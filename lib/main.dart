@@ -11,112 +11,129 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      debugShowCheckedModeBanner: false,
+      title: 'Railway HRMS',
+      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.green)),
+      home: const AuthPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class AuthPage extends StatelessWidget {
+  const AuthPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+    return LayeredGradientBackground(child: Container());
+  }
+}
+
+class LayeredGradientPainter extends CustomPainter {
+  final double opacity; // Control overall opacity
+
+  const LayeredGradientPainter({this.opacity = 1.0});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+
+    // Layer 1: Base color with opacity control
+    final paint1 = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFF015E35).withOpacity(opacity * 0.9),
+          Color(0xFF015E35).withOpacity(opacity * 0.7),
+        ],
+      ).createShader(rect);
+    canvas.drawRect(rect, paint1);
+
+    // Layer 2: Warm overlay with transparency
+    final paint2 = Paint()
+      ..shader = RadialGradient(
+        center: Alignment.center,
+        radius: 0.8,
+        colors: [
+          Color.fromARGB(0, 249, 187, 1).withOpacity(opacity * 0.3),
+          Color(0xFF002213).withOpacity(opacity * 0.4),
+        ],
+        stops: const [0.3, 1.0],
+      ).createShader(rect);
+    canvas.drawRect(rect, paint2);
+
+    // Layer 3: Accent color with blending
+    final paint3 = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color.fromARGB(13, 218, 71, 13).withOpacity(opacity * 0.15),
+          Color.fromRGBO(249, 187, 1, 0.5).withOpacity(opacity * 0.1),
+        ],
+      ).createShader(rect);
+    canvas.drawRect(rect, paint3);
+
+    // Layer 4: Soft shadow overlay
+    final paint4 = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.black.withOpacity(opacity * 0.15),
+          Colors.transparent,
+          Colors.black.withOpacity(opacity * 0.1),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(rect);
+    canvas.drawRect(rect, paint4);
+  }
+
+  @override
+  bool shouldRepaint(covariant LayeredGradientPainter oldDelegate) {
+    return oldDelegate.opacity != opacity;
+  }
+}
+class LayeredGradientBackground extends StatelessWidget {
+  final Widget? child;
+  final double opacity;
+  final GradientStyle style;
+  final EdgeInsetsGeometry? padding;
+
+  const LayeredGradientBackground({
+    super.key,
+    this.child,
+    this.opacity = 0.8,
+    this.style = GradientStyle.default_,
+    this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding,
+      child: CustomPaint(
+        painter: LayeredGradientPainter(
+          opacity: opacity,
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        size: Size.infinite,
+        child: child ?? Container(),
       ),
     );
   }
+}
+
+enum GradientStyle {
+  default_,
+  light,
+  dark,
+  vibrant,
+}
+
+// Alternative: Predefined gradient styles
+class GradientPresets {
+  static const light = 0.4;
+  static const medium = 0.7;
+  static const dark = 0.9;
+  static const transparent = 0.2;
 }
