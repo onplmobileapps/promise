@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- These mirror the app's design tokens (AppPalette) for the parts
+         Android draws itself, before and around Flutter. -->
+
+    <!-- AppPalette.ivory100: the page behind the splash, so the launch
+         screen hands over to it without a flash. -->
+    <color name="launch_background">#F7F6F3</color>
+
+    <!-- AppPalette.jade800: the accent on notification icons. -->
+    <color name="notification_color">#4A8571</color>
+</resources>

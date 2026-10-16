@@ -1,0 +1,30 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "railwayhrms-db71f",
+                    "appId": "1:637349453714:android:ba10749f72cb2faa1f2b4b",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "ios": {
+                "default": {
+                    "projectId": "railwayhrms-db71f",
+                    "appId": "1:637349453714:ios:f75ab5615a16a5411f2b4b",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "railwayhrms-db71f",
+                    "configurations": {
+                        "android": "1:637349453714:android:ba10749f72cb2faa1f2b4b",
+                        "ios": "1:637349453714:ios:f75ab5615a16a5411f2b4b"
+                    }
+                }
+            }
+        }
+    }
+}

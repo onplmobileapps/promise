@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "637349453714",
+    "project_id": "railwayhrms-db71f",
+    "storage_bucket": "railwayhrms-db71f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:637349453714:android:ba10749f72cb2faa1f2b4b",
+        "android_client_info": {
+          "package_name": "com.onnetwork.hrms.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDewBUIBMZ8zC8KmUNYNptOsoSSCJLFlgw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

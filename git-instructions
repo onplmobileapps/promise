@@ -1,0 +1,56 @@
+# ==========================================================
+# 1. OFFICE PC PAR GITHUB SE CODE LAANA (PULL / MERGE)
+# ==========================================================
+
+# Office PC par project folder ke andar jayein
+cd path/to/your/promise/project
+
+# Current remotes check karein (dekhein origin/github added hain ya nahi)
+git remote -v
+
+# Agar GitHub ka remote add nahi hai to add karein:
+git remote add github https://github.com/onplmobileapps/promise.git
+
+# GitHub se ghar wala latest code pull karein:
+git pull github main
+
+
+# ==========================================================
+# 2. GIT STASH & STATUS COMMANDS (BOHT ZAROORI)
+# ==========================================================
+
+# A. Current status check karna (uncommitted changes dekhna)
+git status
+
+# B. Emergency Save (Kaam adhoora ho aur branch change ya pull karna ho):
+# Apne uncommitted kaam ko temporary safe/hide karne ke liye:
+git stash save "office work in progress"
+
+# C. Stash ki hui list dekhna:
+git stash list
+
+# D. Stashed kaam ko wapas lana (Stash se nikal kar code par apply karna):
+git stash pop
+
+# E. Agar stash ko apply karna ho lekin list se delete na karna ho:
+git stash apply
+
+# F. Agar stash kiya hua kaam discard / delete karna ho:
+git stash drop
+
+
+# ==========================================================
+# 3. OFFICE SE CODE GITLAB AUR GITHUB DONO PAR PUSH KARNA
+# ==========================================================
+
+# Changes stage karein
+git add .
+
+# Commit karein
+git commit -m "Updated code from office"
+
+# Office ke local GitLab par push karein
+git push origin main
+
+# GitHub par bhi sync rakhne ke liye push karein
+git push github main

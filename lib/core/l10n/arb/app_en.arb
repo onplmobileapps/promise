@@ -1,0 +1,3362 @@
+{
+  "@@locale": "en",
+  "appName": "PROMISE",
+  "@appName": {
+    "description": "Product name, shown as the app title and in the wordmark's alt text."
+  },
+  "appFullName": "Pakistan Railway Operational and Management Integrated Services Ecosystem",
+  "@appFullName": {
+    "description": "What PROMISE stands for."
+  },
+  "organisationName": "Pakistan Railways",
+  "@organisationName": {
+    "description": "The organisation that runs the app."
+  },
+  "appEmblemLabel": "PROMISE emblem",
+  "@appEmblemLabel": {
+    "description": "Screen reader label for the PROMISE emblem image."
+  },
+  "splashTagline": "Pakistan Railway Operational and Management Integrated Services Ecosystem",
+  "@splashTagline": {
+    "description": "Line under the wordmark on the splash screen."
+  },
+  "poweredBy": "Designed and developed by One Network",
+  "@poweredBy": {
+    "description": "Credit line at the bottom of the sign-in screens."
+  },
+  "copyrightNotice": "© {year} ONE Network. All rights reserved.",
+  "@copyrightNotice": {
+    "description": "Copyright line at the bottom of the code screen.",
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "actionOk": "OK",
+  "@actionOk": {
+    "description": "Button that closes a message."
+  },
+  "actionCancel": "Cancel",
+  "@actionCancel": {
+    "description": "Button that dismisses a choice without acting."
+  },
+  "actionClose": "Close",
+  "@actionClose": {
+    "description": "Button or tooltip that closes a sheet or dialog."
+  },
+  "actionGotIt": "Got it",
+  "@actionGotIt": {
+    "description": "Button that acknowledges an explanation."
+  },
+  "actionContinue": "Continue",
+  "@actionContinue": {
+    "description": "Button that moves to the next step."
+  },
+  "actionSubmit": "Submit",
+  "@actionSubmit": {
+    "description": "Button that sends a form."
+  },
+  "actionBack": "Back",
+  "@actionBack": {
+    "description": "Tooltip of the back button."
+  },
+  "updateAvailableTitle": "Update available",
+  "@updateAvailableTitle": {
+    "description": "Title of the sheet shown when a newer app version is in the store."
+  },
+  "updateAvailableMessage": "A newer version of PROMISE is available. Update now to get the latest security fixes and features.",
+  "@updateAvailableMessage": {
+    "description": "Body of the update sheet."
+  },
+  "updateAvailableVersion": "Version {version}",
+  "@updateAvailableVersion": {
+    "description": "The store version on the update sheet.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateNow": "Update now",
+  "@updateNow": {
+    "description": "Button that opens the store page."
+  },
+  "loginTabTrainTracking": "TRACKING",
+  "@loginTabTrainTracking": {
+    "description": "Sign-in tab for train tracking, by mobile number."
+  },
+  "loginTabPromise": "PROMISE",
+  "@loginTabPromise": {
+    "description": "Sign-in tab for employees, by employee ID and password."
+  },
+  "loginWelcomeTitle": "Welcome back",
+  "@loginWelcomeTitle": {
+    "description": "Heading over the sign-in card."
+  },
+  "loginWelcomeDetail": "Your workday starts here with {app}",
+  "@loginWelcomeDetail": {
+    "description": "Line under the sign-in heading; app is the app's name, shown bold.",
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "loginEyebrow": "EMPLOYEE ACCESS",
+  "@loginEyebrow": {
+    "description": "Small capitals over the sign-in card's title."
+  },
+  "loginCardTitle": "Sign in to your workspace",
+  "@loginCardTitle": {
+    "description": "Title of the sign-in card."
+  },
+  "loginBiometricNote": "For employees with biometric sign-in turned on.",
+  "@loginBiometricNote": {
+    "description": "Under the face or fingerprint sign-in key."
+  },
+  "loginOrPassword": "or use {id} & {password}",
+  "@loginOrPassword": {
+    "description": "Divider between biometric sign-in and the password form; id and password are the fields' names, shown bold.",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "password": {
+        "type": "String"
+      }
+    }
+  },
+  "loginWithPassword": "Sign In with Employee ID & Password",
+  "@loginWithPassword": {
+    "description": "The password form's key when biometric sign-in is offered above it."
+  },
+  "loginSecure": "Built for the people who keep Pakistan moving",
+  "@loginSecure": {
+    "description": "Line under the sign-in card, beside a train."
+  },
+  "loginForgotPassword": "Forgot password?",
+  "@loginForgotPassword": {
+    "description": "Link under the sign-in keys to reset a forgotten password."
+  },
+  "loginTitle": "Sign in",
+  "@loginTitle": {
+    "description": "Heading of both sign-in forms."
+  },
+  "loginTrackingSubtitle": "Enter your mobile number, then scan your CNIC.",
+  "@loginTrackingSubtitle": {
+    "description": "Line under the heading of the train tracking sign-in form."
+  },
+  "loginPromiseSubtitle": "Enter your employee ID and password.",
+  "@loginPromiseSubtitle": {
+    "description": "Line under the heading of the employee sign-in form."
+  },
+  "loginButton": "Sign In",
+  "@loginButton": {
+    "description": "Button that signs an employee in."
+  },
+  "loginInProgress": "Signing in",
+  "@loginInProgress": {
+    "description": "Screen reader label of the sign-in button while it waits."
+  },
+  "loginFailedTitle": "Couldn't sign you in",
+  "@loginFailedTitle": {
+    "description": "Title of the dialog shown when sign-in fails."
+  },
+  "employeeIdLabel": "Employee ID",
+  "@employeeIdLabel": {
+    "description": "Label of the employee ID field."
+  },
+  "employeeIdHint": "Enter your employee ID",
+  "@employeeIdHint": {
+    "description": "Hint inside the empty employee ID field."
+  },
+  "employeeIdTooLong": "Employee ID can be at most {max} characters",
+  "@employeeIdTooLong": {
+    "description": "Under the field when it is longer than allowed.",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "employeeIdRequired": "Employee ID is required",
+  "@employeeIdRequired": {
+    "description": "Error when the employee ID field is empty."
+  },
+  "passwordLabel": "Password",
+  "@passwordLabel": {
+    "description": "Label of the password field."
+  },
+  "passwordHint": "Enter your password",
+  "@passwordHint": {
+    "description": "Hint inside the empty password field."
+  },
+  "passwordTooLong": "Password can be at most {max} characters",
+  "@passwordTooLong": {
+    "description": "Under the field when it is longer than allowed.",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "passwordRequired": "Password is required",
+  "@passwordRequired": {
+    "description": "Error when the password field is empty."
+  },
+  "passwordShow": "Show password",
+  "@passwordShow": {
+    "description": "Tooltip of the button that reveals the password."
+  },
+  "passwordHide": "Hide password",
+  "@passwordHide": {
+    "description": "Tooltip of the button that hides the password."
+  },
+  "biometricFaceId": "Sign In with Face ID",
+  "@biometricFaceId": {
+    "description": "Tooltip of the Face ID button on iPhone."
+  },
+  "biometricFace": "Sign In with Face",
+  "@biometricFace": {
+    "description": "Sign-in key on an Android phone with face unlock set up."
+  },
+  "biometricFingerprint": "Sign In with Fingerprint",
+  "@biometricFingerprint": {
+    "description": "Tooltip of the fingerprint button on Android."
+  },
+  "biometricReason": "Authenticate to sign in to PROMISE",
+  "@biometricReason": {
+    "description": "Reason the system shows in the biometric prompt."
+  },
+  "biometricDisabledTitle": "Turn on biometric sign-in",
+  "@biometricDisabledTitle": {
+    "description": "Title of the dialog shown when biometric sign-in is off."
+  },
+  "biometricDisabledMessage": "Sign in once with your employee ID and password, then turn on Biometric login in Profile. After that, your fingerprint or Face ID signs you in.",
+  "@biometricDisabledMessage": {
+    "description": "How to turn on biometric sign-in."
+  },
+  "biometricNoCredentialsTitle": "Sign in once first",
+  "@biometricNoCredentialsTitle": {
+    "description": "Title when there are no saved credentials for biometric sign-in."
+  },
+  "biometricNoCredentialsMessage": "No saved sign-in was found on this phone. Sign in with your employee ID and password once.",
+  "@biometricNoCredentialsMessage": {
+    "description": "Body when there are no saved credentials for biometric sign-in."
+  },
+  "networkOperatorLabel": "Network operator",
+  "@networkOperatorLabel": {
+    "description": "Label of the mobile network field."
+  },
+  "networkOperatorHint": "Select network operator",
+  "@networkOperatorHint": {
+    "description": "Shown in the mobile network field before one is chosen; also the picker's title."
+  },
+  "networkOperatorRequired": "Please select a network operator",
+  "@networkOperatorRequired": {
+    "description": "Error when no mobile network is chosen."
+  },
+  "mobileNumberLabel": "Mobile number",
+  "@mobileNumberLabel": {
+    "description": "Label of the mobile number field."
+  },
+  "mobileNumberHint": "03XXXXXXXXX",
+  "@mobileNumberHint": {
+    "description": "Pattern shown in the empty mobile number field."
+  },
+  "mobileNumberRequired": "Mobile number is required",
+  "@mobileNumberRequired": {
+    "description": "Error when the mobile number field is empty."
+  },
+  "mobileNumberStart": "Mobile number must start with 03",
+  "@mobileNumberStart": {
+    "description": "Error when the mobile number doesn't start with 03."
+  },
+  "mobileNumberLength": "Mobile number must be 11 digits, like 03001234567",
+  "@mobileNumberLength": {
+    "description": "Error when the mobile number isn't 11 digits long."
+  },
+  "otpTitle": "Verify code",
+  "@otpTitle": {
+    "description": "Heading of the one-time code screen."
+  },
+  "otpSubtitle": "Enter the {length}-digit code we sent to",
+  "@otpSubtitle": {
+    "description": "Line before the phone number on the code screen.",
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "otpFieldLabel": "One-time code",
+  "@otpFieldLabel": {
+    "description": "Screen reader label of the code boxes."
+  },
+  "otpNotReceived": "Didn't receive the code?",
+  "@otpNotReceived": {
+    "description": "Text before the resend action."
+  },
+  "otpResend": "Resend code",
+  "@otpResend": {
+    "description": "Action that sends the code again."
+  },
+  "otpResendIn": "Resend in {seconds}s",
+  "@otpResendIn": {
+    "description": "Countdown until the code can be sent again.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "otpVerify": "Verify",
+  "@otpVerify": {
+    "description": "Button that checks the code."
+  },
+  "forgotPasswordTitle": "Forgot password",
+  "@forgotPasswordTitle": {
+    "description": "Title of the forgot password screen."
+  },
+  "forgotPasswordMessage": "Enter your email address. We will send you a verification code or a link to reset your password.",
+  "@forgotPasswordMessage": {
+    "description": "Explanation on the forgot password screen."
+  },
+  "forgotPasswordFieldLabel": "Email address",
+  "@forgotPasswordFieldLabel": {
+    "description": "Label of the email field on the forgot password screen."
+  },
+  "forgotPasswordFieldHint": "name@example.com",
+  "@forgotPasswordFieldHint": {
+    "description": "Hint inside the empty email field."
+  },
+  "emailInvalid": "Please enter a valid email address",
+  "@emailInvalid": {
+    "description": "Error when the email address is not valid."
+  },
+  "featureInDevelopmentTitle": "Coming soon",
+  "@featureInDevelopmentTitle": {
+    "description": "Title of the dialog for a feature that is not ready."
+  },
+  "featureInDevelopmentMessage": "This feature is being built. Please check back later.",
+  "@featureInDevelopmentMessage": {
+    "description": "Body of the dialog for a feature that is not ready."
+  },
+  "networkOfflineTitle": "You're offline",
+  "@networkOfflineTitle": {
+    "description": "Connection banner title when Wi-Fi and mobile data are both off."
+  },
+  "networkOfflineMessage": "Turn on Wi-Fi or mobile data",
+  "@networkOfflineMessage": {
+    "description": "Connection banner hint when Wi-Fi and mobile data are both off."
+  },
+  "networkNoInternetTitle": "No internet",
+  "@networkNoInternetTitle": {
+    "description": "Connection banner title when Wi-Fi or data is on but the internet doesn't answer."
+  },
+  "networkNoInternetMessage": "Wi-Fi or data is on but not working",
+  "@networkNoInternetMessage": {
+    "description": "Connection banner hint when Wi-Fi or data is on but the internet doesn't answer."
+  },
+  "networkSlowTitle": "Slow internet",
+  "@networkSlowTitle": {
+    "description": "Connection banner title when the connection is slow."
+  },
+  "networkSlowMessage": "The app is running slowly",
+  "@networkSlowMessage": {
+    "description": "Connection banner hint when the connection is slow."
+  },
+  "networkBackOnlineTitle": "Back online",
+  "@networkBackOnlineTitle": {
+    "description": "Connection banner title, shown briefly when the connection returns."
+  },
+  "networkBackOnlineMessage": "You're connected again",
+  "@networkBackOnlineMessage": {
+    "description": "Connection banner hint, shown briefly when the connection returns."
+  },
+  "networkRetry": "Retry",
+  "@networkRetry": {
+    "description": "Banner button that checks the connection again."
+  },
+  "networkStatusAnnouncement": "{title}. {message}",
+  "@networkStatusAnnouncement": {
+    "description": "What a screen reader says when the connection banner changes.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "permissionCameraTitle": "Allow camera access",
+  "@permissionCameraTitle": {
+    "description": "Heading of the dialog that explains, before the system asks, why the app needs the camera."
+  },
+  "permissionCameraReason": "PROMISE uses the camera to scan your CNIC, to take inspection and accident photos, and to check your face when attendance is marked. It's only on while you take a photo.",
+  "@permissionCameraReason": {
+    "description": "Why the app needs the camera, shown before the system's prompt."
+  },
+  "permissionCameraBlocked": "Camera access is turned off for PROMISE. To take photos, allow the camera in Settings.",
+  "@permissionCameraBlocked": {
+    "description": "Shown when the camera was refused and the system won't ask again."
+  },
+  "permissionLocationTitle": "Allow location access",
+  "@permissionLocationTitle": {
+    "description": "Heading of the dialog that explains, before the system asks, why the app needs the location."
+  },
+  "permissionLocationReason": "PROMISE uses your location to confirm you're at your work area when attendance is marked, and to record where inspections and accidents are reported. It's only read while you use these features.",
+  "@permissionLocationReason": {
+    "description": "Why the app needs the location, shown before the system's prompt."
+  },
+  "permissionLocationBlocked": "Location access is turned off for PROMISE. To mark attendance and file reports, allow location in Settings.",
+  "@permissionLocationBlocked": {
+    "description": "Shown when location was refused and the system won't ask again."
+  },
+  "permissionNotificationsTitle": "Turn on notifications",
+  "@permissionNotificationsTitle": {
+    "description": "Heading of the dialog that explains, before the system asks, why the app sends notifications."
+  },
+  "permissionNotificationsReason": "Hear straight away about leave requests, approvals and other updates that need your attention.",
+  "@permissionNotificationsReason": {
+    "description": "Why the app sends notifications, shown before the system's prompt."
+  },
+  "permissionNotificationsBlocked": "Notifications are turned off for PROMISE. To hear about requests and approvals, allow notifications in Settings.",
+  "@permissionNotificationsBlocked": {
+    "description": "Shown when notifications were refused and the system won't ask again."
+  },
+  "permissionBlockedTitle": "Allow access in Settings",
+  "@permissionBlockedTitle": {
+    "description": "Heading of the dialog shown when a permission was refused and the system won't ask again."
+  },
+  "permissionOpenSettings": "Open Settings",
+  "@permissionOpenSettings": {
+    "description": "Button that opens the app's page in the system settings."
+  },
+  "permissionNotNow": "Not now",
+  "@permissionNotNow": {
+    "description": "Button that leaves a permission for later."
+  },
+  "homeModulesTitle": "Modules",
+  "@homeModulesTitle": {
+    "description": "Heading over the module cards on the home screen."
+  },
+  "homeProfile": "Your profile",
+  "@homeProfile": {
+    "description": "Screen reader label of the avatar on the home screen, which opens the profile."
+  },
+  "greetingMorning": "Good Morning",
+  "@greetingMorning": {
+    "description": "Greeting on the home screen before noon."
+  },
+  "greetingAfternoon": "Good Afternoon",
+  "@greetingAfternoon": {
+    "description": "Greeting on the home screen from noon to 5 pm."
+  },
+  "greetingEvening": "Good Evening",
+  "@greetingEvening": {
+    "description": "Greeting on the home screen from 5 pm."
+  },
+  "greetingWithName": "{greeting}, {name}",
+  "@greetingWithName": {
+    "description": "The greeting followed by the user's first name.",
+    "placeholders": {
+      "greeting": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "moduleHrmsTitle": "HRMS",
+  "@moduleHrmsTitle": {
+    "description": "Name of the human resources module."
+  },
+  "moduleHrmsSubtitle": "Human Resource Management System",
+  "@moduleHrmsSubtitle": {
+    "description": "Line under the HRMS module's name."
+  },
+  "moduleTrackingTitle": "Tracking",
+  "@moduleTrackingTitle": {
+    "description": "Name of the train tracking module."
+  },
+  "moduleTrackingSubtitle": "Realtime Train Tracking",
+  "@moduleTrackingSubtitle": {
+    "description": "Line under the tracking module's name."
+  },
+  "moduleInspectionTitle": "e Inspection",
+  "@moduleInspectionTitle": {
+    "description": "Name of the inspection module."
+  },
+  "moduleInspectionSubtitle": "Digital Inspection of Assets",
+  "@moduleInspectionSubtitle": {
+    "description": "Line under the inspection module's name."
+  },
+  "modulePramsTitle": "PRAMS",
+  "@modulePramsTitle": {
+    "description": "Name of the accident management module."
+  },
+  "modulePramsSubtitle": "Accident Management System",
+  "@modulePramsSubtitle": {
+    "description": "Line under the PRAMS module's name."
+  },
+  "navHome": "Home",
+  "@navHome": {
+    "description": "Bottom navigation item for the home screen."
+  },
+  "navTrains": "Trains",
+  "@navTrains": {
+    "description": "Bottom navigation item that opens live train tracking."
+  },
+  "navAlerts": "Alerts",
+  "@navAlerts": {
+    "description": "Bottom navigation item, and header button, for notifications."
+  },
+  "navProfile": "Profile",
+  "@navProfile": {
+    "description": "Bottom navigation item for the profile and settings."
+  },
+  "navCheckIn": "Check in or out with your face",
+  "@navCheckIn": {
+    "description": "Screen reader label of the raised check-in button in the bottom navigation."
+  },
+  "exitTitle": "Close PROMISE?",
+  "@exitTitle": {
+    "description": "Title of the dialog shown when back is pressed on the home screen."
+  },
+  "exitMessage": "You'll sign in again the next time you open it.",
+  "@exitMessage": {
+    "description": "Body of the close-the-app dialog."
+  },
+  "exitConfirm": "Close app",
+  "@exitConfirm": {
+    "description": "Button that closes the app."
+  },
+  "attendanceMarkedTitle": "Attendance marked",
+  "@attendanceMarkedTitle": {
+    "description": "Title of the dialog shown once attendance is marked by face."
+  },
+  "attendanceFailedTitle": "Couldn't mark attendance",
+  "@attendanceFailedTitle": {
+    "description": "Title of the dialog shown when marking attendance fails."
+  },
+  "alertsTitle": "Alerts",
+  "@alertsTitle": {
+    "description": "Title of the alerts screen."
+  },
+  "alertsOverline": "{count} new · {date}",
+  "@alertsOverline": {
+    "description": "Small line over the alerts title: how many are unread, and today's date.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "alertsMarkAllRead": "Mark all read",
+  "@alertsMarkAllRead": {
+    "description": "Button that marks every alert read."
+  },
+  "alertsFilterAll": "All",
+  "@alertsFilterAll": {
+    "description": "Filter chip showing every alert."
+  },
+  "alertsFilterAccidents": "Accidents",
+  "@alertsFilterAccidents": {
+    "description": "Filter chip showing accident alerts."
+  },
+  "alertsFilterLeave": "Leave",
+  "@alertsFilterLeave": {
+    "description": "Filter chip showing leave alerts."
+  },
+  "alertsFilterAttendance": "Attendance",
+  "@alertsFilterAttendance": {
+    "description": "Filter chip showing attendance alerts."
+  },
+  "alertsToday": "Today",
+  "@alertsToday": {
+    "description": "Heading over today's alerts."
+  },
+  "alertsYesterday": "Yesterday",
+  "@alertsYesterday": {
+    "description": "Heading over yesterday's alerts."
+  },
+  "alertsEmptyTitle": "Nothing here yet",
+  "@alertsEmptyTitle": {
+    "description": "Title when a filter has no alerts."
+  },
+  "alertsEmptyMessage": "Updates about accidents, leave and attendance will show up here.",
+  "@alertsEmptyMessage": {
+    "description": "Line when a filter has no alerts."
+  },
+  "alertsOpenCase": "Open case",
+  "@alertsOpenCase": {
+    "description": "Button on an accident alert that opens its case."
+  },
+  "alertUnread": "Unread",
+  "@alertUnread": {
+    "description": "Screen reader label of the dot on an unread alert."
+  },
+  "caseReported": "Reported",
+  "@caseReported": {
+    "description": "First step of an accident case."
+  },
+  "caseAcknowledged": "Acknowledged",
+  "@caseAcknowledged": {
+    "description": "Second step of an accident case."
+  },
+  "caseRelief": "Relief",
+  "@caseRelief": {
+    "description": "Third step of an accident case: relief on its way or on site."
+  },
+  "caseCleared": "Cleared",
+  "@caseCleared": {
+    "description": "Last step of an accident case: the track is clear."
+  },
+  "caseStepOf": "Step {step} of {total}: {name}",
+  "@caseStepOf": {
+    "description": "What a screen reader says about an accident case's progress.",
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "profileTitle": "Profile",
+  "@profileTitle": {
+    "description": "Title of the profile and settings screen."
+  },
+  "profileEmployeeId": "EMP {id}",
+  "@profileEmployeeId": {
+    "description": "Tag with the employee's number on the profile.",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "profileSectionAccount": "Account",
+  "@profileSectionAccount": {
+    "description": "Heading over the account settings."
+  },
+  "profilePersonalInfo": "Personal information",
+  "@profilePersonalInfo": {
+    "description": "Row that opens the employee's personal information."
+  },
+  "profileSecurity": "Change Password",
+  "@profileSecurity": {
+    "description": "Row that opens password reset."
+  },
+  "profileBiometric": "Biometric Sign In",
+  "@profileBiometric": {
+    "description": "Row with the switch for fingerprint or Face ID sign-in."
+  },
+  "profileSectionPreferences": "Preferences",
+  "@profileSectionPreferences": {
+    "description": "Heading over the app preferences."
+  },
+  "profileNotifications": "Notifications",
+  "@profileNotifications": {
+    "description": "Row that opens notification settings."
+  },
+  "logoutButton": "Log out",
+  "@logoutButton": {
+    "description": "Button that signs the employee out."
+  },
+  "logoutTitle": "Log out of PROMISE?",
+  "@logoutTitle": {
+    "description": "Title of the log out confirmation."
+  },
+  "logoutMessage": "Next time you'll sign in with your employee ID and password.",
+  "@logoutMessage": {
+    "description": "Body of the log out confirmation."
+  },
+  "biometricEnableReason": "Confirm it's you to turn on biometric sign-in",
+  "@biometricEnableReason": {
+    "description": "Reason the system shows when turning on biometric sign-in."
+  },
+  "biometricEnableFailedTitle": "Couldn't turn on biometric sign-in",
+  "@biometricEnableFailedTitle": {
+    "description": "Title when turning on biometric sign-in fails."
+  },
+  "biometricEnableFailedMessage": "Your fingerprint or face wasn't confirmed. Please try again.",
+  "@biometricEnableFailedMessage": {
+    "description": "Body when turning on biometric sign-in fails."
+  },
+  "routeNotFound": "Page not found",
+  "@routeNotFound": {
+    "description": "Shown when the app is asked for a screen that doesn't exist."
+  },
+  "actionRetry": "Try again",
+  "@actionRetry": {
+    "description": "A button that repeats something that failed."
+  },
+  "hrmsTitle": "HRMS",
+  "@hrmsTitle": {
+    "description": "The HRMS module, in its header."
+  },
+  "hrmsSubtitle": "My attendance and leave",
+  "@hrmsSubtitle": {
+    "description": "What the HRMS home holds, under its title."
+  },
+  "hrmsNavAttendance": "Attendance",
+  "@hrmsNavAttendance": {
+    "description": "The attendance tab of the HRMS bar."
+  },
+  "hrmsNavLeave": "Leave",
+  "@hrmsNavLeave": {
+    "description": "The leave tab of the HRMS bar."
+  },
+  "hrmsNavTeam": "Team",
+  "@hrmsNavTeam": {
+    "description": "The team tab of the HRMS bar, for those with a team."
+  },
+  "hrmsBackHome": "Back to home",
+  "@hrmsBackHome": {
+    "description": "The back tile on the HRMS home, which leaves HRMS."
+  },
+  "hrmsHistoryTooltip": "Attendance history",
+  "@hrmsHistoryTooltip": {
+    "description": "The tile on the HRMS home that opens the attendance calendar."
+  },
+  "shiftTodayLabel": "Today's shift",
+  "@shiftTodayLabel": {
+    "description": "Read by screen readers for the card of today's attendance."
+  },
+  "shiftOnTime": "Present · on time",
+  "@shiftOnTime": {
+    "description": "Status: checked in on time."
+  },
+  "shiftLate": "Present · late",
+  "@shiftLate": {
+    "description": "Status: checked in after the shift began."
+  },
+  "shiftCheckedOut": "Checked out",
+  "@shiftCheckedOut": {
+    "description": "Status: checked in and out today."
+  },
+  "shiftNotIn": "Not checked in",
+  "@shiftNotIn": {
+    "description": "Status: not checked in yet today."
+  },
+  "shiftOnLeave": "On leave",
+  "@shiftOnLeave": {
+    "description": "Status: on leave today."
+  },
+  "shiftAbsent": "Absent",
+  "@shiftAbsent": {
+    "description": "Status: marked absent today."
+  },
+  "shiftHoursAtWork": "hrs at work",
+  "@shiftHoursAtWork": {
+    "description": "After the hours and minutes spent at work today, as in \"05:42 hrs at work\"."
+  },
+  "shiftCheckIn": "Check-in",
+  "@shiftCheckIn": {
+    "description": "The time someone checked in."
+  },
+  "shiftCheckOut": "Check-out",
+  "@shiftCheckOut": {
+    "description": "The time someone checked out."
+  },
+  "shiftNotYet": "Not yet",
+  "@shiftNotYet": {
+    "description": "In place of a check-out time not reached yet."
+  },
+  "shiftActionCheckIn": "Check in",
+  "@shiftActionCheckIn": {
+    "description": "The button that checks in with the face."
+  },
+  "shiftActionCheckOut": "Check out",
+  "@shiftActionCheckOut": {
+    "description": "The button that checks out with the face."
+  },
+  "shiftProgress": "{percent}% of the shift done",
+  "@shiftProgress": {
+    "description": "Read by screen readers for the shift bar.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shiftLoadFailed": "Couldn't load today's attendance.",
+  "@shiftLoadFailed": {
+    "description": "Shown when today's attendance fails to load."
+  },
+  "workAreaInside": "Inside work area",
+  "@workAreaInside": {
+    "description": "You are inside your work area."
+  },
+  "workAreaOutside": "Outside work area",
+  "@workAreaOutside": {
+    "description": "You are outside your work area."
+  },
+  "workAreaFinding": "Finding you…",
+  "@workAreaFinding": {
+    "description": "Waiting for the location."
+  },
+  "workAreaLoading": "Loading your work area…",
+  "@workAreaLoading": {
+    "description": "Waiting for the work areas."
+  },
+  "workAreaUnavailable": "Work area unavailable",
+  "@workAreaUnavailable": {
+    "description": "The work areas could not be loaded."
+  },
+  "workAreaLocationOff": "Location is off",
+  "@workAreaLocationOff": {
+    "description": "The phone's location is turned off."
+  },
+  "workAreaLocationDenied": "Location not allowed",
+  "@workAreaLocationDenied": {
+    "description": "The app may not use the location."
+  },
+  "workAreaFake": "Fake location",
+  "@workAreaFake": {
+    "description": "A fake GPS app was detected."
+  },
+  "workAreaInsideDetail": "{office} · {distance} from the office",
+  "@workAreaInsideDetail": {
+    "description": "Under \"Inside work area\".",
+    "placeholders": {
+      "office": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "workAreaOutsideDetail": "{distance} from {office} · tap for the way",
+  "@workAreaOutsideDetail": {
+    "description": "Under \"Outside work area\".",
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      },
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "workAreaFindingDetail": "Checking you against {office}",
+  "@workAreaFindingDetail": {
+    "description": "While the location is found.",
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "workAreaLocationOffDetail": "Turn it on to mark attendance",
+  "@workAreaLocationOffDetail": {
+    "description": "Under \"Location is off\"."
+  },
+  "workAreaDeniedDetail": "Allow it to mark attendance",
+  "@workAreaDeniedDetail": {
+    "description": "Under \"Location not allowed\"."
+  },
+  "workAreaFakeDetail": "Turn off fake GPS apps to mark attendance",
+  "@workAreaFakeDetail": {
+    "description": "Under \"Fake location\"."
+  },
+  "workAreaRetryDetail": "Pull down to try again",
+  "@workAreaRetryDetail": {
+    "description": "Under \"Work area unavailable\"."
+  },
+  "workAreaYours": "Your work area",
+  "@workAreaYours": {
+    "description": "The work area when none is named yet."
+  },
+  "distanceMeters": "{meters} m",
+  "@distanceMeters": {
+    "description": "A distance in metres.",
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
+  "distanceKilometers": "{km} km",
+  "@distanceKilometers": {
+    "description": "A distance in kilometres, with one decimal.",
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "hrmsApplyLeave": "Apply leave",
+  "@hrmsApplyLeave": {
+    "description": "The card that opens the leave form."
+  },
+  "hrmsLeaveDaysLeft": "{count, plural, =0{No leave days left} =1{1 leave day left} other{{count} leave days left}}",
+  "@hrmsLeaveDaysLeft": {
+    "description": "Under \"Apply leave\": the leave left across every type.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hrmsAttendanceCard": "Attendance",
+  "@hrmsAttendanceCard": {
+    "description": "The card that opens the attendance calendar."
+  },
+  "hrmsDaysIn": "{count, plural, =0{No days in {month}} =1{1 day in {month}} other{{count} days in {month}}}",
+  "@hrmsDaysIn": {
+    "description": "Under \"Attendance\": days marked this month.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "hrmsLeaveBalance": "Leave balance",
+  "@hrmsLeaveBalance": {
+    "description": "The section of leave balances."
+  },
+  "leaveOfTotal": "of {total}",
+  "@leaveOfTotal": {
+    "description": "Under a leave ring: out of how many.",
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveRingLabel": "{type}: {left} of {total} days left",
+  "@leaveRingLabel": {
+    "description": "Read by screen readers for a leave ring.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveBalanceEmpty": "No leave balances yet",
+  "@leaveBalanceEmpty": {
+    "description": "When there are no leave types."
+  },
+  "leaveBalanceFailed": "Couldn't load your leave balance.",
+  "@leaveBalanceFailed": {
+    "description": "When the balances fail to load."
+  },
+  "hrmsMyRequests": "My requests",
+  "@hrmsMyRequests": {
+    "description": "The section of the employee's leave requests."
+  },
+  "leaveStatusPending": "With manager",
+  "@leaveStatusPending": {
+    "description": "A request waiting for the manager."
+  },
+  "leaveStatusApproved": "Approved",
+  "@leaveStatusApproved": {
+    "description": "An approved request."
+  },
+  "leaveStatusRejected": "Rejected",
+  "@leaveStatusRejected": {
+    "description": "A rejected request."
+  },
+  "leaveRequestTitle": "{type} · {dates}",
+  "@leaveRequestTitle": {
+    "description": "A request's heading: its type and dates.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "dates": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveAppliedOn": "Applied {date}",
+  "@leaveAppliedOn": {
+    "description": "When a request was made.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveWaitingManager": "Waiting for your manager",
+  "@leaveWaitingManager": {
+    "description": "Under a pending request."
+  },
+  "leaveRequestsEmpty": "No requests yet",
+  "@leaveRequestsEmpty": {
+    "description": "When there are no requests."
+  },
+  "leaveRequestsFailed": "Couldn't load your requests.",
+  "@leaveRequestsFailed": {
+    "description": "When the requests fail to load."
+  },
+  "leaveRequestDetails": "Leave request",
+  "@leaveRequestDetails": {
+    "description": "The sheet with one request's details."
+  },
+  "leaveDetailType": "Type",
+  "@leaveDetailType": {
+    "description": "A request's leave type."
+  },
+  "leaveDetailDates": "Dates",
+  "@leaveDetailDates": {
+    "description": "A request's days."
+  },
+  "leaveDetailStatus": "Status",
+  "@leaveDetailStatus": {
+    "description": "A request's status."
+  },
+  "leaveDetailReason": "Reason",
+  "@leaveDetailReason": {
+    "description": "Why the leave was asked for."
+  },
+  "leaveDetailApplied": "Applied",
+  "@leaveDetailApplied": {
+    "description": "When the request was made."
+  },
+  "leaveAllRequests": "All requests",
+  "@leaveAllRequests": {
+    "description": "The sheet listing every request."
+  },
+  "leaveTitle": "Apply leave",
+  "@leaveTitle": {
+    "description": "The leave form's heading."
+  },
+  "leaveHistory": "History",
+  "@leaveHistory": {
+    "description": "Opens the list of past requests."
+  },
+  "leaveTypeGroup": "Leave type",
+  "@leaveTypeGroup": {
+    "description": "The group of leave types, for screen readers."
+  },
+  "leaveLeftOf": "of {total} left",
+  "@leaveLeftOf": {
+    "description": "Under a leave type's days left.",
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "leavePickDates": "Pick dates",
+  "@leavePickDates": {
+    "description": "The calendar's label, for screen readers."
+  },
+  "leaveDaysAfter": "{days, plural, =1{1 day} other{{days} days}} · {left} left after",
+  "@leaveDaysAfter": {
+    "description": "Under the calendar: the days picked and the balance after.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveReason": "Reason",
+  "@leaveReason": {
+    "description": "The reason field's label."
+  },
+  "leaveReasonHint": "Say why, in a few words",
+  "@leaveReasonHint": {
+    "description": "The reason field's hint."
+  },
+  "leaveReasonShort": "Write at least {count} characters",
+  "@leaveReasonShort": {
+    "description": "When the reason is too short.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "leaveGoesTo": "Goes to your reporting manager for approval",
+  "@leaveGoesTo": {
+    "description": "Under the form: who decides."
+  },
+  "leaveSend": "Send request",
+  "@leaveSend": {
+    "description": "The button that sends the request."
+  },
+  "leaveSending": "Sending…",
+  "@leaveSending": {
+    "description": "While the request is sent."
+  },
+  "leaveSentTitle": "Request sent",
+  "@leaveSentTitle": {
+    "description": "The dialog after a request is sent."
+  },
+  "leaveSendFailedTitle": "Couldn't send the request",
+  "@leaveSendFailedTitle": {
+    "description": "The dialog when sending fails."
+  },
+  "leavePickTypeError": "Pick a leave type",
+  "@leavePickTypeError": {
+    "description": "When no type is picked."
+  },
+  "leavePickDatesError": "Pick the days of your leave",
+  "@leavePickDatesError": {
+    "description": "When no days are picked."
+  },
+  "leaveTypesFailed": "Couldn't load the leave types.",
+  "@leaveTypesFailed": {
+    "description": "When the types fail to load."
+  },
+  "attendanceTitle": "Attendance",
+  "@attendanceTitle": {
+    "description": "The attendance calendar's heading."
+  },
+  "attendanceOnTime": "On time",
+  "@attendanceOnTime": {
+    "description": "Days started on time."
+  },
+  "attendanceLate": "Late",
+  "@attendanceLate": {
+    "description": "Days started late."
+  },
+  "attendanceLeave": "Leave",
+  "@attendanceLeave": {
+    "description": "Days on leave."
+  },
+  "attendanceAbsent": "Absent",
+  "@attendanceAbsent": {
+    "description": "Days absent."
+  },
+  "attendanceWeekend": "Weekend",
+  "@attendanceWeekend": {
+    "description": "Days off."
+  },
+  "attendancePickMonth": "Pick a month",
+  "@attendancePickMonth": {
+    "description": "The month picker's title."
+  },
+  "attendanceIn": "In {time}",
+  "@attendanceIn": {
+    "description": "A check-in time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "attendanceOut": "Out {time}",
+  "@attendanceOut": {
+    "description": "A check-out time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "attendanceWorked": "{hours}h {minutes}m",
+  "@attendanceWorked": {
+    "description": "Time worked.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "attendanceNothingMarked": "Nothing marked this day",
+  "@attendanceNothingMarked": {
+    "description": "A day without a record."
+  },
+  "attendanceFailed": "Couldn't load attendance.",
+  "@attendanceFailed": {
+    "description": "When attendance fails to load."
+  },
+  "attendanceDayLabel": "{date}: {status}",
+  "@attendanceDayLabel": {
+    "description": "Read by screen readers for a calendar day.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "attendanceNoMark": "not marked",
+  "@attendanceNoMark": {
+    "description": "A day's status when nothing was marked."
+  },
+  "teamTitle": "My team",
+  "@teamTitle": {
+    "description": "The team page's heading."
+  },
+  "teamPeople": "{count, plural, =1{1 person} other{{count} people}}",
+  "@teamPeople": {
+    "description": "How many are on the team.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamMarkAttendance": "Mark a team member's attendance",
+  "@teamMarkAttendance": {
+    "description": "The tile that marks someone else's attendance."
+  },
+  "teamYouAreIn": "You're in since {time} · {duration}",
+  "@teamYouAreIn": {
+    "description": "The strip with the admin's own check-in.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "teamYouAreOut": "You're not checked in",
+  "@teamYouAreOut": {
+    "description": "The strip when the admin hasn't checked in."
+  },
+  "teamToday": "Team today",
+  "@teamToday": {
+    "description": "The board of the team's day."
+  },
+  "teamUpdated": "Updated {time}",
+  "@teamUpdated": {
+    "description": "When the board was loaded.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "teamStatusIn": "In",
+  "@teamStatusIn": {
+    "description": "People at work."
+  },
+  "teamStatusLate": "Late",
+  "@teamStatusLate": {
+    "description": "People who came late."
+  },
+  "teamStatusLeave": "Leave",
+  "@teamStatusLeave": {
+    "description": "People on leave."
+  },
+  "teamStatusAbsent": "Absent",
+  "@teamStatusAbsent": {
+    "description": "People absent."
+  },
+  "teamStatusTotal": "Total",
+  "@teamStatusTotal": {
+    "description": "The whole team."
+  },
+  "teamBarLabel": "{present} in, {late} late, {leave} on leave, {absent} absent",
+  "@teamBarLabel": {
+    "description": "Read by screen readers for the team bar.",
+    "placeholders": {
+      "present": {
+        "type": "int"
+      },
+      "late": {
+        "type": "int"
+      },
+      "leave": {
+        "type": "int"
+      },
+      "absent": {
+        "type": "int"
+      }
+    }
+  },
+  "teamRightNow": "Team right now",
+  "@teamRightNow": {
+    "description": "The list of the team."
+  },
+  "teamAll": "All {count}",
+  "@teamAll": {
+    "description": "Opens the whole team.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamMembers": "Team members",
+  "@teamMembers": {
+    "description": "The sheet with the whole team."
+  },
+  "teamSearchHint": "Search by name or ID",
+  "@teamSearchHint": {
+    "description": "The search field in the team sheet."
+  },
+  "teamNobody": "No one here",
+  "@teamNobody": {
+    "description": "When a list of people is empty."
+  },
+  "teamMembersFailed": "Couldn't load the team.",
+  "@teamMembersFailed": {
+    "description": "When the team fails to load."
+  },
+  "memberIn": "In {time}",
+  "@memberIn": {
+    "description": "Someone at work since a time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "memberLate": "Late {time}",
+  "@memberLate": {
+    "description": "Someone in late since a time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "memberOnLeave": "On leave",
+  "@memberOnLeave": {
+    "description": "Someone on leave."
+  },
+  "memberAbsent": "Absent",
+  "@memberAbsent": {
+    "description": "Someone absent."
+  },
+  "memberNotMarked": "Not marked",
+  "@memberNotMarked": {
+    "description": "Someone with nothing marked."
+  },
+  "memberProfile": "Team member",
+  "@memberProfile": {
+    "description": "The sheet with someone's profile."
+  },
+  "memberEmployeeId": "Employee ID",
+  "@memberEmployeeId": {
+    "description": "Someone's employee number."
+  },
+  "memberDesignation": "Designation",
+  "@memberDesignation": {
+    "description": "Someone's job."
+  },
+  "memberDepartment": "Department",
+  "@memberDepartment": {
+    "description": "Someone's department."
+  },
+  "memberDivision": "Division",
+  "@memberDivision": {
+    "description": "Someone's division."
+  },
+  "memberLocation": "Location",
+  "@memberLocation": {
+    "description": "Where someone works."
+  },
+  "memberShift": "Shift",
+  "@memberShift": {
+    "description": "Someone's shift."
+  },
+  "memberPhone": "Phone",
+  "@memberPhone": {
+    "description": "Someone's phone."
+  },
+  "memberEmail": "Email",
+  "@memberEmail": {
+    "description": "Someone's email."
+  },
+  "memberAtWork": "At work",
+  "@memberAtWork": {
+    "description": "How long someone has been at work today."
+  },
+  "memberMoreDetails": "More details",
+  "@memberMoreDetails": {
+    "description": "The rest of someone's details."
+  },
+  "memberMarkAttendance": "Mark attendance",
+  "@memberMarkAttendance": {
+    "description": "Marks this person's attendance."
+  },
+  "cnicRetake": "Retake",
+  "@cnicRetake": {
+    "description": "Takes the CNIC photo again."
+  },
+  "cnicCameraFailed": "Couldn't open the camera. Try again.",
+  "@cnicCameraFailed": {
+    "description": "When the camera fails to start."
+  },
+  "cnicStepFace": "Face",
+  "@cnicStepFace": {
+    "description": "The first step of registering: the face."
+  },
+  "cnicStepCnic": "CNIC",
+  "@cnicStepCnic": {
+    "description": "The second step of registering: the CNIC."
+  },
+  "cnicStepDone": "Done",
+  "@cnicStepDone": {
+    "description": "The last step of registering."
+  },
+  "cnicStepOf": "Step {current} of {total}: {name}",
+  "@cnicStepOf": {
+    "description": "Read by screen readers for the steps.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "registerIntroTitle": "Set up face check-in",
+  "@registerIntroTitle": {
+    "description": "The dialog before the first face registration."
+  },
+  "gateCheckingTitle": "Checking your location",
+  "@gateCheckingTitle": {
+    "description": "The dialog while the location is checked before check-in."
+  },
+  "gateCheckingMessage": "Making sure you are at your office…",
+  "@gateCheckingMessage": {
+    "description": "Under it."
+  },
+  "gateNotAllowedTitle": "Not allowed",
+  "@gateNotAllowedTitle": {
+    "description": "When the phone may not mark attendance."
+  },
+  "gateFakeLocationTitle": "Fake location",
+  "@gateFakeLocationTitle": {
+    "description": "When a fake GPS app is found."
+  },
+  "othersTitle": "Mark attendance",
+  "@othersTitle": {
+    "description": "The screen that marks someone else's attendance."
+  },
+  "othersSubtitle": "For someone on your team",
+  "@othersSubtitle": {
+    "description": "Under its title."
+  },
+  "othersEmployeeIdHint": "e.g. 100234",
+  "@othersEmployeeIdHint": {
+    "description": "The employee ID field's hint."
+  },
+  "othersEmployeeIdRequired": "Enter an employee ID",
+  "@othersEmployeeIdRequired": {
+    "description": "When the employee ID is empty."
+  },
+  "faceCaptureFailedTitle": "Face capture failed",
+  "@faceCaptureFailedTitle": {
+    "description": "When the face camera fails."
+  },
+  "livenessFailedTitle": "Liveness check failed",
+  "@livenessFailedTitle": {
+    "description": "When the face isn't a live person."
+  },
+  "faceIncompleteTitle": "Face capture incomplete",
+  "@faceIncompleteTitle": {
+    "description": "When too few photos were taken."
+  },
+  "faceIncompleteMessage": "Not enough clear photos were taken. Try again in good light.",
+  "@faceIncompleteMessage": {
+    "description": "Its message."
+  },
+  "faceRegisteredTitle": "Face registered",
+  "@faceRegisteredTitle": {
+    "description": "When a face is registered."
+  },
+  "faceRegisteredMessage": "The face is registered.",
+  "@faceRegisteredMessage": {
+    "description": "Its message when the server says nothing."
+  },
+  "registrationFailedTitle": "Registration failed",
+  "@registrationFailedTitle": {
+    "description": "When registering a face fails."
+  },
+  "verificationFailedTitle": "Verification failed",
+  "@verificationFailedTitle": {
+    "description": "When the face doesn't match."
+  },
+  "locationErrorTitle": "Couldn't get the location",
+  "@locationErrorTitle": {
+    "description": "When the location fails."
+  },
+  "locationErrorMessage": "Turn on location and allow the app to use it, then try again.",
+  "@locationErrorMessage": {
+    "description": "Its message."
+  },
+  "markFailedTitle": "Something went wrong",
+  "@markFailedTitle": {
+    "description": "When marking fails unexpectedly."
+  },
+  "markFailedMessage": "Couldn't mark the attendance. Try again.",
+  "@markFailedMessage": {
+    "description": "Its message."
+  },
+  "memberSapId": "SAP ID",
+  "@memberSapId": {
+    "description": "Someone's SAP number."
+  },
+  "memberRank": "Rank",
+  "@memberRank": {
+    "description": "Someone's pay scale."
+  },
+  "memberSubSection": "Sub-section",
+  "@memberSubSection": {
+    "description": "Someone's sub-section."
+  },
+  "memberRole": "Role",
+  "@memberRole": {
+    "description": "Someone's role in the app."
+  },
+  "memberJoined": "Joined",
+  "@memberJoined": {
+    "description": "When someone joined."
+  },
+  "memberReportsTo": "Reports to",
+  "@memberReportsTo": {
+    "description": "Who someone reports to."
+  },
+  "memberEmployment": "Employment",
+  "@memberEmployment": {
+    "description": "Whether someone is still employed."
+  },
+  "teamMonthChanges": "{joined} joined · {left} left this month",
+  "@teamMonthChanges": {
+    "description": "Under the team board.",
+    "placeholders": {
+      "joined": {
+        "type": "int"
+      },
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "teamRestDay": "{count} on a rest day",
+  "@teamRestDay": {
+    "description": "Under the team board, when some have the day off.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapRecenter": "Centre on me",
+  "@mapRecenter": {
+    "description": "The map tile that centres on the user."
+  },
+  "mapUpdatedNow": "Updated just now",
+  "@mapUpdatedNow": {
+    "description": "When the location was found moments ago."
+  },
+  "mapUpdatedMinutes": "Updated {minutes} min ago",
+  "@mapUpdatedMinutes": {
+    "description": "When the location was found minutes ago.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mapYouAreAt": "You're at {office}",
+  "@mapYouAreAt": {
+    "description": "The panel title inside an office's area.",
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "mapOtherOffice": "Attendance is marked where you are. To mark it at {office}, go there first.",
+  "@mapOtherOffice": {
+    "description": "When another office is picked on the map.",
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "mapOutsideMessage": "Go {distance} to {office} to mark attendance. Follow the line.",
+  "@mapOutsideMessage": {
+    "description": "When outside every area.",
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      },
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "mapLoadingMessage": "Getting the offices you may mark attendance at.",
+  "@mapLoadingMessage": {
+    "description": "While the offices load."
+  },
+  "mapFailedTitle": "Couldn't load your work area",
+  "@mapFailedTitle": {
+    "description": "When the offices fail to load."
+  },
+  "mapLocationOffMessage": "Turn on location to see where you are and mark attendance.",
+  "@mapLocationOffMessage": {
+    "description": "When location is off."
+  },
+  "mapDeniedTitle": "Location permission needed",
+  "@mapDeniedTitle": {
+    "description": "When location isn't allowed."
+  },
+  "mapDeniedMessage": "Allow location so the app can check you are at work.",
+  "@mapDeniedMessage": {
+    "description": "Its message."
+  },
+  "mapFindingMessage": "Stay where the sky is visible for a better fix.",
+  "@mapFindingMessage": {
+    "description": "While the location is found."
+  },
+  "mapFromOffice": "from office",
+  "@mapFromOffice": {
+    "description": "Under the distance to the office."
+  },
+  "mapAccuracy": "GPS accuracy",
+  "@mapAccuracy": {
+    "description": "Under the location's accuracy."
+  },
+  "mapRange": "allowed range",
+  "@mapRange": {
+    "description": "Under the area's radius."
+  },
+  "mapAccuracyValue": "±{meters} m",
+  "@mapAccuracyValue": {
+    "description": "How far off the location may be.",
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
+  "mapTurnOnLocation": "Turn on location",
+  "@mapTurnOnLocation": {
+    "description": "Turns location on."
+  },
+  "mapAllowLocation": "Allow location",
+  "@mapAllowLocation": {
+    "description": "Asks for location."
+  },
+  "mapMarkInstead": "Mark at {office} instead",
+  "@mapMarkInstead": {
+    "description": "Goes back to the office the user is in.",
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "mapContinueAt": "Continue at {office}",
+  "@mapContinueAt": {
+    "description": "Goes on to check in at the office.",
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "mapMarkHere": "Mark attendance here",
+  "@mapMarkHere": {
+    "description": "Marks attendance at the office the user is in."
+  },
+  "mapMarkInside": "Mark attendance inside the area",
+  "@mapMarkInside": {
+    "description": "The disabled button outside every area."
+  },
+  "mapYouAreHere": "You are here",
+  "@mapYouAreHere": {
+    "description": "On the chip of the office the user is in."
+  },
+  "mapAway": "{distance} away",
+  "@mapAway": {
+    "description": "On an office chip.",
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "mapAreaSize": "{meters} m area",
+  "@mapAreaSize": {
+    "description": "On an office chip before the location is known.",
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSectionAppearance": "Appearance",
+  "@profileSectionAppearance": {
+    "description": "The profile section for light and dark."
+  },
+  "appearanceLight": "Light",
+  "@appearanceLight": {
+    "description": "The light look."
+  },
+  "appearanceDark": "Dark",
+  "@appearanceDark": {
+    "description": "The dark look."
+  },
+  "appearanceSystem": "System",
+  "@appearanceSystem": {
+    "description": "The look the phone is set to."
+  },
+  "registerSubtitle": "Two quick steps, then you can check in",
+  "@registerSubtitle": {
+    "description": "Under the setup screen's title."
+  },
+  "registerOthersSubtitle": "Two quick steps for employee {id}",
+  "@registerOthersSubtitle": {
+    "description": "Under the title when registering someone else.",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "registerFaceTitle": "Register the face",
+  "@registerFaceTitle": {
+    "description": "Step 1's title."
+  },
+  "registerFaceDetail": "The camera takes a few photos of the face. Hold the phone at eye level, in good light.",
+  "@registerFaceDetail": {
+    "description": "Step 1's explanation."
+  },
+  "registerFaceAction": "Start face scan",
+  "@registerFaceAction": {
+    "description": "Opens the face camera."
+  },
+  "registerFaceDone": "Face photos taken",
+  "@registerFaceDone": {
+    "description": "Step 1 once done."
+  },
+  "registerCnicTitle": "Upload the CNIC",
+  "@registerCnicTitle": {
+    "description": "Step 2's title."
+  },
+  "registerCnicDetail": "Photograph the front of the CNIC, fitted inside the frame.",
+  "@registerCnicDetail": {
+    "description": "Step 2's explanation."
+  },
+  "registerCnicDone": "CNIC photo taken",
+  "@registerCnicDone": {
+    "description": "Step 2 once done."
+  },
+  "registerCnicLocked": "Finish step 1 first",
+  "@registerCnicLocked": {
+    "description": "Under step 2 before step 1 is done."
+  },
+  "registerStep": "Step {number}",
+  "@registerStep": {
+    "description": "A step's number, for screen readers.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "registerAttachmentsFailed": "The CNIC and face photos couldn't be sent, so nothing was registered. {reason}",
+  "@registerAttachmentsFailed": {
+    "description": "Under face check-in setup when the CNIC and face photos fail to upload; reason is the server's or network's message.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "registerProceed": "Proceed",
+  "@registerProceed": {
+    "description": "Registers once both steps are done."
+  },
+  "registerProceeding": "Registering…",
+  "@registerProceeding": {
+    "description": "While registering."
+  },
+  "registerPrivacy": "The photos are used only to recognise this person at check-in.",
+  "@registerPrivacy": {
+    "description": "A note under the steps."
+  },
+  "faceTitleVerify": "Face check-in",
+  "@faceTitleVerify": {
+    "description": "The face camera's title when checking in or out."
+  },
+  "faceTitleRegister": "Register the face",
+  "@faceTitleRegister": {
+    "description": "The face camera's title when registering."
+  },
+  "faceStepLocation": "Location",
+  "@faceStepLocation": {
+    "description": "The first step of a check-in."
+  },
+  "faceTipTitle": "Hold the phone at eye level",
+  "@faceTipTitle": {
+    "description": "The tip under the face camera."
+  },
+  "faceTipDetail": "Straight in front of your face, not from below the chin",
+  "@faceTipDetail": {
+    "description": "Its detail."
+  },
+  "faceFooter": "It takes the photo by itself when you hold still.",
+  "@faceFooter": {
+    "description": "Under the face camera."
+  },
+  "faceCameraFailed": "Couldn't open the camera.",
+  "@faceCameraFailed": {
+    "description": "When the face camera fails."
+  },
+  "faceCheckArea": "At your work area",
+  "@faceCheckArea": {
+    "description": "A check passed before the camera opened."
+  },
+  "faceCheckLive": "Live person",
+  "@faceCheckLive": {
+    "description": "The liveness check, while the photos are taken."
+  },
+  "faceCheckDevice": "Device secure",
+  "@faceCheckDevice": {
+    "description": "A check passed before the camera opened."
+  },
+  "faceHintLook": "Look at the camera",
+  "@faceHintLook": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintStraight": "Look straight at the camera",
+  "@faceHintStraight": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintEyeLevel": "Hold the phone at eye level",
+  "@faceHintEyeLevel": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintNoFace": "Put your face inside the oval",
+  "@faceHintNoFace": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintMultiple": "Only one person in the frame",
+  "@faceHintMultiple": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintEyes": "Open your eyes and look at the camera",
+  "@faceHintEyes": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintCovered": "Uncover your face",
+  "@faceHintCovered": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintFar": "Move closer",
+  "@faceHintFar": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintClose": "Move back a little",
+  "@faceHintClose": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintSteady": "Hold the phone steady",
+  "@faceHintSteady": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintDark": "Move to better light",
+  "@faceHintDark": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintBright": "Too much light on your face",
+  "@faceHintBright": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintObject": "Keep objects away from your face",
+  "@faceHintObject": {
+    "description": "What the face camera asks for."
+  },
+  "faceHintCapturing": "Face found · hold still",
+  "@faceHintCapturing": {
+    "description": "What the face camera asks for."
+  },
+  "teamGroupIn": "At work",
+  "@teamGroupIn": {
+    "description": "The group of people at work, in the team sheet."
+  },
+  "teamGroupLate": "Came late",
+  "@teamGroupLate": {
+    "description": "The group of people who came late."
+  },
+  "teamGroupLeave": "On leave",
+  "@teamGroupLeave": {
+    "description": "The group of people on leave."
+  },
+  "teamGroupAbsent": "Absent",
+  "@teamGroupAbsent": {
+    "description": "The group of people absent."
+  },
+  "teamGroupOther": "Not marked",
+  "@teamGroupOther": {
+    "description": "The group of people with nothing marked."
+  },
+  "teamGroupCount": "{group} · {count}",
+  "@teamGroupCount": {
+    "description": "A group's heading with how many are in it.",
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamSheetSubtitle": "{people} · updated {time}",
+  "@teamSheetSubtitle": {
+    "description": "Under the team sheet's title.",
+    "placeholders": {
+      "people": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "actionClear": "Clear",
+  "@actionClear": {
+    "description": "Clears a search."
+  },
+  "teamMarkTitle": "Mark your team's attendance",
+  "@teamMarkTitle": {
+    "description": "The card on the team page that opens marking."
+  },
+  "teamMarkSubtitle": "With their face, or register a new face and CNIC",
+  "@teamMarkSubtitle": {
+    "description": "Under it."
+  },
+  "teamViewAll": "View all {count} members",
+  "@teamViewAll": {
+    "description": "The button under the team list.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teamInToday": "{percent}%",
+  "@teamInToday": {
+    "description": "How much of the team is in, inside the ring.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "teamInTodayLabel": "in today",
+  "@teamInTodayLabel": {
+    "description": "Under the share of the team in."
+  },
+  "teamInTodaySemantics": "{percent}% of the team is in today",
+  "@teamInTodaySemantics": {
+    "description": "Read by screen readers for the ring.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "logoutSubtitle": "You'll sign in again with your employee ID and password",
+  "@logoutSubtitle": {
+    "description": "Under the log out button."
+  },
+  "poweredByLead": "Designed & Developed by",
+  "@poweredByLead": {
+    "description": "Before the company's name in the credit."
+  },
+  "copyrightNotice": "© {year} All rights reserved",
+  "@copyrightNotice": {
+    "description": "Under the credit line; year is this year.",
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "poweredByName": "One Network",
+  "@poweredByName": {
+    "description": "The company that built the app."
+  },
+  "leaveLeftShort": "left",
+  "@leaveLeftShort": {
+    "description": "Under the days left in a leave ring."
+  },
+  "leaveUsed": "{days} used",
+  "@leaveUsed": {
+    "description": "The days of a leave type taken.",
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "attendanceRecords": "Records",
+  "@attendanceRecords": {
+    "description": "The list of days under the calendar."
+  },
+  "attendanceViewAll": "View all {count}",
+  "@attendanceViewAll": {
+    "description": "Shows every record.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "attendanceShowLess": "Show less",
+  "@attendanceShowLess": {
+    "description": "Shows only the latest records."
+  },
+  "attendanceNoRecords": "No records here",
+  "@attendanceNoRecords": {
+    "description": "When no day matches."
+  },
+  "othersTeam": "Your team",
+  "@othersTeam": {
+    "description": "Heading over the team to pick from."
+  },
+  "othersTeamCount": "Your team · {count}",
+  "@othersTeamCount": {
+    "description": "Heading over the team, with its size.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "othersTeamSearch": "Search by name, ID or designation",
+  "@othersTeamSearch": {
+    "description": "Search box over the team."
+  },
+  "othersTeamEmpty": "No one on your team yet",
+  "@othersTeamEmpty": {
+    "description": "When the team is empty."
+  },
+  "othersTeamNoMatch": "No one matches",
+  "@othersTeamNoMatch": {
+    "description": "When the search finds no one."
+  },
+  "othersTeamFailed": "Couldn't load your team.",
+  "@othersTeamFailed": {
+    "description": "When the team could not be loaded."
+  },
+  "othersFirstTimeNote": "Pick someone below or type their ID. If their face isn't registered yet, you'll register it with their CNIC first.",
+  "@othersFirstTimeNote": {
+    "description": "Under the mark key."
+  },
+  "inspSubtitle": "Digital Inspection of Assets",
+  "@inspSubtitle": {
+    "description": "Under the e Inspection title."
+  },
+  "inspFootplate": "Footplate",
+  "@inspFootplate": {
+    "description": "A kind of inspection."
+  },
+  "inspStation": "Station",
+  "@inspStation": {
+    "description": "A kind of inspection."
+  },
+  "inspMotorTrolley": "Motor Trolley",
+  "@inspMotorTrolley": {
+    "description": "A kind of inspection."
+  },
+  "inspLocomotive": "Locomotive",
+  "@inspLocomotive": {
+    "description": "A kind of inspection."
+  },
+  "inspElectrical": "Electrical (RTL)",
+  "@inspElectrical": {
+    "description": "A kind of inspection."
+  },
+  "inspFootplateAbout": "Day and night, from the cab",
+  "@inspFootplateAbout": {
+    "description": "What a footplate inspection covers."
+  },
+  "inspStationAbout": "Premises, signals and facilities",
+  "@inspStationAbout": {
+    "description": "What a station inspection covers."
+  },
+  "inspMotorTrolleyAbout": "Track patrol by trolley",
+  "@inspMotorTrolleyAbout": {
+    "description": "What a motor trolley inspection covers."
+  },
+  "inspLocomotiveAbout": "Condition of the loco",
+  "@inspLocomotiveAbout": {
+    "description": "What a locomotive inspection covers."
+  },
+  "inspElectricalAbout": "Electrical assets",
+  "@inspElectricalAbout": {
+    "description": "What an electrical inspection covers."
+  },
+  "inspPlan": "{month} plan",
+  "@inspPlan": {
+    "description": "The month plan card title, like \"October plan\".",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "inspDue": "Due {date}",
+  "@inspDue": {
+    "description": "When the month plan is due.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "inspDone": "done",
+  "@inspDone": {
+    "description": "Under the done count on the plan ring."
+  },
+  "inspDoneOf": "{done} of {total} done",
+  "@inspDoneOf": {
+    "description": "How many inspections of a kind are done.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inspCompleted": "Completed",
+  "@inspCompleted": {
+    "description": "Inspections done."
+  },
+  "inspPending": "Pending",
+  "@inspPending": {
+    "description": "Inspections left this month."
+  },
+  "inspOverdue": "Overdue",
+  "@inspOverdue": {
+    "description": "Inspections left from earlier months."
+  },
+  "inspExtra": "Extra",
+  "@inspExtra": {
+    "description": "Inspections beyond the plan."
+  },
+  "inspContinue": "Continue where you left off",
+  "@inspContinue": {
+    "description": "Heading over the drafts."
+  },
+  "inspStart": "Start an inspection",
+  "@inspStart": {
+    "description": "Heading over the kinds of inspection."
+  },
+  "inspDrafts": "Drafts",
+  "@inspDrafts": {
+    "description": "The key that scrolls to the drafts."
+  },
+  "inspDraft": "Draft",
+  "@inspDraft": {
+    "description": "A draft without a name."
+  },
+  "inspSaved": "Saved {when}",
+  "@inspSaved": {
+    "description": "When a draft was saved.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "inspResume": "Resume",
+  "@inspResume": {
+    "description": "Opens a draft."
+  },
+  "inspDeleteDraft": "Delete draft",
+  "@inspDeleteDraft": {
+    "description": "Deletes a draft."
+  },
+  "inspDeleteDraftTitle": "Delete this draft?",
+  "@inspDeleteDraftTitle": {
+    "description": "Confirms deleting a draft."
+  },
+  "inspDeleteDraftMessage": "What was filled in so far will be lost.",
+  "@inspDeleteDraftMessage": {
+    "description": "Says what deleting a draft does."
+  },
+  "pramsSubtitle": "Accident Management System",
+  "@pramsSubtitle": {
+    "description": "Under the PRAMS title."
+  },
+  "pramsSearch": "Search train, location or status",
+  "@pramsSearch": {
+    "description": "Search box over the cases."
+  },
+  "pramsAll": "All",
+  "@pramsAll": {
+    "description": "Shows cases of every severity."
+  },
+  "pramsCritical": "Critical",
+  "@pramsCritical": {
+    "description": "A severity."
+  },
+  "pramsModerate": "Moderate",
+  "@pramsModerate": {
+    "description": "A severity."
+  },
+  "pramsMinor": "Minor",
+  "@pramsMinor": {
+    "description": "A severity."
+  },
+  "pramsLoadFailed": "Couldn't load the cases",
+  "@pramsLoadFailed": {
+    "description": "When the cases did not load."
+  },
+  "pramsNoCases": "No accidents reported",
+  "@pramsNoCases": {
+    "description": "When there are no cases."
+  },
+  "pramsNoCasesMessage": "Cases you report show here with their progress.",
+  "@pramsNoCasesMessage": {
+    "description": "Under no cases."
+  },
+  "pramsNoMatch": "Nothing matches",
+  "@pramsNoMatch": {
+    "description": "When the search finds nothing."
+  },
+  "pramsNoMatchMessage": "Try another train, place or severity.",
+  "@pramsNoMatchMessage": {
+    "description": "Under nothing matches."
+  },
+  "pramsReportTitle": "Report an accident",
+  "@pramsReportTitle": {
+    "description": "The report card title."
+  },
+  "pramsReportSubtitle": "Location and details go straight to control",
+  "@pramsReportSubtitle": {
+    "description": "The report card line."
+  },
+  "pramsReportAction": "Report accident",
+  "@pramsReportAction": {
+    "description": "Opens the report form."
+  },
+  "pramsThisMonth": "This month",
+  "@pramsThisMonth": {
+    "description": "Over the month counts."
+  },
+  "pramsOpen": "Open",
+  "@pramsOpen": {
+    "description": "Cases not yet acted on."
+  },
+  "pramsInvestigating": "Investigating",
+  "@pramsInvestigating": {
+    "description": "Cases being looked into."
+  },
+  "pramsClosed": "Closed",
+  "@pramsClosed": {
+    "description": "Cases closed."
+  },
+  "pramsWeeks": "Cases per week: {counts}",
+  "@pramsWeeks": {
+    "description": "Screen reader text for the week bars.",
+    "placeholders": {
+      "counts": {
+        "type": "String"
+      }
+    }
+  },
+  "pramsUpdated": "Updated {when}",
+  "@pramsUpdated": {
+    "description": "When a case was updated.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "pramsKm": "KM {km}",
+  "@pramsKm": {
+    "description": "The kilometre of a case.",
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "pramsStageReported": "Reported",
+  "@pramsStageReported": {
+    "description": "A case stage."
+  },
+  "pramsStageAcknowledged": "Acknowledged",
+  "@pramsStageAcknowledged": {
+    "description": "A case stage."
+  },
+  "pramsStageRelief": "Relief",
+  "@pramsStageRelief": {
+    "description": "A case stage."
+  },
+  "pramsStageCleared": "Cleared",
+  "@pramsStageCleared": {
+    "description": "A case stage."
+  },
+  "pramsStageOf": "Step {step} of {total}: {name}",
+  "@pramsStageOf": {
+    "description": "Screen reader text for a case stage.",
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reportTitle": "Report accident",
+  "@reportTitle": {
+    "description": "The report form title."
+  },
+  "reportSubtitle": "Goes to control the moment you submit",
+  "@reportSubtitle": {
+    "description": "Under the report form title."
+  },
+  "reportStepTrain": "Train",
+  "@reportStepTrain": {
+    "description": "The first step of a report."
+  },
+  "reportStepWhat": "What happened",
+  "@reportStepWhat": {
+    "description": "The second step of a report."
+  },
+  "reportStepPhotos": "Photos",
+  "@reportStepPhotos": {
+    "description": "The third step of a report."
+  },
+  "reportLocating": "Finding your location",
+  "@reportLocating": {
+    "description": "While the location is found."
+  },
+  "reportLocatingDetail": "It goes with the report",
+  "@reportLocatingDetail": {
+    "description": "Under finding your location."
+  },
+  "reportLocated": "Location captured",
+  "@reportLocated": {
+    "description": "Once the location is found."
+  },
+  "reportLocatedDetail": "{lat}, {lon} · accurate to {metres} m",
+  "@reportLocatedDetail": {
+    "description": "Where the reporter is.",
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lon": {
+        "type": "String"
+      },
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "reportNotLocated": "Couldn't find your location",
+  "@reportNotLocated": {
+    "description": "When the location is not found."
+  },
+  "reportNotLocatedDetail": "Turn on location and try again",
+  "@reportNotLocatedDetail": {
+    "description": "Under the location not found."
+  },
+  "reportAuto": "Auto",
+  "@reportAuto": {
+    "description": "Says the location was taken on its own."
+  },
+  "reportTrainAndPlace": "Train and place",
+  "@reportTrainAndPlace": {
+    "description": "A section of the report."
+  },
+  "reportTrain": "Train",
+  "@reportTrain": {
+    "description": "The train field."
+  },
+  "reportPickTrainHint": "Select the train",
+  "@reportPickTrainHint": {
+    "description": "The train field before one is picked."
+  },
+  "reportPickTrain": "Select the train",
+  "@reportPickTrain": {
+    "description": "The train sheet title."
+  },
+  "reportPickTrainSubtitle": "Trains running near your location",
+  "@reportPickTrainSubtitle": {
+    "description": "Under the train sheet title."
+  },
+  "reportSearchTrains": "Train name or number",
+  "@reportSearchTrains": {
+    "description": "Search box in the train sheet."
+  },
+  "reportAway": "{km} km away",
+  "@reportAway": {
+    "description": "How far a train is.",
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "reportUseTrain": "Use {train}",
+  "@reportUseTrain": {
+    "description": "Picks the train.",
+    "placeholders": {
+      "train": {
+        "type": "String"
+      }
+    }
+  },
+  "reportNoTrains": "No train matches",
+  "@reportNoTrains": {
+    "description": "When no train is found."
+  },
+  "reportLocomotive": "Locomotive",
+  "@reportLocomotive": {
+    "description": "The locomotive field."
+  },
+  "reportKilometre": "Kilometre",
+  "@reportKilometre": {
+    "description": "The kilometre field."
+  },
+  "reportLastStation": "Last station",
+  "@reportLastStation": {
+    "description": "The last station field."
+  },
+  "reportFromTrain": "From train",
+  "@reportFromTrain": {
+    "description": "Says a value comes from the train."
+  },
+  "reportDivision": "Division",
+  "@reportDivision": {
+    "description": "The division field."
+  },
+  "reportSection": "Section",
+  "@reportSection": {
+    "description": "The section field."
+  },
+  "reportBlockSection": "Block section",
+  "@reportBlockSection": {
+    "description": "The block section field."
+  },
+  "reportWhen": "Date and time",
+  "@reportWhen": {
+    "description": "The date and time field."
+  },
+  "reportPick": "Select",
+  "@reportPick": {
+    "description": "A field before a value is picked."
+  },
+  "reportWhatHappened": "What happened",
+  "@reportWhatHappened": {
+    "description": "A section of the report."
+  },
+  "reportSeverityFromType": "set from the type",
+  "@reportSeverityFromType": {
+    "description": "Says the severity comes from the kind of accident."
+  },
+  "reportConditions": "Conditions",
+  "@reportConditions": {
+    "description": "Heading over the conditions."
+  },
+  "reportDerailed": "Train derailed",
+  "@reportDerailed": {
+    "description": "A condition."
+  },
+  "reportDerailedAbout": "One or more vehicles off the track",
+  "@reportDerailedAbout": {
+    "description": "What the condition means."
+  },
+  "reportFire": "Fire involved",
+  "@reportFire": {
+    "description": "A condition."
+  },
+  "reportFireAbout": "Fire or explosion at the site",
+  "@reportFireAbout": {
+    "description": "What the condition means."
+  },
+  "reportInjured": "People injured",
+  "@reportInjured": {
+    "description": "A condition."
+  },
+  "reportInjuredAbout": "Passengers or staff hurt",
+  "@reportInjuredAbout": {
+    "description": "What the condition means."
+  },
+  "reportDangerousGoods": "Dangerous goods",
+  "@reportDangerousGoods": {
+    "description": "A condition."
+  },
+  "reportDangerousGoodsAbout": "Hazardous cargo on board",
+  "@reportDangerousGoodsAbout": {
+    "description": "What the condition means."
+  },
+  "reportFewer": "Fewer",
+  "@reportFewer": {
+    "description": "Lowers the count."
+  },
+  "reportMore": "More",
+  "@reportMore": {
+    "description": "Raises the count."
+  },
+  "reportRemarks": "Remarks",
+  "@reportRemarks": {
+    "description": "The remarks field."
+  },
+  "reportPhotos": "Photos",
+  "@reportPhotos": {
+    "description": "Heading over the photos."
+  },
+  "reportPhotoN": "Photo {n}",
+  "@reportPhotoN": {
+    "description": "A photo, for screen readers.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "reportAddPhoto": "Add photo",
+  "@reportAddPhoto": {
+    "description": "Adds a photo."
+  },
+  "reportTakePhoto": "Take a photo",
+  "@reportTakePhoto": {
+    "description": "Opens the camera."
+  },
+  "reportChoosePhotos": "Choose from gallery",
+  "@reportChoosePhotos": {
+    "description": "Opens the gallery."
+  },
+  "reportRemovePhoto": "Remove this photo?",
+  "@reportRemovePhoto": {
+    "description": "Confirms removing a photo."
+  },
+  "reportRemove": "Remove",
+  "@reportRemove": {
+    "description": "Removes a photo."
+  },
+  "reportReset": "Reset",
+  "@reportReset": {
+    "description": "Clears the form."
+  },
+  "reportSubmit": "Submit report",
+  "@reportSubmit": {
+    "description": "Sends the report."
+  },
+  "reportMissingTitle": "A little more first",
+  "@reportMissingTitle": {
+    "description": "When the report is not complete."
+  },
+  "reportMissingMessage": "Select the train, what happened, and the date and time.",
+  "@reportMissingMessage": {
+    "description": "What the report still needs."
+  },
+  "reportFailedTitle": "Couldn't send the report",
+  "@reportFailedTitle": {
+    "description": "When the report did not send."
+  },
+  "reportFailedMessage": "Please try again.",
+  "@reportFailedMessage": {
+    "description": "When the report did not send."
+  },
+  "verificationInProgressTitle": "Verification In Progress",
+  "@verificationInProgressTitle": {
+    "description": "Title when face/CNIC verification is pending admin approval."
+  },
+  "verificationInProgressMessage": "Your data has been submitted. Please wait for admin approval.",
+  "@verificationInProgressMessage": {
+    "description": "Message when face/CNIC verification is pending admin approval."
+  },
+  "shiftRegisterFace": "Register face",
+  "@shiftRegisterFace": {
+    "description": "The shift key before the face is registered."
+  },
+  "loading": "Loading",
+  "@loading": {
+    "description": "What a screen reader says for the loader."
+  },
+  "locRefresh": "Refresh location",
+  "@locRefresh": {
+    "description": "Finds the location afresh."
+  },
+  "locFindingShort": "Finding you…",
+  "@locFindingShort": {
+    "description": "The refresh key while it works."
+  },
+  "locFinding": "Finding your exact location…",
+  "@locFinding": {
+    "description": "While the location is found again."
+  },
+  "locFindingDetail": "Stay where you are for a moment.",
+  "@locFindingDetail": {
+    "description": "While the location is found again."
+  },
+  "locFailed": "Couldn't find your location",
+  "@locFailed": {
+    "description": "When finding the location failed."
+  },
+  "locFailedDetail": "Move near a window or outside, then try again.",
+  "@locFailedDetail": {
+    "description": "What to do when finding the location failed."
+  },
+  "locUpdated": "Location updated just now",
+  "@locUpdated": {
+    "description": "When the location was found again."
+  },
+  "locUpdatedDetail": "This is where you are now.",
+  "@locUpdatedDetail": {
+    "description": "When the location was found again."
+  },
+  "locOutside": "Not where you are?",
+  "@locOutside": {
+    "description": "When the employee appears outside the office."
+  },
+  "locOutsideDetail": "If you're inside your office, tap Refresh location to update where you are.",
+  "@locOutsideDetail": {
+    "description": "What to do when shown outside."
+  },
+  "locStale": "{minutes, plural, =1{Location from 1 min ago} other{Location from {minutes} min ago}}",
+  "@locStale": {
+    "description": "When the location is old.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "locStaleDetail": "Tap Refresh location so it shows where you are now.",
+  "@locStaleDetail": {
+    "description": "What to do when the location is old."
+  },
+  "locRough": "Location is rough (±{metres} m)",
+  "@locRough": {
+    "description": "When the location is not exact.",
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "locRoughDetail": "Tap Refresh location, or move near a window or outside.",
+  "@locRoughDetail": {
+    "description": "What to do when the location is rough."
+  },
+  "profilePhotoTitle": "Profile photo",
+  "@profilePhotoTitle": {
+    "description": "Title of the sheet that changes the user's profile photo."
+  },
+  "profilePhotoSubtitle": "Kept on this phone only",
+  "@profilePhotoSubtitle": {
+    "description": "Under the profile photo sheet's title: the photo isn't sent anywhere."
+  },
+  "profilePhotoChange": "Change photo",
+  "@profilePhotoChange": {
+    "description": "Opens the sheet that changes the profile photo."
+  },
+  "profilePhotoCamera": "Take a photo",
+  "@profilePhotoCamera": {
+    "description": "Takes a new profile photo with the camera."
+  },
+  "profilePhotoGallery": "Choose from gallery",
+  "@profilePhotoGallery": {
+    "description": "Picks a profile photo from the phone's photos."
+  },
+  "profilePhotoAvatar": "Choose an avatar",
+  "@profilePhotoAvatar": {
+    "description": "Picks an emoji to show in place of a photo."
+  },
+  "profilePhotoRemove": "Remove photo",
+  "@profilePhotoRemove": {
+    "description": "Goes back to the user's initials."
+  },
+  "profilePhotoFailed": "Couldn't use that photo. Try another.",
+  "@profilePhotoFailed": {
+    "description": "When a picked photo couldn't be saved."
+  },
+  "emojiPickerTitle": "Choose an avatar",
+  "@emojiPickerTitle": {
+    "description": "Title of the emoji picker."
+  },
+  "emojiGroupSmileys": "Smileys & people",
+  "@emojiGroupSmileys": {
+    "description": "An emoji group's tab, for screen readers."
+  },
+  "emojiGroupAnimals": "Animals & nature",
+  "@emojiGroupAnimals": {
+    "description": "An emoji group's tab, for screen readers."
+  },
+  "emojiGroupFood": "Food & drink",
+  "@emojiGroupFood": {
+    "description": "An emoji group's tab, for screen readers."
+  },
+  "emojiGroupActivities": "Activity",
+  "@emojiGroupActivities": {
+    "description": "An emoji group's tab, for screen readers."
+  },
+  "emojiGroupTravel": "Travel & places",
+  "@emojiGroupTravel": {
+    "description": "An emoji group's tab, for screen readers."
+  },
+  "emojiGroupObjects": "Objects",
+  "@emojiGroupObjects": {
+    "description": "An emoji group's tab, for screen readers."
+  },
+  "emojiGroupSymbols": "Symbols",
+  "@emojiGroupSymbols": {
+    "description": "An emoji group's tab, for screen readers."
+  },
+  "emojiGroupFlags": "Flags",
+  "@emojiGroupFlags": {
+    "description": "An emoji group's tab, for screen readers."
+  },
+  "profileSectionText": "Text",
+  "@profileSectionText": {
+    "description": "Profile section heading for text size and weight."
+  },
+  "textSizeTitle": "Text size",
+  "@textSizeTitle": {
+    "description": "Names the text size slider."
+  },
+  "textSizeSmall": "Small",
+  "@textSizeSmall": {
+    "description": "A text size."
+  },
+  "textSizeDefault": "Default",
+  "@textSizeDefault": {
+    "description": "A text size: the phone's own."
+  },
+  "textSizeLarge": "Large",
+  "@textSizeLarge": {
+    "description": "A text size."
+  },
+  "textSizeLargest": "Largest",
+  "@textSizeLargest": {
+    "description": "A text size."
+  },
+  "textPreviewMessage": "Assalam-o-Alaikum! This is how text will look across PROMISE.",
+  "@textPreviewMessage": {
+    "description": "Sample message in the text size preview."
+  },
+  "textPreviewTime": "9:41",
+  "@textPreviewTime": {
+    "description": "The time on the sample message in the text size preview."
+  },
+  "textBold": "Bold text",
+  "@textBold": {
+    "description": "Switch that makes all text bold."
+  },
+  "textBoldDetail": "Heavier letters that are easier to read",
+  "@textBoldDetail": {
+    "description": "Under the bold text switch."
+  },
+  "textSizeLarger": "Larger",
+  "@textSizeLarger": {
+    "description": "A text size."
+  },
+  "textPreviewReply": "Walaikum Assalam! It's easy to read now.",
+  "@textPreviewReply": {
+    "description": "The reply in the text size preview."
+  },
+  "emojiUse": "Use this avatar",
+  "@emojiUse": {
+    "description": "Keeps the emoji picked as the avatar."
+  },
+  "emojiBackground": "Background",
+  "@emojiBackground": {
+    "description": "Over the colours an emoji avatar can sit on."
+  },
+  "emojiPickPrompt": "Pick an emoji below",
+  "@emojiPickPrompt": {
+    "description": "Under the avatar preview before an emoji is picked."
+  },
+  "avatarTintJade": "Jade",
+  "@avatarTintJade": {
+    "description": "A background colour for an emoji avatar, for screen readers."
+  },
+  "avatarTintGold": "Gold",
+  "@avatarTintGold": {
+    "description": "A background colour for an emoji avatar, for screen readers."
+  },
+  "avatarTintSky": "Sky",
+  "@avatarTintSky": {
+    "description": "A background colour for an emoji avatar, for screen readers."
+  },
+  "avatarTintRose": "Rose",
+  "@avatarTintRose": {
+    "description": "A background colour for an emoji avatar, for screen readers."
+  },
+  "avatarTintSand": "Sand",
+  "@avatarTintSand": {
+    "description": "A background colour for an emoji avatar, for screen readers."
+  },
+  "profileAppVersion": "App Version",
+  "@profileAppVersion": {
+    "description": "Profile row showing the installed version."
+  },
+  "messageSuccessTitle": "Done",
+  "@messageSuccessTitle": {
+    "description": "Title of a message saying something worked."
+  },
+  "messageErrorTitle": "Something went wrong",
+  "@messageErrorTitle": {
+    "description": "Title of a message saying something failed."
+  },
+  "messageWarningTitle": "Please check",
+  "@messageWarningTitle": {
+    "description": "Title of a message asking the user to check something."
+  },
+  "messageInfoTitle": "Good to know",
+  "@messageInfoTitle": {
+    "description": "Title of a plain informational message."
+  },
+  "actionRefresh": "Refresh",
+  "@actionRefresh": {
+    "description": "Loads something again after it failed."
+  },
+  "teamLoadFailedTitle": "Couldn't load your team",
+  "@teamLoadFailedTitle": {
+    "description": "Dialog title when the team's data failed to load."
+  },
+  "teamLoadFailedMessage": "Check your connection, then refresh to try again.",
+  "@teamLoadFailedMessage": {
+    "description": "Dialog message when the team's data failed to load."
+  },
+  "profileTextDisplay": "Font & Display Size",
+  "@profileTextDisplay": {
+    "description": "Profile row that opens the font and display size page."
+  },
+  "profileTextDisplayDetail": "{display} display · {text} text",
+  "@profileTextDisplayDetail": {
+    "description": "Under the font and display size row: the display size and text size picked.",
+    "placeholders": {
+      "display": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "displaySizeTitle": "Display size",
+  "@displaySizeTitle": {
+    "description": "Section title for how large the whole app is drawn."
+  },
+  "displaySizeStandard": "Default",
+  "@displaySizeStandard": {
+    "description": "Display size that fits the most on screen."
+  },
+  "displaySizeLarge": "Large",
+  "@displaySizeLarge": {
+    "description": "Display size that draws everything larger."
+  },
+  "displaySizeStandardDetail": "More on screen",
+  "@displaySizeStandardDetail": {
+    "description": "Under the default display size."
+  },
+  "displaySizeLargeDetail": "Everything larger",
+  "@displaySizeLargeDetail": {
+    "description": "Under the large display size."
+  },
+  "displaySizeFooter": "Display size makes everything larger, buttons and icons too. Text size changes only the words.",
+  "@displaySizeFooter": {
+    "description": "Note under the display size choices."
+  },
+  "leaveFrom": "From",
+  "@leaveFrom": {
+    "description": "Tile over the leave calendar for the first day of leave."
+  },
+  "leaveTo": "To",
+  "@leaveTo": {
+    "description": "Tile over the leave calendar for the last day of leave."
+  },
+  "leaveNoDay": "Pick a day",
+  "@leaveNoDay": {
+    "description": "On a leave date tile before a day is picked."
+  },
+  "leavePickFirstDay": "Tap the first day of your leave",
+  "@leavePickFirstDay": {
+    "description": "Hint over the leave calendar while the first day is being picked."
+  },
+  "leavePickLastDay": "Now tap the last day (same day for one day)",
+  "@leavePickLastDay": {
+    "description": "Hint over the leave calendar while the last day is being picked."
+  },
+  "dateTimeDone": "Done",
+  "@dateTimeDone": {
+    "description": "Button that confirms a picked date and time."
+  },
+  "dateTimeTime": "Time",
+  "@dateTimeTime": {
+    "description": "Label over the time wheel in the date and time sheet."
+  },
+  "attReportTitle": "Attendance report",
+  "@attReportTitle": {
+    "description": "PDF title for one person's attendance."
+  },
+  "attReportTeamTitle": "Team attendance",
+  "@attReportTeamTitle": {
+    "description": "PDF title of the team summary."
+  },
+  "attReportGenerated": "Generated {when}",
+  "@attReportGenerated": {
+    "description": "PDF: when the report was made.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "attReportGeneratedBy": "Generated by {name}",
+  "@attReportGeneratedBy": {
+    "description": "PDF footer: who downloaded it.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attReportPage": "Page {page} of {total}",
+  "@attReportPage": {
+    "description": "PDF footer page number.",
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "attReportEmployeeId": "Employee ID",
+  "@attReportEmployeeId": {
+    "description": "PDF field."
+  },
+  "attReportDesignation": "Designation",
+  "@attReportDesignation": {
+    "description": "PDF field."
+  },
+  "attReportDepartment": "Department",
+  "@attReportDepartment": {
+    "description": "PDF field."
+  },
+  "attReportDivision": "Division",
+  "@attReportDivision": {
+    "description": "PDF field."
+  },
+  "attReportLocation": "Location",
+  "@attReportLocation": {
+    "description": "PDF field."
+  },
+  "attReportShift": "Shift",
+  "@attReportShift": {
+    "description": "PDF field."
+  },
+  "attReportPresent": "Present",
+  "@attReportPresent": {
+    "description": "PDF stat: days present."
+  },
+  "attReportDaysOff": "Days off",
+  "@attReportDaysOff": {
+    "description": "PDF stat: weekends and holidays."
+  },
+  "attReportRate": "Attendance rate",
+  "@attReportRate": {
+    "description": "PDF stat: share of working days present."
+  },
+  "attReportHours": "Hours worked",
+  "@attReportHours": {
+    "description": "PDF stat: total time worked."
+  },
+  "attReportWorkingDays": "Working days",
+  "@attReportWorkingDays": {
+    "description": "PDF stat: days meant to be worked."
+  },
+  "attReportGlance": "At a glance",
+  "@attReportGlance": {
+    "description": "PDF section: the period as a calendar."
+  },
+  "attReportDaily": "Daily record",
+  "@attReportDaily": {
+    "description": "PDF section: one row per day."
+  },
+  "attReportDate": "Date",
+  "@attReportDate": {
+    "description": "PDF column."
+  },
+  "attReportDay": "Day",
+  "@attReportDay": {
+    "description": "PDF column."
+  },
+  "attReportStatus": "Status",
+  "@attReportStatus": {
+    "description": "PDF column."
+  },
+  "attReportCheckIn": "Check-in",
+  "@attReportCheckIn": {
+    "description": "PDF column."
+  },
+  "attReportCheckOut": "Check-out",
+  "@attReportCheckOut": {
+    "description": "PDF column."
+  },
+  "attReportWorked": "Worked",
+  "@attReportWorked": {
+    "description": "PDF column."
+  },
+  "attReportLeaves": "Leaves",
+  "@attReportLeaves": {
+    "description": "PDF section: leave requests in the period."
+  },
+  "attReportLeaveType": "Leave type",
+  "@attReportLeaveType": {
+    "description": "PDF column."
+  },
+  "attReportDays": "Days",
+  "@attReportDays": {
+    "description": "PDF column: number of days."
+  },
+  "attReportAppliedOn": "Applied on",
+  "@attReportAppliedOn": {
+    "description": "PDF column."
+  },
+  "attReportRemarks": "Remarks",
+  "@attReportRemarks": {
+    "description": "PDF column."
+  },
+  "attReportNoLeaves": "No leaves in this period.",
+  "@attReportNoLeaves": {
+    "description": "PDF: no leave requests touch the period."
+  },
+  "attReportLoadFailed": "This person's attendance couldn't be loaded.",
+  "@attReportLoadFailed": {
+    "description": "PDF: a person's data failed to load."
+  },
+  "attReportMembers": "{count} people",
+  "@attReportMembers": {
+    "description": "PDF team summary: how many people.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "attReportName": "Name",
+  "@attReportName": {
+    "description": "PDF column."
+  },
+  "attReportFooter": "PROMISE · Pakistan Railways",
+  "@attReportFooter": {
+    "description": "PDF footer brand line."
+  },
+  "downloadTitle": "Download attendance",
+  "@downloadTitle": {
+    "description": "Sheet title for downloading an attendance PDF."
+  },
+  "downloadMonthly": "Monthly",
+  "@downloadMonthly": {
+    "description": "Choice: a calendar month."
+  },
+  "downloadRange": "Date range",
+  "@downloadRange": {
+    "description": "Choice: days picked on a calendar."
+  },
+  "downloadOnlyMe": "Only me",
+  "@downloadOnlyMe": {
+    "description": "Choice: the signed-in employee."
+  },
+  "downloadMyTeam": "My team",
+  "@downloadMyTeam": {
+    "description": "Choice: members of the team."
+  },
+  "downloadSelectAll": "Select all",
+  "@downloadSelectAll": {
+    "description": "Selects every team member."
+  },
+  "downloadSelected": "{count} of {total} selected",
+  "@downloadSelected": {
+    "description": "How many team members are picked.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadPickPeople": "Pick at least one person",
+  "@downloadPickPeople": {
+    "description": "Error when no team member is picked."
+  },
+  "downloadPickRange": "Pick the first and last day",
+  "@downloadPickRange": {
+    "description": "Error when no range is picked."
+  },
+  "downloadButton": "Download PDF",
+  "@downloadButton": {
+    "description": "Button that makes and saves the PDF."
+  },
+  "downloadPreparing": "Preparing {done} of {total}…",
+  "@downloadPreparing": {
+    "description": "Progress while loading people.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadSavedTitle": "Saved to Downloads",
+  "@downloadSavedTitle": {
+    "description": "Dialog after the PDF is saved."
+  },
+  "downloadSavedMessage": "{name} is in Downloads › PROMISE.",
+  "@downloadSavedMessage": {
+    "description": "Where the PDF was saved.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadOpen": "Open",
+  "@downloadOpen": {
+    "description": "Opens the saved PDF."
+  },
+  "downloadShare": "Share",
+  "@downloadShare": {
+    "description": "Shares the saved PDF."
+  },
+  "downloadFailed": "Couldn't save the PDF. Try again.",
+  "@downloadFailed": {
+    "description": "Error when saving fails."
+  },
+  "downloadNeedsStorage": "Allow storage so the PDF can be saved.",
+  "@downloadNeedsStorage": {
+    "description": "Error when storage is refused on old Android."
+  },
+  "downloadNoViewer": "No app on this phone opens PDFs.",
+  "@downloadNoViewer": {
+    "description": "Error when no PDF viewer exists."
+  },
+  "downloadSearch": "Search team",
+  "@downloadSearch": {
+    "description": "Hint in the team search field."
+  },
+  "attReportPeople": "People",
+  "@attReportPeople": {
+    "description": "PDF team summary: the people in it."
+  },
+  "downloadCardTitle": "Download attendance",
+  "@downloadCardTitle": {
+    "description": "Card title: download your attendance."
+  },
+  "downloadCardMessage": "Save your attendance on your phone as a PDF file, with your leaves.",
+  "@downloadCardMessage": {
+    "description": "Card text: what the download does."
+  },
+  "downloadTeamCardTitle": "Download team attendance",
+  "@downloadTeamCardTitle": {
+    "description": "Card title: download the team's attendance."
+  },
+  "downloadTeamCardMessage": "Save a PDF of your whole team, or pick only the people you need.",
+  "@downloadTeamCardMessage": {
+    "description": "Card text: what the team download does."
+  },
+  "downloadTagAnyDates": "Any dates",
+  "@downloadTagAnyDates": {
+    "description": "Tag: any range of days."
+  },
+  "downloadTagLeaves": "With leaves",
+  "@downloadTagLeaves": {
+    "description": "Tag: leaves are included."
+  },
+  "downloadIntro": "Choose the dates, then tap Download PDF. The file is saved in your phone's Downloads.",
+  "@downloadIntro": {
+    "description": "Sheet intro explaining the steps."
+  },
+  "downloadStepDates": "1 · Which dates?",
+  "@downloadStepDates": {
+    "description": "Sheet step label: pick the period."
+  },
+  "downloadStepWhose": "2 · Whose attendance?",
+  "@downloadStepWhose": {
+    "description": "Sheet step label: pick the people."
+  },
+  "identityTitle": "Verify your identity",
+  "@identityTitle": {
+    "description": "Heading of the CNIC step of train tracking sign-in."
+  },
+  "identitySubtitle": "Scan the front of your CNIC to continue.",
+  "@identitySubtitle": {
+    "description": "Line under the heading of the CNIC step."
+  },
+  "identityStepMobile": "Mobile",
+  "@identityStepMobile": {
+    "description": "Train tracking sign-in step: the mobile number."
+  },
+  "identityStepCnic": "CNIC",
+  "@identityStepCnic": {
+    "description": "Train tracking sign-in step: the CNIC."
+  },
+  "identityChangeNumber": "Change",
+  "@identityChangeNumber": {
+    "description": "Goes back to change the mobile number."
+  },
+  "cnicCardTitle": "Pakistani CNIC",
+  "@cnicCardTitle": {
+    "description": "Title over the CNIC on the identity step."
+  },
+  "cnicCardTap": "Tap to scan your CNIC",
+  "@cnicCardTap": {
+    "description": "In the empty CNIC space; opens the CNIC camera."
+  },
+  "cnicCardAi": "Checked on this phone by on-device AI",
+  "@cnicCardAi": {
+    "description": "Note that the CNIC is checked on the phone."
+  },
+  "cnicScanAgain": "Scan again",
+  "@cnicScanAgain": {
+    "description": "Opens the CNIC camera again once a CNIC is scanned."
+  },
+  "cnicVerified": "Verified",
+  "@cnicVerified": {
+    "description": "On the CNIC's photo once the AI has checked it."
+  },
+  "cnicLiveBadge": "AI scan",
+  "@cnicLiveBadge": {
+    "description": "Badge on the CNIC camera while the AI reads it."
+  },
+  "cnicHintStarting": "Starting the camera…",
+  "@cnicHintStarting": {
+    "description": "While the CNIC camera starts."
+  },
+  "cnicHintPlace": "Fit the front of your CNIC inside the frame",
+  "@cnicHintPlace": {
+    "description": "While nothing is in the CNIC camera's frame."
+  },
+  "cnicHintLooking": "Looking for a CNIC…",
+  "@cnicHintLooking": {
+    "description": "While there is text in the frame but no CNIC yet."
+  },
+  "cnicHintCloser": "Bring your CNIC closer to fill the frame",
+  "@cnicHintCloser": {
+    "description": "When the CNIC is held too far from the camera."
+  },
+  "cnicHintHold": "CNIC found. Hold steady and tap capture",
+  "@cnicHintHold": {
+    "description": "When the CNIC is seen in the frame, ready to be captured."
+  },
+  "cnicCapture": "Capture CNIC",
+  "@cnicCapture": {
+    "description": "The CNIC camera's shutter, for screen readers."
+  },
+  "cnicHintBank": "That's a bank card, not a CNIC",
+  "@cnicHintBank": {
+    "description": "When a bank card is held up to the CNIC camera."
+  },
+  "cnicHintOther": "That card isn't a CNIC",
+  "@cnicHintOther": {
+    "description": "When another card is held up to the CNIC camera."
+  },
+  "cnicHintReading": "Checking your CNIC…",
+  "@cnicHintReading": {
+    "description": "While the AI checks the photo of the CNIC."
+  },
+  "cnicHintVerified": "CNIC verified",
+  "@cnicHintVerified": {
+    "description": "Once the AI has read the CNIC."
+  },
+  "cnicTorchOn": "Turn the light on",
+  "@cnicTorchOn": {
+    "description": "Turns the phone's light on, on the CNIC camera."
+  },
+  "cnicTorchOff": "Turn the light off",
+  "@cnicTorchOff": {
+    "description": "Turns the phone's light off, on the CNIC camera."
+  },
+  "cnicWrongBankTitle": "That's a bank card",
+  "@cnicWrongBankTitle": {
+    "description": "Dialog title when a bank card is scanned instead of a CNIC."
+  },
+  "cnicWrongBankMessage": "Bank, debit and credit cards can't be used. Scan your Pakistani CNIC or NICOP instead.",
+  "@cnicWrongBankMessage": {
+    "description": "Dialog message when a bank card is scanned instead of a CNIC."
+  },
+  "cnicWrongCardTitle": "That isn't a CNIC",
+  "@cnicWrongCardTitle": {
+    "description": "Dialog title when another card is scanned instead of a CNIC."
+  },
+  "cnicWrongCardMessage": "This looks like another card, such as a licence, passport or office card. Only a Pakistani CNIC or NICOP can be scanned.",
+  "@cnicWrongCardMessage": {
+    "description": "Dialog message when another card is scanned instead of a CNIC."
+  },
+  "cnicNotCnicMessage": "Only a Pakistani CNIC or NICOP can be scanned. Hold the front of the card, the side with your photo, inside the frame.",
+  "@cnicNotCnicMessage": {
+    "description": "Dialog message when something with text that isn't a CNIC is scanned."
+  },
+  "cnicNothingTitle": "No CNIC found",
+  "@cnicNothingTitle": {
+    "description": "Dialog title when the photo taken shows no CNIC."
+  },
+  "cnicNothingMessage": "We couldn't see a Pakistani CNIC clearly in the photo. Fit the front of your CNIC or NICOP, the side with your photo, inside the frame, hold steady in good light and capture again.",
+  "@cnicNothingMessage": {
+    "description": "Dialog message when the photo taken shows no CNIC, or too unclearly to tell."
+  },
+  "cnicFlash": "Flash",
+  "@cnicFlash": {
+    "description": "Beside the switch for the phone's light, on the CNIC camera."
+  },
+  "cnicHintDark": "Too dark. Switch the flash on",
+  "@cnicHintDark": {
+    "description": "When the camera is too dark to read a CNIC."
+  },
+  "cnicHintDarkFlashOn": "Still too dark. Move to more light",
+  "@cnicHintDarkFlashOn": {
+    "description": "When the camera is too dark to read a CNIC with the flash on."
+  },
+  "cnicHintBlurry": "Hold steady. The picture is blurred",
+  "@cnicHintBlurry": {
+    "description": "When the camera's picture is too blurred to take a CNIC."
+  }
+}

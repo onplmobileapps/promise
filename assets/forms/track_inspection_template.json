@@ -1,0 +1,219 @@
+{
+  "templateId": "tpl-track-inspection-001",
+  "name": "Track Inspection",
+  "type": "track",
+  "version": 1,
+  "allowCustomFields": true,
+  "customFieldTypes": ["text", "number", "dropdown", "radio", "checkbox", "date", "image", "signature"],
+  "sections": [
+    {
+      "title": "General Information",
+      "fields": [
+        {
+          "key": "station",
+          "type": "dropdown",
+          "label": "Station",
+          "lookupCategory": "stations",
+          "placeholder": "Select station",
+          "validation": { 
+            "required": true,
+            "errorMessage": "Station is required"
+          }
+        },
+        {
+          "key": "inspection_date",
+          "type": "date",
+          "label": "Date of Inspection",
+          "validation": { 
+            "required": true,
+            "errorMessage": "Inspection date is required"
+          }
+        },
+        {
+          "key": "gps_location",
+          "type": "gps",
+          "label": "Track Section GPS Location",
+          "autoCapture": true,
+          "validation": {
+            "required": false
+          }
+        },
+        {
+          "key": "track_section_km",
+          "type": "number",
+          "label": "Track Section (KM)",
+          "inputFormatter": {
+            "type": "decimal",
+            "decimalDigits": 3,
+            "min": 0,
+            "max": 9999.999
+          },
+          "placeholder": "e.g., 125.500",
+          "validation": {
+            "required": true,
+            "min": 0,
+            "max": 9999.999,
+            "errorMessage": "Enter valid track section (0-9999.999)"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Track Condition",
+      "fields": [
+        {
+          "key": "rail_condition",
+          "type": "radio",
+          "label": "Overall Rail Condition",
+          "options": [
+            { "value": "good", "label": "Good" },
+            { "value": "fair", "label": "Fair" },
+            { "value": "poor", "label": "Poor" }
+          ],
+          "validation": { 
+            "required": true,
+            "errorMessage": "Rail condition is required"
+          }
+        },
+        {
+          "key": "defects_found",
+          "type": "checkbox",
+          "label": "Defects Observed",
+          "options": [
+            { "value": "cracks", "label": "Cracks" },
+            { "value": "corrosion", "label": "Corrosion" },
+            { "value": "misalignment", "label": "Misalignment" },
+            { "value": "loose_fittings", "label": "Loose Fittings" },
+            { "value": "wheel_burnt", "label": "Wheel Burnt" },
+            { "value": "end_battered", "label": "End Battered" },
+            { "value": "hogged", "label": "Hogged" }
+          ]
+        },
+        {
+          "key": "defect_detail",
+          "type": "text",
+          "label": "Describe the defect",
+          "placeholder": "Enter detailed description of defects",
+          "inputFormatter": {
+            "type": "multiline",
+            "maxLength": 500,
+            "minLines": 3,
+            "maxLines": 5
+          },
+          "visibleWhenFieldKey": "rail_condition",
+          "visibleWhenEquals": "poor",
+          "validation": { 
+            "required": true,
+            "minLength": 10,
+            "maxLength": 500,
+            "errorMessage": "Please provide defect details (10-500 characters)"
+          }
+        },
+        {
+          "key": "track_photo",
+          "type": "image",
+          "label": "Photograph of Track Section",
+          "validation": {
+            "required": false,
+            "maxFileSizeMB": 5,
+            "allowedFormats": ["jpg", "jpeg", "png"]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Ballast & Sleepers",
+      "fields": [
+        {
+          "key": "ballast_cushion",
+          "type": "radio",
+          "label": "Ballast Cushion",
+          "options": [
+            { "value": "proper", "label": "Proper" },
+            { "value": "scattered", "label": "Scattered" },
+            { "value": "fouled", "label": "Fouled" }
+          ],
+          "validation": {
+            "required": true,
+            "errorMessage": "Ballast cushion condition is required"
+          }
+        },
+        {
+          "key": "sleepers_condition",
+          "type": "radio",
+          "label": "Sleepers Condition",
+          "options": [
+            { "value": "serviceable", "label": "Serviceable" },
+            { "value": "unserviceable", "label": "Un-Serviceable" }
+          ],
+          "validation": {
+            "required": true,
+            "errorMessage": "Sleepers condition is required"
+          }
+        },
+        {
+          "key": "rail_joints",
+          "type": "radio",
+          "label": "Rail Joints",
+          "options": [
+            { "value": "low", "label": "Low" },
+            { "value": "aligned", "label": "Aligned" }
+          ],
+          "validation": {
+            "required": true,
+            "errorMessage": "Rail joints condition is required"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Sign-off",
+      "fields": [
+        {
+          "key": "remarks",
+          "type": "text",
+          "label": "Additional Remarks",
+          "placeholder": "Enter any additional observations or notes",
+          "inputFormatter": {
+            "type": "multiline",
+            "maxLength": 1000,
+            "minLines": 4,
+            "maxLines": 6
+          },
+          "validation": {
+            "required": false,
+            "maxLength": 1000
+          }
+        },
+        {
+          "key": "inspector_signature",
+          "type": "signature",
+          "label": "Inspector Signature",
+          "validation": { 
+            "required": true,
+            "errorMessage": "Inspector signature is required"
+          }
+        },
+        {
+          "key": "inspector_name",
+          "type": "text",
+          "label": "Inspector Name",
+          "inputFormatter": {
+            "type": "text",
+            "allowUppercase": true,
+            "allowSpaces": true,
+            "maxLength": 100
+          },
+          "placeholder": "Enter inspector name",
+          "validation": {
+            "required": true,
+            "minLength": 3,
+            "maxLength": 100,
+            "pattern": "^[a-zA-Z\\s]+$",
+            "errorMessage": "Enter valid inspector name (letters only, 3-100 characters)"
+          }
+        }
+      ]
+    }
+  ]
+}

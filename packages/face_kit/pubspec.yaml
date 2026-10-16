@@ -1,0 +1,33 @@
+name: face_kit
+description: >-
+  Plug-and-play face capture for Flutter: Face-ID-style capture, passive
+  liveness (anti-spoofing), occlusion/blur/pose gates and on-device face
+  embeddings, all running off the UI thread.
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.10.8
+  flutter: '>=3.38.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  camera: ^0.12.0+1
+  google_mlkit_face_detection: ^0.15.1
+  onnxruntime_v2: ^1.23.2+2
+  ffi: ^2.1.0
+  image: ^4.8.0
+  path_provider: ^2.1.2
+  screen_brightness: ^2.1.11
+  sensors_plus: ^7.0.0
+  wakelock_plus: ^1.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  assets:
+    - assets/models/
