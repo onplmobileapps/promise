@@ -51,7 +51,6 @@ import 'package:railway_hrms/modules/prams/data/models/accident_list_item.dart';
 import 'package:railway_hrms/modules/prams/screens/accident_approval_screen.dart';
 import 'package:railway_hrms/modules/prams/screens/accident_report_details_screen.dart';
 import 'package:railway_hrms/modules/prams/screens/accident_report_form.dart';
-import 'package:railway_hrms/modules/prams/screens/accident_reports_screen.dart';
 import 'package:railway_hrms/modules/prams/screens/accident_submitted_screen.dart';
 import 'package:railway_hrms/modules/prams/screens/accident_timeline_screen.dart';
 import 'package:railway_hrms/modules/prams/screens/prams_dashboard_screen.dart';
@@ -480,9 +479,6 @@ final Map<String, Widget Function()> _screens = {
     now: () => _today,
   ),
   'prams-report': () => const AccidentReportingScreen(),
-  'prams-reports': () => AccidentReportsScreen(
-    accidents: [for (final a in _accidents) Accidents.fromJson(a)],
-  ),
   'prams-details': () =>
       AccidentReportDetailsScreen(accident: Accidents.fromJson(_accidents[0])),
   'prams-timeline': () => const AccidentTimelineScreen(),

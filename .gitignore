@@ -60,3 +60,7 @@ android/.gradle/
 **/ios/Flutter/Flutter.framework
 **/ios/Flutter/Flutter.podspec
 **/ios/DerivedData/
+# Local packages: their builds and tool state
+/packages/build/
+/packages/*/build/
+/packages/*/.dart_tool/
