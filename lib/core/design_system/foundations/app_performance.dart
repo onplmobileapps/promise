@@ -141,11 +141,46 @@ abstract final class AppPerformance {
   /// One step down from [budget]: full to steady, steady to lite.
   static void _stepDown() {
     final next = switch (_budget.value) {
-      RenderBudget.full when _screenHz > 65 => RenderBudget.steady,
+      RenderBudget.full => RenderBudget.steady,
       _ => RenderBudget.lite,
     };
     if (kProfileMode) debugPrint('Frames: too slow, drawing ${next.name}');
     _budget.value = next;
+    _remember?.call(next);
+  }
+
+  /// Keeps what was learned of the phone for its next start.
+  static void Function(RenderBudget budget)? _remember;
+
+  /// How long what was learned is trusted: an update can make the app
+  /// lighter, so the phone is tried at its best again now and then.
+  static const Duration _learnedFor = Duration(days: 14);
+
+  /// Starts from what this phone was last seen to keep up with, read from
+  /// [read] as `name@millisecondsSinceEpoch`, and keeps what it learns with
+  /// [write]: so a phone that needed a lighter budget starts with it,
+  /// rather than stuttering for its first seconds every time.
+  static void restore({
+    required String? Function() read,
+    required void Function(String value) write,
+  }) {
+    _remember = (budget) =>
+        write('${budget.name}@${DateTime.now().millisecondsSinceEpoch}');
+    if (_forced.isNotEmpty) return;
+    final saved = read();
+    if (saved == null) return;
+    final at = saved.indexOf('@');
+    if (at < 0) return;
+    final learned = RenderBudget.values
+        .where((b) => b.name == saved.substring(0, at))
+        .firstOrNull;
+    final ms = int.tryParse(saved.substring(at + 1));
+    if (learned == null || ms == null) return;
+    final age = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(ms),
+    );
+    if (age > _learnedFor || age.isNegative) return;
+    if (learned.index > _budget.value.index) _budget.value = learned;
   }
 
   /// The screen's refresh rate, as the engine knows it.

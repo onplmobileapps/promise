@@ -27,6 +27,7 @@ import 'package:railway_hrms/modules/tracking/data/train_remote_datasource.dart'
 import 'package:railway_hrms/modules/tracking/data/train_repository.dart';
 import 'package:railway_hrms/modules/tracking/data/train_repository_impl.dart';
 import 'package:railway_hrms/modules/tracking/services/track_history_store.dart';
+import 'package:railway_hrms/modules/tracking/services/tracking_cache.dart';
 
 /// Registers the app's services with [sl], module by module.
 Future<void> init() async {
@@ -73,8 +74,13 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<TrainRepository>(() => TrainRepositoryImpl(sl()));
   sl.registerLazySingleton<TrackHistoryStore>(TrackHistoryStore.new);
+  sl.registerLazySingleton<TrackingCache>(TrackingCache.new);
   sl.registerFactory<RealTimeTrackingCubit>(
-    () => RealTimeTrackingCubit(sl(), history: sl<TrackHistoryStore>()),
+    () => RealTimeTrackingCubit(
+      sl(),
+      history: sl<TrackHistoryStore>(),
+      cache: sl<TrackingCache>(),
+    ),
   );
 
   // PRAMS

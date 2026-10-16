@@ -256,14 +256,11 @@ Future<ui.Image?> loadPhoto(
     }
   }
 
-  listener = ImageStreamListener(
-    (info, _) {
-      final image = info.image.clone();
-      info.dispose();
-      end(image);
-    },
-    onError: (_, _) => end(null),
-  );
+  listener = ImageStreamListener((info, _) {
+    final image = info.image.clone();
+    info.dispose();
+    end(image);
+  }, onError: (_, _) => end(null));
   stream.addListener(listener);
   return done.future;
 }

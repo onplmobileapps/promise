@@ -99,6 +99,31 @@ void main() {
     expect(controller.text, '65546');
   });
 
+  test('a phone starts from the budget it was last seen to need, for two '
+      'weeks', () {
+    String? saved;
+    void restore() => AppPerformance.restore(
+      read: () => saved,
+      write: (value) => saved = value,
+    );
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    saved = 'steady@$now';
+    restore();
+    expect(AppPerformance.budget.value, RenderBudget.steady);
+
+    // Learned long ago: tried at its best again.
+    AppPerformance.debugBudget = RenderBudget.full;
+    saved = 'lite@${now - const Duration(days: 15).inMilliseconds}';
+    restore();
+    expect(AppPerformance.budget.value, RenderBudget.full);
+
+    // Nonsense is ignored.
+    saved = 'turbo@x';
+    restore();
+    expect(AppPerformance.budget.value, RenderBudget.full);
+  });
+
   test('a map on a phone drawing lite starts lighter, its trains flat', () {
     expect(MapPacer.forPhone().draws3d, isTrue);
     AppPerformance.debugBudget = RenderBudget.lite;

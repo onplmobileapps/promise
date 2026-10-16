@@ -60,7 +60,12 @@ void main() async {
       return true;
     };
   }
-  await SharedPreferences.getInstance();
+  final prefs = await SharedPreferences.getInstance();
+  // A phone that was seen to need a lighter budget starts with it.
+  AppPerformance.restore(
+    read: () => prefs.getString('render_budget'),
+    write: (value) => unawaited(prefs.setString('render_budget', value)),
+  );
   await di.init();
   // The API's addresses come from here, so it loads before anything can
   // call the API. It is a small bundled file, quick to read.

@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:railway_hrms/core/error/exceptions.dart';
 import 'package:railway_hrms/core/utils/either.dart';
 import 'package:railway_hrms/modules/tracking/bloc/real_time_tracking_cubit.dart';
 import 'package:railway_hrms/modules/tracking/data/models/live_train_models.dart';
 import 'package:railway_hrms/modules/tracking/data/train_repository.dart';
+import 'package:railway_hrms/modules/tracking/services/tracking_cache.dart';
 import 'package:railway_hrms/modules/tracking/services/train_live_feed.dart';
 
 class _FakeTrainRepository implements TrainRepository {
@@ -250,6 +252,59 @@ void main() {
     // Nothing is borrowed from the station list.
     expect(origin.position, isNull);
     await cubit.close();
+  });
+
+  test('tracking opened again starts from what it last knew', () async {
+    final cache = TrackingCache();
+    late _FakeFeed feed;
+    RealTimeTrackingCubit open(_FakeTrainRepository repository) =>
+        RealTimeTrackingCubit(
+          repository,
+          cache: cache,
+          feed: ({required onPosition, required onLinkChanged}) => feed =
+              _FakeFeed(onPosition: onPosition, onLinkChanged: onLinkChanged),
+        );
+    final repository = _FakeTrainRepository(
+      Right(_response([_trainWithDevice(1, 101, 11)])),
+      stationPages: {
+        null: [
+          {'id': 1, 'name': 'Lahore Jn', 'latitude': 31.58, 'longitude': 74.34},
+        ],
+      },
+    );
+    final first = open(repository);
+    await first.initialize();
+    first.watchFleet();
+    feed.onLinkChanged(11, LinkState.open);
+    final report = TrainPosition(
+      deviceId: 11,
+      position: const LatLng(31.5, 74.3),
+      speedKmh: 80,
+      course: 0,
+      moving: true,
+      validFix: true,
+      fixTime: DateTime.now(),
+    );
+    feed.onPosition(report);
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    final openedAt = first.state.openedAt[11];
+    await first.close();
+
+    final second = open(repository);
+    // At once, before anything loads.
+    expect(second.state.isLoading, isFalse);
+    expect(second.state.trains.single.number, 101);
+    expect(second.state.positions[11], report);
+    expect(second.state.stations, isNotEmpty);
+    repository.requestedPages.clear();
+    await second.initialize();
+    expect(repository.requestedPages, isEmpty);
+
+    // The feed was open just now: in touch since then, not only now.
+    second.watchFleet();
+    feed.onLinkChanged(11, LinkState.open);
+    expect(second.state.openedAt[11], openedAt);
+    await second.close();
   });
 
   test('selecting a train without a device keeps no live link', () async {

@@ -10,6 +10,7 @@ import 'package:railway_hrms/modules/tracking/services/rail_router.dart';
 import 'package:railway_hrms/modules/tracking/services/route_geometry.dart';
 import 'package:railway_hrms/modules/tracking/services/route_stops.dart';
 import 'package:railway_hrms/modules/tracking/services/track_history_store.dart';
+import 'package:railway_hrms/modules/tracking/services/tracking_cache.dart';
 import 'package:railway_hrms/modules/tracking/services/train_live_feed.dart';
 import 'package:railway_hrms/modules/tracking/services/train_motion.dart';
 
@@ -23,9 +24,11 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     LiveFeedFactory feed = TrainProxyFeed.new,
     RailRoute? route,
     TrackHistoryStore? history,
+    TrackingCache? cache,
   }) : _route = route ?? RailRouter.instance.route,
        _store = history,
-       super(const RealTimeTrackingState()) {
+       _cache = cache,
+       super(_seeded(cache)) {
     _feed = feed(onPosition: _onPosition, onLinkChanged: _onLinkChanged);
     // Parse the rail network while the list is on screen.
     if (route == null) RailRouter.instance.warmUp();
@@ -38,6 +41,34 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
 
   /// Where the day's reports are kept between visits; none in tests.
   final TrackHistoryStore? _store;
+
+  /// What tracking last knew this session, to start from; none in tests.
+  final TrackingCache? _cache;
+
+  /// Tracking as [cache] last knew it: shown at once, refreshed behind.
+  static RealTimeTrackingState _seeded(TrackingCache? cache) {
+    if (cache == null) return const RealTimeTrackingState();
+    final trains = cache.trains;
+    return RealTimeTrackingState(
+      isLoading: trains.isEmpty,
+      trains: trains,
+      stations: cache.stations,
+      positions: cache.positions,
+      paths: trains.isEmpty ? const {} : cache.paths,
+    );
+  }
+
+  @override
+  void emit(RealTimeTrackingState state) {
+    super.emit(state);
+    final cache = _cache;
+    if (cache == null || isClosed) return;
+    cache
+      ..stations = state.stations
+      ..positions = state.positions
+      ..paths = state.paths;
+    if (state.trains.isNotEmpty) cache.trains = state.trains;
+  }
 
   /// A report further than this from the train's route is not placed
   /// along it.
@@ -65,6 +96,8 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
   static const int _maxStationPages = 30;
 
   Future<void> loadStations() async {
+    // They don't change in a day.
+    if (state.stations.isNotEmpty) return;
     final found = <String, TrainStation>{};
     String? page;
     try {
@@ -183,8 +216,16 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
       links[deviceId] = link;
       if (link == LinkState.open) {
         final now = DateTime.now();
-        since.putIfAbsent(deviceId, () => now);
-        if (was != LinkState.open) opened[deviceId] = now;
+        if (was != LinkState.open) {
+          _cache?.opened();
+          // In touch since before this screen, if the feed was open just
+          // now: a device silent all that while is known to be silent.
+          final inTouch = _cache?.inTouchSince ?? now;
+          since.putIfAbsent(deviceId, () => inTouch);
+          opened[deviceId] = inTouch;
+        }
+      } else if (link == LinkState.retrying) {
+        _cache?.lost();
       }
     }
     emit(state.copyWith(links: links, listeningSince: since, openedAt: opened));
@@ -222,6 +263,7 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     if (_pendingPositions.isEmpty || isClosed) return;
     final arrived = Map<int, TrainPosition>.of(_pendingPositions);
     _pendingPositions.clear();
+    _cache?.heard();
     arrived.values.forEach(_remember);
     final positions = Map<int, TrainPosition>.of(state.positions)
       ..addAll(arrived);
@@ -607,6 +649,8 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     _flushTimer?.cancel();
     _pathsTimer?.cancel();
     _saveTimer?.cancel();
+    // In touch until now, for the next screen to carry on from.
+    if (state.links.values.contains(LinkState.open)) _cache?.heard();
     _feed.dispose();
     // The day's reports are put away for the next visit.
     unawaited(_saveHistory());
