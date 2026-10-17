@@ -212,6 +212,8 @@ class _InspectionDashboardScreenState extends State<InspectionDashboardScreen> {
       screen = const StationInspectionScreen();
     } else if (type == 'motor_trolley') {
       screen = const MotorTrolleyInspectionScreen();
+    } else if (type == 'locomotive') {
+      screen = const LocomotiveInspectionScreen();
     } else {
       screen = FootplateWizardScreen(resumeId: id);
     }
@@ -633,6 +635,7 @@ extension InspectionKindDrafts on InspectionKind {
       switch (record['payload']?['type']?.toString()) {
         'station' || 'signal' || 'traffic' => InspectionKind.station,
         'electrical' => InspectionKind.electrical,
+        'locomotive' => InspectionKind.locomotive,
         'civil' || 'motor_trolley' => InspectionKind.motorTrolley,
         null || '' || 'footplate' => InspectionKind.footplate,
         _ => null,

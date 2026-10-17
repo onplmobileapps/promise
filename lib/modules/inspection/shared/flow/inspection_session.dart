@@ -195,3 +195,21 @@ class _GatePage extends StatelessWidget {
     );
   }
 }
+
+/// Opens [page] as part of the inspection [context] belongs to, so a form
+/// it opens doesn't ask for the face again; with [replace], in place of
+/// the page [context] is on.
+Future<T?> pushInspectionPage<T extends Object?>(
+  BuildContext context,
+  WidgetBuilder page, {
+  bool replace = false,
+}) {
+  final session = InspectionSession.maybeOf(context);
+  final route = MaterialPageRoute<T>(
+    builder: (context) => session == null
+        ? page(context)
+        : InspectionSession(start: session.start, child: page(context)),
+  );
+  final navigator = Navigator.of(context);
+  return replace ? navigator.pushReplacement(route) : navigator.push(route);
+}

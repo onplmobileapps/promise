@@ -3787,5 +3787,87 @@
   "inspFormSection": "Section",
   "@inspFormSection": {
     "description": "Label of the railway section an inspection covers."
+  },
+  "inspFormSavedLocally": "Saved on this phone, with its PDF. This inspection isn't sent online yet.",
+  "@inspFormSavedLocally": {
+    "description": "Shown when an inspection with no server yet is finished and kept on the device."
+  },
+  "inspFormAsset": "Asset",
+  "@inspFormAsset": {
+    "description": "Heading of the facts about the asset being inspected."
+  },
+  "inspCatalogNew": "New inspection",
+  "@inspCatalogNew": {
+    "description": "Tab of an inspection catalogue that starts a new inspection."
+  },
+  "inspCatalogDone": "Finished",
+  "@inspCatalogDone": {
+    "description": "Tab of an inspection catalogue listing inspections finished on this phone."
+  },
+  "inspCatalogDepartment": "Department",
+  "@inspCatalogDepartment": {
+    "description": "Heading of the department chips in an inspection catalogue."
+  },
+  "inspCatalogSubDepartment": "Sub-department",
+  "@inspCatalogSubDepartment": {
+    "description": "Heading of the sub-department chips in an inspection catalogue."
+  },
+  "inspCatalogAssets": "Assets",
+  "@inspCatalogAssets": {
+    "description": "Heading of the list of assets that can be inspected."
+  },
+  "inspCatalogEmpty": "No finished inspections yet",
+  "@inspCatalogEmpty": {
+    "description": "Shown when no inspection of a catalogue has been finished on this phone."
+  },
+  "inspCatalogEmptyMessage": "Inspections you finish here are kept on this phone with their report.",
+  "@inspCatalogEmptyMessage": {
+    "description": "Explains where finished catalogue inspections are kept."
+  },
+  "inspCatalogTook": "{minutes} min",
+  "@inspCatalogTook": {
+    "description": "How long a finished inspection took.",
+    "placeholders": {
+      "minutes": {
+        "type": "String",
+        "example": "12.5"
+      }
+    }
+  },
+  "inspCivilTitle": "Civil inspection",
+  "@inspCivilTitle": {
+    "description": "Title of the civil inspection catalogue."
+  },
+  "inspCivilSubtitle": "Works, track and bridges",
+  "@inspCivilSubtitle": {
+    "description": "What civil inspections cover."
+  },
+  "inspElectricalSubtitle": "Power and rolling stock",
+  "@inspElectricalSubtitle": {
+    "description": "What electrical inspections cover."
+  },
+  "inspRtlRole": "Your role",
+  "@inspRtlRole": {
+    "description": "Label of the role an RTL electrical inspector inspects as."
+  },
+  "inspRtlPlaces": "Places to inspect",
+  "@inspRtlPlaces": {
+    "description": "Heading of the places an RTL electrical inspection covers."
+  },
+  "inspRtlPickPlace": "Pick at least one place to inspect.",
+  "@inspRtlPickPlace": {
+    "description": "Shown when an RTL inspection is started with no place picked."
+  },
+  "inspFormStart": "Start inspection",
+  "@inspFormStart": {
+    "description": "Opens an inspection's form once what it covers is chosen."
+  },
+  "inspLocomotiveTitle": "Locomotive inspection",
+  "@inspLocomotiveTitle": {
+    "description": "Title of the locomotive inspection form."
+  },
+  "inspLocomotiveSubtitle": "GEU-40 · Mechanical",
+  "@inspLocomotiveSubtitle": {
+    "description": "What a locomotive inspection covers, under its title."
   }
 }

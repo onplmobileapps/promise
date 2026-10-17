@@ -4893,6 +4893,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Section'**
   String get inspFormSection;
+
+  /// Shown when an inspection with no server yet is finished and kept on the device.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this phone, with its PDF. This inspection isn\'t sent online yet.'**
+  String get inspFormSavedLocally;
+
+  /// Heading of the facts about the asset being inspected.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset'**
+  String get inspFormAsset;
+
+  /// Tab of an inspection catalogue that starts a new inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'New inspection'**
+  String get inspCatalogNew;
+
+  /// Tab of an inspection catalogue listing inspections finished on this phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get inspCatalogDone;
+
+  /// Heading of the department chips in an inspection catalogue.
+  ///
+  /// In en, this message translates to:
+  /// **'Department'**
+  String get inspCatalogDepartment;
+
+  /// Heading of the sub-department chips in an inspection catalogue.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-department'**
+  String get inspCatalogSubDepartment;
+
+  /// Heading of the list of assets that can be inspected.
+  ///
+  /// In en, this message translates to:
+  /// **'Assets'**
+  String get inspCatalogAssets;
+
+  /// Shown when no inspection of a catalogue has been finished on this phone.
+  ///
+  /// In en, this message translates to:
+  /// **'No finished inspections yet'**
+  String get inspCatalogEmpty;
+
+  /// Explains where finished catalogue inspections are kept.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspections you finish here are kept on this phone with their report.'**
+  String get inspCatalogEmptyMessage;
+
+  /// How long a finished inspection took.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String inspCatalogTook(String minutes);
+
+  /// Title of the civil inspection catalogue.
+  ///
+  /// In en, this message translates to:
+  /// **'Civil inspection'**
+  String get inspCivilTitle;
+
+  /// What civil inspections cover.
+  ///
+  /// In en, this message translates to:
+  /// **'Works, track and bridges'**
+  String get inspCivilSubtitle;
+
+  /// What electrical inspections cover.
+  ///
+  /// In en, this message translates to:
+  /// **'Power and rolling stock'**
+  String get inspElectricalSubtitle;
+
+  /// Label of the role an RTL electrical inspector inspects as.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role'**
+  String get inspRtlRole;
+
+  /// Heading of the places an RTL electrical inspection covers.
+  ///
+  /// In en, this message translates to:
+  /// **'Places to inspect'**
+  String get inspRtlPlaces;
+
+  /// Shown when an RTL inspection is started with no place picked.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one place to inspect.'**
+  String get inspRtlPickPlace;
+
+  /// Opens an inspection's form once what it covers is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Start inspection'**
+  String get inspFormStart;
+
+  /// Title of the locomotive inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Locomotive inspection'**
+  String get inspLocomotiveTitle;
+
+  /// What a locomotive inspection covers, under its title.
+  ///
+  /// In en, this message translates to:
+  /// **'GEU-40 · Mechanical'**
+  String get inspLocomotiveSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -2699,4 +2699,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inspFormSection => 'Section';
+
+  @override
+  String get inspFormSavedLocally =>
+      'Saved on this phone, with its PDF. This inspection isn\'t sent online yet.';
+
+  @override
+  String get inspFormAsset => 'Asset';
+
+  @override
+  String get inspCatalogNew => 'New inspection';
+
+  @override
+  String get inspCatalogDone => 'Finished';
+
+  @override
+  String get inspCatalogDepartment => 'Department';
+
+  @override
+  String get inspCatalogSubDepartment => 'Sub-department';
+
+  @override
+  String get inspCatalogAssets => 'Assets';
+
+  @override
+  String get inspCatalogEmpty => 'No finished inspections yet';
+
+  @override
+  String get inspCatalogEmptyMessage =>
+      'Inspections you finish here are kept on this phone with their report.';
+
+  @override
+  String inspCatalogTook(String minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get inspCivilTitle => 'Civil inspection';
+
+  @override
+  String get inspCivilSubtitle => 'Works, track and bridges';
+
+  @override
+  String get inspElectricalSubtitle => 'Power and rolling stock';
+
+  @override
+  String get inspRtlRole => 'Your role';
+
+  @override
+  String get inspRtlPlaces => 'Places to inspect';
+
+  @override
+  String get inspRtlPickPlace => 'Pick at least one place to inspect.';
+
+  @override
+  String get inspFormStart => 'Start inspection';
+
+  @override
+  String get inspLocomotiveTitle => 'Locomotive inspection';
+
+  @override
+  String get inspLocomotiveSubtitle => 'GEU-40 · Mechanical';
 }

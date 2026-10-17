@@ -1,15 +1,59 @@
+import 'package:railway_hrms/modules/inspection/shared/spec/form_spec.dart';
+
 /// Field specification for electrical inspection forms.
 /// Defines the structure, validation rules, and conditional logic for each field.
-class ElectricalFieldSpec {
+class ElectricalFieldSpec implements FormSpec {
+  @override
   final String key;
+  @override
   final String label;
   final ElectricalFieldType type;
   final List<String>? options;
   final String? conditionKey;
   final String? conditionValue;
+  @override
   final int? maxValue;
+  @override
   final String? unit;
   final List<ElectricalFieldSpec>? children;
+
+  @override
+  FormSpecKind get kind => switch (type) {
+    ElectricalFieldType.section => FormSpecKind.section,
+    ElectricalFieldType.group => FormSpecKind.group,
+    ElectricalFieldType.text => FormSpecKind.text,
+    ElectricalFieldType.number => FormSpecKind.number,
+    ElectricalFieldType.radio ||
+    ElectricalFieldType.checkbox => FormSpecKind.choice,
+    ElectricalFieldType.dropdown => FormSpecKind.select,
+    ElectricalFieldType.date => FormSpecKind.date,
+  };
+
+  @override
+  List<String> get choices =>
+      options ??
+      (type == ElectricalFieldType.checkbox ? const ['Yes', 'No'] : const []);
+
+  @override
+  List<FormSpec> get parts => children ?? const [];
+
+  @override
+  String? get showIfKey => conditionKey;
+
+  @override
+  Object? get showIfValue => conditionValue;
+
+  @override
+  String? get shownValue => null;
+
+  @override
+  String? get itemLabel => null;
+
+  @override
+  String? get note => null;
+
+  @override
+  List<String> get faults => const [];
 
   const ElectricalFieldSpec({
     required this.key,

@@ -1,5 +1,7 @@
 library;
 
+import 'package:railway_hrms/modules/inspection/shared/spec/form_spec.dart';
+
 enum CivilFieldType {
   section,
   radio,
@@ -12,11 +14,14 @@ enum CivilFieldType {
   repeatGroup,
 }
 
-class CivilFieldSpec {
+class CivilFieldSpec implements FormSpec {
+  @override
   final String key;
+  @override
   final String label;
   final CivilFieldType type;
   final List<String>? options;
+  @override
   final String? unit;
   final List<CivilFieldSpec>? children;
 
@@ -31,7 +36,45 @@ class CivilFieldSpec {
 
   /// For `repeatGroup`: label used for the "Add ..." button and for
   /// naming each instance (e.g. "Pier" -> "Pier 1", "Pier 2", ...).
+  @override
   final String? itemLabel;
+
+  @override
+  FormSpecKind get kind => switch (type) {
+    CivilFieldType.section => FormSpecKind.section,
+    CivilFieldType.radio => FormSpecKind.choice,
+    CivilFieldType.date => FormSpecKind.date,
+    CivilFieldType.number => FormSpecKind.number,
+    CivilFieldType.text => FormSpecKind.text,
+    CivilFieldType.dropdown => FormSpecKind.select,
+    CivilFieldType.display => FormSpecKind.display,
+    CivilFieldType.group => FormSpecKind.group,
+    CivilFieldType.repeatGroup => FormSpecKind.repeat,
+  };
+
+  @override
+  List<String> get choices => options ?? const [];
+
+  @override
+  num? get maxValue => null;
+
+  @override
+  List<FormSpec> get parts => children ?? const [];
+
+  @override
+  String? get showIfKey => conditionKey;
+
+  @override
+  Object? get showIfValue => conditionValue;
+
+  @override
+  String? get shownValue => displayValue;
+
+  @override
+  String? get note => null;
+
+  @override
+  List<String> get faults => const [];
 
   const CivilFieldSpec({
     required this.key,

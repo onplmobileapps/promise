@@ -763,3 +763,45 @@ class InspectionCard extends StatelessWidget {
     );
   }
 }
+
+/// Facts about what is inspected, each label beside its value, as an
+/// asset's department and type.
+class InspectionFacts extends StatelessWidget {
+  const InspectionFacts(this.facts, {super.key});
+
+  final List<(String, String)> facts;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, (label, value)) in facts.indexed) ...[
+          if (i > 0) AppSpacing.gapSm,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: text.bodySmall?.copyWith(color: colors.textSecondary),
+                ),
+              ),
+              AppSpacing.gapMd,
+              Flexible(
+                flex: 2,
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  style: text.labelLarge,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}

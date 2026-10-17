@@ -96,6 +96,9 @@ class ElectricalInspectionDraftService {
     String? subDepartment,
     String? asset,
     Map<String, dynamic>? assetData,
+
+    /// The face checks the inspection was started and signed with.
+    Map<String, dynamic>? verification,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final finishedAt = DateTime.now();
@@ -108,6 +111,7 @@ class ElectricalInspectionDraftService {
       'latitude': latitude,
       'longitude': longitude,
       'status': 'submitted',
+      'verification': ?verification,
       'department': ?department,
       'subDepartment': ?subDepartment,
       'asset': ?asset,
