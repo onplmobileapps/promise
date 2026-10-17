@@ -5,11 +5,8 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/error/api_error_text.dart';
 import 'package:railway_hrms/core/error/exceptions.dart';
-import 'package:railway_hrms/core/navigation/app_routes.dart';
-import 'package:railway_hrms/core/navigation/navigator_key.dart';
 import 'package:railway_hrms/core/network/api_endpoints.dart';
 import 'package:railway_hrms/core/network/network_monitor.dart';
 import 'package:railway_hrms/core/storage/storage_service.dart';
@@ -227,7 +224,8 @@ class DioClient {
         final data = error.response?.data;
         if (status == 403 &&
             data is Map &&
-            data['detail'] == 'User has been logged out, needs to login again') {
+            data['detail'] ==
+                'User has been logged out, needs to login again') {
           _forceLogout();
         }
         final message =
@@ -254,12 +252,7 @@ class DioClient {
   static const String _offlineMessage =
       "Can't reach the server. Check your internet connection and try again.";
 
-  void _forceLogout() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      StorageService.clearAuthData();
-      navigatorKey.currentState?.pushReplacementNamed(AppRoutes.login);
-    });
-  }
+  void _forceLogout() => StorageService.clearAuthData();
 }
 
 /// Tells [NetworkMonitor] how long API calls take, and when they can't
@@ -409,10 +402,6 @@ class RefreshTokenInterceptor extends Interceptor {
     }
   }
 
-  Future<void> _handleRefreshFailure() async {
-    await StorageService.clearAuthData();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      navigatorKey.currentState?.pushReplacementNamed(AppRoutes.login);
-    });
-  }
+  /// The session can't be renewed: signed out, on the sign-in screen alone.
+  Future<void> _handleRefreshFailure() => StorageService.clearAuthData();
 }

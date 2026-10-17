@@ -15,7 +15,6 @@ import 'package:railway_hrms/core/design_system/foundations/app_performance.dart
 import 'package:railway_hrms/core/design_system/foundations/font_licences.dart';
 import 'package:railway_hrms/core/design_system/responsive/app_orientation.dart';
 import 'package:railway_hrms/core/media/face_capture_screen.dart';
-import 'package:railway_hrms/core/navigation/navigator_key.dart';
 import 'package:railway_hrms/core/network/network_monitor.dart';
 import 'package:railway_hrms/core/notifications/fcm_service.dart';
 import 'package:railway_hrms/firebase_options.dart';
@@ -78,7 +77,6 @@ void main() async {
           .recordError(error, stack, reason: 'FCM setup'),
     ),
   );
-  fcmService.setNavigatorKey(navigatorKey);
 
   FaceKit.configure(
     FaceKitConfig(

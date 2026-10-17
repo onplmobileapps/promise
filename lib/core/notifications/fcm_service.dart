@@ -7,7 +7,7 @@ import 'dart:math';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:railway_hrms/core/navigation/app_routes.dart';
+import 'package:railway_hrms/core/navigation/shell_requests.dart';
 import 'package:railway_hrms/core/storage/storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -70,12 +70,7 @@ class FcmService {
   static const int _maxStoredDedupKeys = 50;
 
   // Track processed notifications to prevent duplicates
-  GlobalKey<NavigatorState>? _navigatorKey;
   final Set<String> _processedNotifications = {};
-
-  void setNavigatorKey(GlobalKey<NavigatorState> key) {
-    _navigatorKey = key;
-  }
 
   Future<void> init() async {
     if (_isInitialized) {
@@ -810,45 +805,12 @@ class FcmService {
     );
   }
 
-  void _navigateToScreen(RemoteMessage message) {
-    if (_navigatorKey?.currentState == null) return;
+  /// A tapped notification opens the alerts, in the signed-in shell: at
+  /// once if it is up, or once the user has signed in.
+  void _navigateToScreen(RemoteMessage message) => ShellRequests.openAlerts();
 
-    final data = message.data;
-    final type = data['type'];
-    final leaveId = data['leaveId'] ?? data['leave_id'];
-
-    final isLeaveNotification =
-        type != null &&
-        (type.toString().toLowerCase().contains('leave') || leaveId != null);
-
-    if (isLeaveNotification && leaveId != null) {
-      _navigatorKey?.currentState?.pushNamed(
-        AppRoutes.notifications,
-        arguments: leaveId,
-      );
-    } else {
-      _navigatorKey?.currentState?.pushNamed(AppRoutes.notifications);
-    }
-  }
-
-  void _navigateToScreenFromPayload(Map<String, dynamic> payload) {
-    if (_navigatorKey?.currentState == null) return;
-
-    final leaveId =
-        payload['leaveId'] ??
-        payload['leave_id'] ??
-        payload['data']?['leaveId'] ??
-        payload['data']?['leave_id'];
-
-    if (leaveId != null) {
-      _navigatorKey?.currentState?.pushNamed(
-        AppRoutes.notifications,
-        arguments: leaveId,
-      );
-    } else {
-      _navigatorKey?.currentState?.pushNamed(AppRoutes.notifications);
-    }
-  }
+  void _navigateToScreenFromPayload(Map<String, dynamic> payload) =>
+      ShellRequests.openAlerts();
 
   Future<void> _getInitialToken() async {
     try {

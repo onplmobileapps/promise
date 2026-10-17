@@ -9,6 +9,7 @@ import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/core/navigation/app_routes.dart';
+import 'package:railway_hrms/core/navigation/shell_requests.dart';
 import 'package:railway_hrms/core/permissions/app_permission.dart';
 import 'package:railway_hrms/core/permissions/permission_gate.dart';
 import 'package:railway_hrms/core/utils/module_notifications.dart';
@@ -45,16 +46,29 @@ class _PromiseDashboardViewState extends State<PromiseDashboardView> {
   @override
   void initState() {
     super.initState();
+    ShellRequests.alerts.addListener(_openRequestedAlerts);
     // Notifications are asked for once the user is in, once only, and with
     // the reason before the system's prompt.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      // A notification tapped before signing in opens here, now.
+      _openRequestedAlerts();
       await sl<PermissionGate>().request(
         AppPermission.notifications,
         context: context,
         once: true,
       );
     });
+  }
+
+  @override
+  void dispose() {
+    ShellRequests.alerts.removeListener(_openRequestedAlerts);
+    super.dispose();
+  }
+
+  void _openRequestedAlerts() {
+    if (mounted && ShellRequests.takeAlerts()) _select(_Tab.alerts);
   }
 
   void _select(_Tab tab) {
@@ -153,8 +167,7 @@ class _PromiseDashboardViewState extends State<PromiseDashboardView> {
       _Tab.profile => const SettingsView(),
       _Tab.home => Navigator(
         key: _homePages,
-        onGenerateRoute: (settings) =>
-            MaterialPageRoute<void>(settings: settings, builder: (_) => home),
+        onGenerateRoute: (settings) => shellPageRoute(settings, home),
       ),
     };
   }
@@ -257,4 +270,18 @@ class _ShellNavigationBar extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A page of the home tab's own navigator: the home first, and a screen a
+/// module opens by name as itself, not as the home again.
+@visibleForTesting
+Route<Object?> shellPageRoute(RouteSettings settings, Widget home) {
+  final name = settings.name;
+  final builder = name == null || name == Navigator.defaultRouteName
+      ? null
+      : AppRouteRegistry.builderFor(name);
+  return MaterialPageRoute<Object?>(
+    settings: settings,
+    builder: builder ?? (_) => home,
+  );
 }

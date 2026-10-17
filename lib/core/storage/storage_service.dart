@@ -24,11 +24,11 @@ class StorageService {
     String? csrfToken,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-
+    _signingOut = false;
     await Future.wait([
       prefs.setString(_accessTokenKey, accessToken),
       prefs.setString(_refreshTokenKey, refreshToken),
-      prefs.setString(_csrfTokenKey, csrfToken!),
+      prefs.setString(_csrfTokenKey, csrfToken ?? ''),
     ]);
   }
 
@@ -157,13 +157,29 @@ class StorageService {
   /// screen; everywhere else this sends the user to the login screen.
   static Future<void> clearAuthData({bool navigate = true}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
-    if (navigate) {
+    // The session's tokens go with it, so nothing signed in is sent from
+    // the sign-in screen.
+    await Future.wait([
+      for (final key in [
+        _tokenKey,
+        _userKey,
+        _accessTokenKey,
+        _refreshTokenKey,
+        _csrfTokenKey,
+      ])
+        prefs.remove(key),
+    ]);
+    // Several requests refused at once sign out once: one sign-in screen,
+    // with nothing left under it to go back to.
+    if (navigate && !_signingOut) {
+      _signingOut = true;
       navigatorKey.currentState?.pushNamedAndRemoveUntil(
         '/login',
         (route) => false,
       );
     }
   }
+
+  /// A sign-out is on its way to the sign-in screen; cleared on signing in.
+  static bool _signingOut = false;
 }
