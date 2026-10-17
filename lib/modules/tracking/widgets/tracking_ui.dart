@@ -26,6 +26,7 @@ class TrackPalette {
       amber = c.onGoldContainer,
       amberSoft = c.goldContainer,
       grey = c.textTertiary,
+      offline = c.offline,
       red = c.onDangerContainer,
       redSoft = c.dangerContainer,
       blue = c.info,
@@ -74,6 +75,9 @@ class TrackPalette {
   final Color amber;
   final Color amberSoft;
   final Color grey;
+
+  /// A train gone quiet, on the map and in its status: grey-blue.
+  final Color offline;
   final Color red;
   final Color redSoft;
   final Color blue;
@@ -260,7 +264,7 @@ LiveStatus liveStatusOf(
       TrainLiveStatus.stale,
       // Its device has gone quiet: no live position to show.
       'Offline',
-      palette.grey,
+      palette.offline,
       Icons.cloud_off_rounded,
     );
   }

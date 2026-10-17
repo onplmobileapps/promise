@@ -32,14 +32,15 @@ class TrainLivery {
     glass: Color(0xFF13222E),
   );
 
-  /// For all trains: official green locomotive and coaches.
-  static const faded = TrainLivery(
-    bodyDark: Color(0xFF0A4A2A),
-    body: Color(0xFF167340),
-    bodyLight: Color(0xFF3DB46D),
-    band: Color(0xFFF7C948),
-    roof: Color(0xFFEDE6CF),
-    glass: Color(0xFF13222E),
+  /// A train gone offline: grey-blue, its band dulled, so a live train
+  /// stands out from it at a glance.
+  static const offline = TrainLivery(
+    bodyDark: Color(0xFF3B4A5E),
+    body: Color(0xFF5B6E86),
+    bodyLight: Color(0xFF8C9DB3),
+    band: Color(0xFFC3CEDB),
+    roof: Color(0xFFE3E8EF),
+    glass: Color(0xFF1C2532),
   );
 }
 

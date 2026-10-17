@@ -1473,7 +1473,7 @@ class _MapPulsePainter extends CustomPainter {
         // Darker than the mint land so moving trains stand out on it.
         _MapTrainKind.moving => palette.g1,
         _MapTrainKind.stopped => palette.amber,
-        _MapTrainKind.old => palette.grey,
+        _MapTrainKind.old => palette.offline,
       };
       if (kind == _MapTrainKind.moving) {
         final phase = (t * 1.5 + i * 0.37) % 1.0;

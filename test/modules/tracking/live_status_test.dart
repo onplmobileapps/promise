@@ -103,6 +103,9 @@ void main() {
       );
       expect(s.kind, TrainLiveStatus.stale);
       expect(s.label, 'Offline');
+      // Grey-blue, apart from the plain grey of text and a live green.
+      expect(s.color, TrackPalette.light.offline);
+      expect(s.color, isNot(TrackPalette.light.grey));
     });
 
     test('just after the feed reconnects is still being updated', () {

@@ -48,8 +48,18 @@ class Train3dPalette {
     lamp: '#FFF3B0',
   );
 
-  /// For all trains: green palette.
-  static const faded = pakistanRailways;
+  /// A train gone offline: grey-blue, its band dulled and its lamp out.
+  static const offline = Train3dPalette(
+    frame: '#263241',
+    lowerBody: '#3E4E63',
+    band: '#B8C4D3',
+    body: '#566A82',
+    coachBody: '#5E728B',
+    glass: '#18212C',
+    locoRoof: '#7F93AB',
+    coachRoof: '#C9D1DB',
+    lamp: '#D6DCE4',
+  );
 }
 
 /// How much of the train is modelled.

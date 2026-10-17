@@ -54,6 +54,10 @@ abstract final class AppPalette {
   static const coral600 = Color(0xFFD9786A);
   static const coral800 = Color(0xFFA63323);
 
+  // Steel: a grey with blue in it, for what is out of touch.
+  static const steel300 = Color(0xFFA3B4C8);
+  static const steel500 = Color(0xFF6E829B);
+
   // Sky.
   static const sky50 = Color(0xFFE6F1FB);
   static const sky500 = Color(0xFF5FA3D9);

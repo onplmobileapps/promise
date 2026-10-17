@@ -31,7 +31,7 @@ List<Object> _statusColor(TrackPalette palette) => [
   mapHex(palette.g2),
   'stopped',
   mapHex(palette.amber),
-  mapHex(palette.grey),
+  mapHex(palette.offline),
 ];
 const Map<String, dynamic> _emptyCollection = {
   'type': 'FeatureCollection',
@@ -222,7 +222,7 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
     );
     await map.addImage(
       'train-dim',
-      await renderTrainSprite(TrainLivery.faded, dpr, headlights: false),
+      await renderTrainSprite(TrainLivery.offline, dpr, headlights: false),
     );
 
     await addStationLayers(map, palette);
@@ -713,7 +713,7 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
         reversed: pose?.reversed ?? false,
         coaches: 2,
         palette: _kindOf(e.status) == 'old'
-            ? Train3dPalette.faded
+            ? Train3dPalette.offline
             : Train3dPalette.pakistanRailways,
       );
     }
@@ -1338,7 +1338,7 @@ class _Legend extends StatelessWidget {
         children: [
           item(palette.g2, 'Moving'),
           item(palette.amber, 'Stopped'),
-          item(palette.grey, 'Offline'),
+          item(palette.offline, 'Offline'),
         ],
       ),
     );

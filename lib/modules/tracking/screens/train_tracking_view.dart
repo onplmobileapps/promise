@@ -762,7 +762,7 @@ class _RouteTrack extends StatelessWidget {
                               (status.isLive ||
                                   status.kind == TrainLiveStatus.weakGps)
                           ? TrainLivery.pakistanRailways
-                          : TrainLivery.faded,
+                          : TrainLivery.offline,
                       headlights:
                           _progress != null &&
                           status.kind == TrainLiveStatus.moving,

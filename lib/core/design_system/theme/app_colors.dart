@@ -75,6 +75,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.success,
     required this.warningMark,
     required this.infoMark,
+    required this.offline,
     required this.textFaint,
     required this.dayPresent,
     required this.dayPresentEdge,
@@ -152,6 +153,7 @@ class AppColors extends ThemeExtension<AppColors> {
     success: AppPalette.jade700,
     warningMark: AppPalette.gold300,
     infoMark: AppPalette.sky300,
+    offline: AppPalette.steel500,
     textFaint: AppPalette.ink200,
     dayPresent: AppPalette.jade75,
     dayPresentEdge: AppPalette.jade400,
@@ -229,6 +231,7 @@ class AppColors extends ThemeExtension<AppColors> {
     success: AppPalette.jadeNight500,
     warningMark: AppPalette.goldNight,
     infoMark: AppPalette.skyNight,
+    offline: AppPalette.steel300,
     textFaint: AppPalette.night500,
     dayPresent: AppPalette.jadeNight16,
     dayPresentEdge: AppPalette.jadeNight40,
@@ -439,6 +442,10 @@ class AppColors extends ThemeExtension<AppColors> {
   /// Marks leave, or news.
   final Color infoMark;
 
+  /// Marks something out of touch, as a train whose GPS has gone quiet:
+  /// grey with blue in it, apart from the greys of plain text.
+  final Color offline;
+
   /// Days outside the month shown, and other text that only fills a grid.
   final Color textFaint;
 
@@ -529,6 +536,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? success,
     Color? warningMark,
     Color? infoMark,
+    Color? offline,
     Color? textFaint,
     Color? dayPresent,
     Color? dayPresentEdge,
@@ -605,6 +613,7 @@ class AppColors extends ThemeExtension<AppColors> {
       success: success ?? this.success,
       warningMark: warningMark ?? this.warningMark,
       infoMark: infoMark ?? this.infoMark,
+      offline: offline ?? this.offline,
       textFaint: textFaint ?? this.textFaint,
       dayPresent: dayPresent ?? this.dayPresent,
       dayPresentEdge: dayPresentEdge ?? this.dayPresentEdge,
@@ -710,6 +719,7 @@ class AppColors extends ThemeExtension<AppColors> {
       success: Color.lerp(success, other.success, t)!,
       warningMark: Color.lerp(warningMark, other.warningMark, t)!,
       infoMark: Color.lerp(infoMark, other.infoMark, t)!,
+      offline: Color.lerp(offline, other.offline, t)!,
       textFaint: Color.lerp(textFaint, other.textFaint, t)!,
       dayPresent: Color.lerp(dayPresent, other.dayPresent, t)!,
       dayPresentEdge: Color.lerp(dayPresentEdge, other.dayPresentEdge, t)!,

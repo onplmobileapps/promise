@@ -282,11 +282,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
     );
     await map.addImage(
       'train-dim',
-      await renderTrainSprite(
-        TrainLivery.pakistanRailways,
-        dpr,
-        headlights: false,
-      ),
+      await renderTrainSprite(TrainLivery.offline, dpr, headlights: false),
     );
 
     await map.addGeoJsonSource('route', _emptyCollection);
@@ -384,7 +380,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
           [Expressions.get, 'live'],
           1,
           mapHex(palette.g2),
-          mapHex(palette.grey),
+          mapHex(palette.offline),
         ],
         circlePitchAlignment: 'map',
       ),
@@ -681,7 +677,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
                   reversed: pose.reversed,
                   palette: _live
                       ? Train3dPalette.pakistanRailways
-                      : Train3dPalette.faded,
+                      : Train3dPalette.offline,
                   detail: detail,
                 )
               : _emptyCollection,
