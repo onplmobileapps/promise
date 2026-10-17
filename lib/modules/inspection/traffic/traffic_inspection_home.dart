@@ -1,102 +1,142 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
+import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/core/storage/storage_service.dart';
-import 'package:railway_hrms/modules/inspection/traffic/level_crossing_form.dart';
+import 'package:railway_hrms/core/utils/either.dart';
+import 'package:railway_hrms/modules/inspection/shared/flow/inspection_review_screen.dart';
+import 'package:railway_hrms/modules/inspection/shared/flow/inspection_session.dart';
+import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
+import 'package:railway_hrms/modules/inspection/shared/report/inspection_report.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_form_scaffold.dart';
 import 'package:railway_hrms/modules/inspection/traffic/models.dart';
-import 'package:railway_hrms/modules/inspection/traffic/traffic_commercial_station_form.dart';
-import 'package:railway_hrms/modules/inspection/traffic/traffic_transport_station_form.dart';
+import 'package:railway_hrms/modules/inspection/traffic/traffic_forms.dart';
+import 'package:railway_hrms/modules/inspection/traffic/traffic_report.dart';
 
 enum _FormKind { commercialStation, transportStation, levelCrossing }
 
-/// Entry point for the Traffic inspection module. Lets the inspector pick
-/// which department + form they're conducting, then shows that form.
+/// A traffic inspection of a station: the face first, then the forms the
+/// commercial and transport departments conduct, each step by step and
+/// each ending in its signed report, kept on the phone.
 ///
-/// The Commercial and Transport station forms both ask about the same
-/// physical safety equipment CONDITION (Firefighting equipment, Medicine /
-/// first aid) for the same station visit. Rather than let each form ask
-/// independently — which was the literal duplication in the source BRD —
-/// this screen owns that answer once per station visit and passes a
-/// `safetyConditionAlreadyRecordedByOtherDept` flag down so the second
-/// department to open the inspection sees it read-only instead of asking
-/// again from scratch.
-class TrafficInspectionHome extends StatefulWidget {
-  final String stationName;
-  final String? resumeId;
+/// The commercial and transport station forms both ask after the same
+/// safety equipment on the same visit. The visit holds that answer once,
+/// so the second department to open its form sees it, answered, instead of
+/// asking again.
+class TrafficInspectionHome extends StatelessWidget {
   const TrafficInspectionHome({
     super.key,
     required this.stationName,
     this.resumeId,
+    this.verifier,
   });
 
+  final String stationName;
+  final String? resumeId;
+
+  /// Checks the face; the app's own unless a test stands in.
+  final InspectionFaceVerifier? verifier;
+
   @override
-  State<TrafficInspectionHome> createState() => _TrafficInspectionHomeState();
+  Widget build(BuildContext context) => InspectionStartGate(
+    title: context.l10n.inspTrafficTitle,
+    verifier: verifier,
+    child: _TrafficVisit(
+      stationName: stationName,
+      resumeId: resumeId,
+      verifier: verifier,
+    ),
+  );
 }
 
-class _TrafficInspectionHomeState extends State<TrafficInspectionHome> {
-  String _id = 'traffic-${DateTime.now().millisecondsSinceEpoch}';
-  final TrafficCommercialStationData _commercialData =
-      TrafficCommercialStationData();
-  final TrafficTransportStationData _transportData =
-      TrafficTransportStationData();
-  final List<LevelCrossingRecord> _levelCrossingRecords = [];
+class _TrafficVisit extends StatefulWidget {
+  const _TrafficVisit({
+    required this.stationName,
+    required this.resumeId,
+    required this.verifier,
+  });
 
-  _FormKind? _openForm;
-  bool _isLoading = true;
+  final String stationName;
+  final String? resumeId;
+  final InspectionFaceVerifier? verifier;
+
+  @override
+  State<_TrafficVisit> createState() => _TrafficVisitState();
+}
+
+class _TrafficVisitState extends State<_TrafficVisit> {
+  late final String _id =
+      widget.resumeId ?? 'traffic-${DateTime.now().millisecondsSinceEpoch}';
+  final _commercial = TrafficCommercialStationData();
+  final _transport = TrafficTransportStationData();
+  final List<LevelCrossingRecord> _crossings = [];
+
+  /// The forms already sent this visit.
+  final Set<String> _done = {};
+  bool _ready = false;
+  Timer? _autosave;
 
   @override
   void initState() {
     super.initState();
-    if (widget.resumeId != null) {
-      _id = widget.resumeId!;
-      _restoreDraft();
-    } else {
-      _isLoading = false;
-    }
+    unawaited(_open());
   }
 
-  Future<void> _restoreDraft() async {
+  @override
+  void dispose() {
+    _autosave?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _open() async {
     final raw = await StorageService.getInspectionDraft(_id);
     if (raw != null && raw.isNotEmpty) {
       try {
-        final payload = jsonDecode(raw) as Map<String, dynamic>;
-        setState(() {
-          _commercialData.fromJson(payload['commercial'] ?? {});
-          _transportData.fromJson(payload['transport'] ?? {});
-          if (payload['levelCrossings'] is List) {
-            _levelCrossingRecords.clear();
-            for (var lc in payload['levelCrossings']) {
-              _levelCrossingRecords.add(LevelCrossingRecord.fromJson(lc));
-            }
-          }
-        });
-      } catch (e) {
-        debugPrint('Error restoring traffic draft: $e');
+        final saved = jsonDecode(raw) as Map<String, dynamic>;
+        _commercial.fromJson(
+          Map<String, dynamic>.from(saved['commercial'] as Map? ?? {}),
+        );
+        _transport.fromJson(
+          Map<String, dynamic>.from(saved['transport'] as Map? ?? {}),
+        );
+        for (final lc in saved['levelCrossings'] as List? ?? const []) {
+          _crossings.add(
+            LevelCrossingRecord.fromJson(Map<String, dynamic>.from(lc as Map)),
+          );
+        }
+        _done.addAll([
+          for (final kind in saved['done'] as List? ?? []) '$kind',
+        ]);
+      } on Object catch (e) {
+        debugPrint('Traffic draft could not be read: $e');
       }
     }
-    if (mounted) setState(() => _isLoading = false);
+    if (_crossings.isEmpty) _crossings.add(LevelCrossingRecord());
+    if (mounted) setState(() => _ready = true);
   }
 
-  void _onChanged() {
-    if (!mounted) return;
-    setState(() {});
-    _persistDraft();
+  Map<String, dynamic> get _payload => {
+    'id': _id,
+    'type': 'traffic',
+    'stationName': widget.stationName,
+    'commercial': _commercial.toJson(),
+    'transport': _transport.toJson(),
+    'levelCrossings': [for (final lc in _crossings) lc.toJson()],
+    'done': _done.toList(),
+  };
+
+  void _changed() {
+    if (mounted) setState(() {});
+    _autosave?.cancel();
+    _autosave = Timer(const Duration(milliseconds: 800), _save);
   }
 
-  Future<void> _persistDraft() async {
-    final payload = {
-      'id': _id,
-      'stationName': widget.stationName,
-      'commercial': _commercialData.toJson(),
-      'transport': _transportData.toJson(),
-      'levelCrossings': _levelCrossingRecords.map((r) => r.toJson()).toList(),
-      'type': 'traffic',
-      'timestamp': DateTime.now().toIso8601String(),
-    };
+  Future<void> _save() async {
+    _autosave?.cancel();
+    final payload = _payload;
     await StorageService.saveInspectionDraft(_id, jsonEncode(payload));
-
-    // Also save a record for the dashboard list
     await StorageService.saveInspectionRecord({
       'id': _id,
       'status': 'in_progress',
@@ -106,200 +146,195 @@ class _TrafficInspectionHomeState extends State<TrafficInspectionHome> {
     });
   }
 
-  bool get _safetyConditionAnsweredByCommercial =>
-      _commercialData.safetyEquipmentCondition.answers.isNotEmpty;
-  bool get _safetyConditionAnsweredByTransport =>
-      _transportData.staffEquipmentCondition.answers.isNotEmpty;
+  bool get _commercialShared =>
+      _commercial.safetyEquipmentCondition.answers.isNotEmpty;
+  bool get _transportShared =>
+      _transport.staffEquipmentCondition.answers.isNotEmpty;
 
-  void _saveDraft() async {
-    await _persistDraft();
-    if (mounted) {
-      showAppMessage(
-        context,
-        'Traffic inspection draft saved',
-        tone: AppDialogTone.success,
-      );
-    }
-  }
+  String _title(AppLocalizations l10n, _FormKind kind) => switch (kind) {
+    _FormKind.commercialStation => l10n.inspTrafficCommercial,
+    _FormKind.transportStation => l10n.inspTrafficTransport,
+    _FormKind.levelCrossing => l10n.inspTrafficLevelCrossing,
+  };
 
-  void _submit(String formName) async {
-    final payload = {
-      'id': _id,
-      'stationName': widget.stationName,
-      'commercial': _commercialData.toJson(),
-      'transport': _transportData.toJson(),
-      'levelCrossings': _levelCrossingRecords.map((r) => r.toJson()).toList(),
-      'type': 'traffic',
-    };
-
-    await StorageService.saveInspectionRecord({
-      'id': _id,
-      'status': 'pending',
-      'train': '${widget.stationName} (Traffic)',
-      'date': DateTime.now().toIso8601String(),
-      'payload': payload,
-    });
-
-    await StorageService.clearInspectionDraft(_id);
-
-    if (mounted) {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          icon: const Icon(Icons.check_circle, color: Colors.green, size: 40),
-          title: const Text('Inspection Submitted'),
-          content: Text('$formName has been submitted for review.'),
-          actions: [
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop(); // Back to dashboard
-              },
-              child: const Text('Done'),
+  Future<void> _openForm(_FormKind kind) async {
+    final l10n = context.l10n;
+    final title = _title(l10n, kind);
+    await pushInspectionPage<void>(
+      context,
+      (_) => _TrafficForm(
+        title: title,
+        subtitle: widget.stationName,
+        verifier: widget.verifier,
+        steps: (changed) => switch (kind) {
+          _FormKind.commercialStation => commercialSteps(
+            _commercial,
+            changed,
+            sharedAnswered: !_commercialShared && _transportShared,
+          ),
+          _FormKind.transportStation => transportSteps(
+            _transport,
+            changed,
+            sharedAnswered: !_transportShared && _commercialShared,
+            addCautionOrder: (code) =>
+                _transport.cautionOrders.of(code, defaultChecked: false),
+          ),
+          _FormKind.levelCrossing => levelCrossingSteps(_crossings, changed),
+        },
+        report: () => InspectionReport(
+          title: '${l10n.inspTrafficTitle} · $title',
+          subtitle: widget.stationName,
+          date: DateTime.now(),
+          facts: [
+            ReportRow(
+              l10n.inspFormStation,
+              widget.stationName,
+              tone: ReportTone.plain,
             ),
           ],
+          sections: switch (kind) {
+            _FormKind.commercialStation => commercialReport(_commercial),
+            _FormKind.transportStation => transportReport(_transport),
+            _FormKind.levelCrossing => levelCrossingReport(_crossings),
+          },
         ),
-      );
-    }
+        onChanged: _changed,
+        onLeave: _save,
+        onKept: (signatures) async {
+          _done.add(kind.name);
+          await _save();
+          await StorageService.saveInspectionRecord({
+            'id': '${_id}_${kind.name}',
+            'status': 'completed',
+            'train': '${widget.stationName} · $title',
+            'date': DateTime.now().toIso8601String(),
+            'payload': {..._payload, 'form': kind.name, ...signatures},
+          });
+        },
+      ),
+    );
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(body: AppLoader.page());
-    }
-    if (_openForm == null) return _buildPicker(context);
-
-    switch (_openForm!) {
-      case _FormKind.commercialStation:
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Traffic (Commercial) — Station'),
-            leading: _backButton(),
-          ),
-          body: TrafficCommercialStationForm(
-            stationName: widget.stationName,
-            data: _commercialData,
-            onChanged: _onChanged,
-            onSaveDraft: _saveDraft,
-            onSubmit: () =>
-                _submit('Traffic (Commercial) — Station inspection'),
-            safetyConditionAlreadyRecordedByOtherDept:
-                !_safetyConditionAnsweredByCommercial &&
-                _safetyConditionAnsweredByTransport,
-          ),
-        );
-      case _FormKind.transportStation:
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Traffic (Transport) — Station'),
-            leading: _backButton(),
-          ),
-          body: TrafficTransportStationForm(
-            stationName: widget.stationName,
-            data: _transportData,
-            onChanged: _onChanged,
-            onSaveDraft: _saveDraft,
-            onSubmit: () => _submit('Traffic (Transport) — Station inspection'),
-            safetyConditionAlreadyRecordedByOtherDept:
-                !_safetyConditionAnsweredByTransport &&
-                _safetyConditionAnsweredByCommercial,
-          ),
-        );
-      case _FormKind.levelCrossing:
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Traffic (Transport) — Level Crossing'),
-            leading: _backButton(),
-          ),
-          body: LevelCrossingListScreen(
-            stationName: widget.stationName,
-            records: _levelCrossingRecords,
-            onChanged: _onChanged,
-            onSaveDraft: _saveDraft,
-            onSubmit: () => _submit('Level Crossing inspection'),
-          ),
-        );
-    }
-  }
-
-  Widget _backButton() => Center(
-    child: AppBackButton(onPressed: () => setState(() => _openForm = null)),
-  );
-
-  Widget _buildPicker(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final colors = context.colors;
+    if (!_ready) return const Scaffold(body: Center(child: AppLoader()));
+    Widget form(_FormKind kind, String about, AppGlyph glyph) => AppListRow(
+      leading: AppIconTile(
+        size: AppSizes.rowTile,
+        child: AppGlyphIcon(
+          glyph,
+          size: AppSizes.iconMd,
+          color: colors.iconAccent,
+          depth: true,
+        ),
+      ),
+      title: _title(l10n, kind),
+      subtitle: about,
+      trailing: _done.contains(kind.name)
+          ? AppPill(l10n.inspFormSaved, dot: colors.success)
+          : null,
+      showChevron: !_done.contains(kind.name),
+      onTap: () => _openForm(kind),
+    );
     return Scaffold(
-      appBar: AppBar(title: const Text('Traffic Inspection')),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+      body: AppScrollPage(
+        backdrop: AppPageBackdrop.blobs,
         children: [
-          Text(
-            widget.stationName,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          AppHeaderBar(
+            title: l10n.inspTrafficTitle,
+            subtitle: widget.stationName,
+            onBack: () => Navigator.of(context).maybePop(),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Choose the form to conduct.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 20),
-          _pickerCard(
-            context,
-            title: 'Traffic (Commercial) — Station',
-            subtitle:
-                'Booking Office, Statistics, Parcel & Goods Offices, Vending, Station Master\'s Office',
-            icon: Icons.storefront,
-            onTap: () =>
-                setState(() => _openForm = _FormKind.commercialStation),
-          ),
-          _pickerCard(
-            context,
-            title: 'Traffic (Transport) — Station',
-            subtitle:
-                'Registers, Ticketing (TCR), Caution Orders, Staff Equipment, Points, Siding',
-            icon: Icons.alt_route,
-            onTap: () => setState(() => _openForm = _FormKind.transportStation),
-          ),
-          _pickerCard(
-            context,
-            title: 'Traffic (Transport) — Level Crossing',
-            subtitle: 'One or more level crossings for this station',
-            icon: Icons.fence,
-            onTap: () => setState(() => _openForm = _FormKind.levelCrossing),
+          AppSpacing.gapXl,
+          AppSectionLabel(l10n.inspTrafficChoose),
+          AppSpacing.gapSm,
+          AppListGroup(
+            children: [
+              form(
+                _FormKind.commercialStation,
+                l10n.inspTrafficCommercialAbout,
+                AppGlyphs.briefcase,
+              ),
+              form(
+                _FormKind.transportStation,
+                l10n.inspTrafficTransportAbout,
+                AppGlyphs.route,
+              ),
+              form(
+                _FormKind.levelCrossing,
+                l10n.inspTrafficLevelCrossingAbout,
+                AppGlyphs.triangleAlert,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _pickerCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(
-          backgroundColor: scheme.primaryContainer,
-          child: Icon(icon, color: scheme.onPrimaryContainer),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
-      ),
-    );
+/// One traffic form, step by step, ending in its signed report.
+class _TrafficForm extends StatefulWidget {
+  const _TrafficForm({
+    required this.title,
+    required this.subtitle,
+    required this.steps,
+    required this.report,
+    required this.onChanged,
+    required this.onLeave,
+    required this.onKept,
+    this.verifier,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<InspectionStep> Function(VoidCallback changed) steps;
+  final InspectionReport Function() report;
+  final VoidCallback onChanged;
+  final Future<void> Function() onLeave;
+
+  /// Keeps the finished form, signed.
+  final Future<void> Function(Map<String, dynamic> signatures) onKept;
+  final InspectionFaceVerifier? verifier;
+
+  @override
+  State<_TrafficForm> createState() => _TrafficFormState();
+}
+
+class _TrafficFormState extends State<_TrafficForm> {
+  bool _dirty = false;
+
+  void _changed() {
+    setState(() => _dirty = true);
+    widget.onChanged();
   }
+
+  Future<void> _review() async {
+    final l10n = context.l10n;
+    await widget.onLeave();
+    if (!mounted) return;
+    final kept = await reviewAndSubmit(
+      context,
+      verifier: widget.verifier,
+      report: widget.report(),
+      submit: (signatures) async {
+        await widget.onKept(signatures.toJson());
+        return Right(l10n.inspFormSavedLocally);
+      },
+    );
+    if (kept && mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) => InspectionFormScaffold(
+    title: widget.title,
+    subtitle: widget.subtitle,
+    dirty: _dirty,
+    onLeave: widget.onLeave,
+    onReview: _review,
+    steps: widget.steps(_changed),
+  );
 }

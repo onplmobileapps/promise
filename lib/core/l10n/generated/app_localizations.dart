@@ -5007,6 +5007,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'GEU-40 · Mechanical'**
   String get inspLocomotiveSubtitle;
+
+  /// Marks every item of a traffic checklist in order at once.
+  ///
+  /// In en, this message translates to:
+  /// **'All {label}'**
+  String inspTrafficAllGood(String label);
+
+  /// Says a count on a traffic checklist may not exceed the asset record's.
+  ///
+  /// In en, this message translates to:
+  /// **'No more than the asset\'s own count'**
+  String get inspTrafficQuantityCap;
+
+  /// Says a shared safety check was already answered in the other traffic form.
+  ///
+  /// In en, this message translates to:
+  /// **'Answered by the other department this visit'**
+  String get inspTrafficSharedAnswered;
+
+  /// Heading of the station's points on the traffic transport form.
+  ///
+  /// In en, this message translates to:
+  /// **'Points'**
+  String get inspTrafficPoints;
+
+  /// Explains the points list on the traffic transport form.
+  ///
+  /// In en, this message translates to:
+  /// **'Each point on the station'**
+  String get inspTrafficPointsNote;
+
+  /// Label of a point's name on the traffic transport form.
+  ///
+  /// In en, this message translates to:
+  /// **'Point {number} name or number'**
+  String inspTrafficPointName(int number);
+
+  /// Title of the traffic inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic inspection'**
+  String get inspTrafficTitle;
+
+  /// Prompt on the traffic inspection's list of forms.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the form to conduct'**
+  String get inspTrafficChoose;
+
+  /// Name of the traffic commercial station form.
+  ///
+  /// In en, this message translates to:
+  /// **'Commercial — Station'**
+  String get inspTrafficCommercial;
+
+  /// What the traffic commercial station form covers.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking office, statistics, parcels and goods, vending, station master\'s office'**
+  String get inspTrafficCommercialAbout;
+
+  /// Name of the traffic transport station form.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport — Station'**
+  String get inspTrafficTransport;
+
+  /// What the traffic transport station form covers.
+  ///
+  /// In en, this message translates to:
+  /// **'Registers, ticketing, caution orders, staff equipment, points, siding'**
+  String get inspTrafficTransportAbout;
+
+  /// Name of the traffic level crossing form.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport — Level crossing'**
+  String get inspTrafficLevelCrossing;
+
+  /// What the traffic level crossing form covers.
+  ///
+  /// In en, this message translates to:
+  /// **'Each level crossing: agency, road, communication and equipment'**
+  String get inspTrafficLevelCrossingAbout;
+
+  /// Name of one level crossing on the traffic form.
+  ///
+  /// In en, this message translates to:
+  /// **'Crossing {number}'**
+  String inspTrafficCrossing(int number);
+
+  /// Adds another level crossing to the traffic form.
+  ///
+  /// In en, this message translates to:
+  /// **'Add level crossing'**
+  String get inspTrafficAddCrossing;
+
+  /// Removes a level crossing from the traffic form.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this crossing'**
+  String get inspTrafficRemoveCrossing;
 }
 
 class _AppLocalizationsDelegate

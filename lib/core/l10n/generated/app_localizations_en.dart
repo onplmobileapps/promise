@@ -2760,4 +2760,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inspLocomotiveSubtitle => 'GEU-40 · Mechanical';
+
+  @override
+  String inspTrafficAllGood(String label) {
+    return 'All $label';
+  }
+
+  @override
+  String get inspTrafficQuantityCap => 'No more than the asset\'s own count';
+
+  @override
+  String get inspTrafficSharedAnswered =>
+      'Answered by the other department this visit';
+
+  @override
+  String get inspTrafficPoints => 'Points';
+
+  @override
+  String get inspTrafficPointsNote => 'Each point on the station';
+
+  @override
+  String inspTrafficPointName(int number) {
+    return 'Point $number name or number';
+  }
+
+  @override
+  String get inspTrafficTitle => 'Traffic inspection';
+
+  @override
+  String get inspTrafficChoose => 'Choose the form to conduct';
+
+  @override
+  String get inspTrafficCommercial => 'Commercial — Station';
+
+  @override
+  String get inspTrafficCommercialAbout =>
+      'Booking office, statistics, parcels and goods, vending, station master\'s office';
+
+  @override
+  String get inspTrafficTransport => 'Transport — Station';
+
+  @override
+  String get inspTrafficTransportAbout =>
+      'Registers, ticketing, caution orders, staff equipment, points, siding';
+
+  @override
+  String get inspTrafficLevelCrossing => 'Transport — Level crossing';
+
+  @override
+  String get inspTrafficLevelCrossingAbout =>
+      'Each level crossing: agency, road, communication and equipment';
+
+  @override
+  String inspTrafficCrossing(int number) {
+    return 'Crossing $number';
+  }
+
+  @override
+  String get inspTrafficAddCrossing => 'Add level crossing';
+
+  @override
+  String get inspTrafficRemoveCrossing => 'Remove this crossing';
 }

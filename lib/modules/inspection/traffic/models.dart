@@ -775,3 +775,18 @@ class TrafficTransportStationData {
     }
   }
 }
+
+const List<String> kSponsoringAgencyOptions = [
+  'District Administration',
+  'Local Government',
+  'Provincial Government',
+  'Highway Department',
+];
+const List<String> kRoadSurfaceTypeOptions = ['Metal', 'Non-Metal'];
+const List<String> kRoadSurfaceSoilingOptions = ['Soiling', 'Non-Soiling'];
+const List<String> kCommunicationMechanismOptions = [
+  'Phone',
+  'Bell',
+  'Wireless',
+  'Nothing',
+];

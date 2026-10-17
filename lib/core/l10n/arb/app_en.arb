@@ -3869,5 +3869,89 @@
   "inspLocomotiveSubtitle": "GEU-40 · Mechanical",
   "@inspLocomotiveSubtitle": {
     "description": "What a locomotive inspection covers, under its title."
+  },
+  "inspTrafficAllGood": "All {label}",
+  "@inspTrafficAllGood": {
+    "description": "Marks every item of a traffic checklist in order at once.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "OK"
+      }
+    }
+  },
+  "inspTrafficQuantityCap": "No more than the asset's own count",
+  "@inspTrafficQuantityCap": {
+    "description": "Says a count on a traffic checklist may not exceed the asset record's."
+  },
+  "inspTrafficSharedAnswered": "Answered by the other department this visit",
+  "@inspTrafficSharedAnswered": {
+    "description": "Says a shared safety check was already answered in the other traffic form."
+  },
+  "inspTrafficPoints": "Points",
+  "@inspTrafficPoints": {
+    "description": "Heading of the station's points on the traffic transport form."
+  },
+  "inspTrafficPointsNote": "Each point on the station",
+  "@inspTrafficPointsNote": {
+    "description": "Explains the points list on the traffic transport form."
+  },
+  "inspTrafficPointName": "Point {number} name or number",
+  "@inspTrafficPointName": {
+    "description": "Label of a point's name on the traffic transport form.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "inspTrafficTitle": "Traffic inspection",
+  "@inspTrafficTitle": {
+    "description": "Title of the traffic inspection."
+  },
+  "inspTrafficChoose": "Choose the form to conduct",
+  "@inspTrafficChoose": {
+    "description": "Prompt on the traffic inspection's list of forms."
+  },
+  "inspTrafficCommercial": "Commercial — Station",
+  "@inspTrafficCommercial": {
+    "description": "Name of the traffic commercial station form."
+  },
+  "inspTrafficCommercialAbout": "Booking office, statistics, parcels and goods, vending, station master's office",
+  "@inspTrafficCommercialAbout": {
+    "description": "What the traffic commercial station form covers."
+  },
+  "inspTrafficTransport": "Transport — Station",
+  "@inspTrafficTransport": {
+    "description": "Name of the traffic transport station form."
+  },
+  "inspTrafficTransportAbout": "Registers, ticketing, caution orders, staff equipment, points, siding",
+  "@inspTrafficTransportAbout": {
+    "description": "What the traffic transport station form covers."
+  },
+  "inspTrafficLevelCrossing": "Transport — Level crossing",
+  "@inspTrafficLevelCrossing": {
+    "description": "Name of the traffic level crossing form."
+  },
+  "inspTrafficLevelCrossingAbout": "Each level crossing: agency, road, communication and equipment",
+  "@inspTrafficLevelCrossingAbout": {
+    "description": "What the traffic level crossing form covers."
+  },
+  "inspTrafficCrossing": "Crossing {number}",
+  "@inspTrafficCrossing": {
+    "description": "Name of one level crossing on the traffic form.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "inspTrafficAddCrossing": "Add level crossing",
+  "@inspTrafficAddCrossing": {
+    "description": "Adds another level crossing to the traffic form."
+  },
+  "inspTrafficRemoveCrossing": "Remove this crossing",
+  "@inspTrafficRemoveCrossing": {
+    "description": "Removes a level crossing from the traffic form."
   }
 }
