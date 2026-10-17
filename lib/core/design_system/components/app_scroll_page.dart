@@ -59,14 +59,17 @@ class AppScrollPage extends StatelessWidget {
               gutter,
               AppSpacing.xxl + MediaQuery.paddingOf(context).bottom,
             ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppSizes.contentMaxWidth,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: children,
+            // Scrolled as one picture, not painted afresh every frame.
+            child: RepaintBoundary(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppSizes.contentMaxWidth,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: children,
+                  ),
                 ),
               ),
             ),

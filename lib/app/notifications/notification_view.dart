@@ -108,109 +108,112 @@ class _NotificationViewState extends State<NotificationView> {
                 layout.gutter,
                 AppSpacing.xxl + MediaQuery.paddingOf(context).bottom,
               ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppSizes.contentMaxWidth,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (canGoBack) ...[
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: AppTileButton(
-                            icon: const AppGlyphIcon(AppGlyphs.chevronLeft),
-                            tooltip: l10n.actionBack,
-                            onPressed: () => Navigator.of(context).maybePop(),
+              // Scrolled as one picture, not painted afresh every frame.
+              child: RepaintBoundary(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppSizes.contentMaxWidth,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (canGoBack) ...[
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: AppTileButton(
+                              icon: const AppGlyphIcon(AppGlyphs.chevronLeft),
+                              tooltip: l10n.actionBack,
+                              onPressed: () => Navigator.of(context).maybePop(),
+                            ),
                           ),
-                        ),
-                        AppSpacing.gapSm,
-                      ],
-                      AppPageHeader(
-                        overline: unread > 0
-                            ? l10n.alertsOverline(unread, date)
-                            : date,
-                        title: l10n.alertsTitle,
-                        action: unread > 0
-                            ? AppButton(
-                                label: l10n.alertsMarkAllRead,
-                                variant: AppButtonVariant.text,
-                                size: AppButtonSize.small,
-                                underlined: false,
-                                expand: false,
-                                onPressed: _markAllRead,
-                              )
-                            : null,
-                      ),
-                      AppSpacing.gapSm,
-                      AppFilterChips<AlertFilter>(
-                        selected: _filter,
-                        onSelected: (filter) =>
-                            setState(() => _filter = filter),
-                        options: [
-                          AppFilterOption(
-                            value: AlertFilter.all,
-                            label: l10n.alertsFilterAll,
-                          ),
-                          AppFilterOption(
-                            value: AlertFilter.accidents,
-                            label: l10n.alertsFilterAccidents,
-                            count: _unread(AlertFilter.accidents),
-                          ),
-                          AppFilterOption(
-                            value: AlertFilter.leave,
-                            label: l10n.alertsFilterLeave,
-                            count: _unread(AlertFilter.leave),
-                          ),
-                          AppFilterOption(
-                            value: AlertFilter.attendance,
-                            label: l10n.alertsFilterAttendance,
-                            count: _unread(AlertFilter.attendance),
-                          ),
+                          AppSpacing.gapSm,
                         ],
-                      ),
-                      if (days.isEmpty)
-                        AppEmptyState(
-                          glyph: AppGlyphs.bell,
-                          title: l10n.alertsEmptyTitle,
-                          message: l10n.alertsEmptyMessage,
+                        AppPageHeader(
+                          overline: unread > 0
+                              ? l10n.alertsOverline(unread, date)
+                              : date,
+                          title: l10n.alertsTitle,
+                          action: unread > 0
+                              ? AppButton(
+                                  label: l10n.alertsMarkAllRead,
+                                  variant: AppButtonVariant.text,
+                                  size: AppButtonSize.small,
+                                  underlined: false,
+                                  expand: false,
+                                  onPressed: _markAllRead,
+                                )
+                              : null,
                         ),
-                      for (final MapEntry(key: day, value: alerts)
-                          in days.entries) ...[
-                        AppSpacing.gapXl,
-                        AppSectionLabel(_dayLabel(day, now, locale)),
                         AppSpacing.gapSm,
-                        for (final alert in alerts.where((a) => a.opensCase))
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.smd,
+                        AppFilterChips<AlertFilter>(
+                          selected: _filter,
+                          onSelected: (filter) =>
+                              setState(() => _filter = filter),
+                          options: [
+                            AppFilterOption(
+                              value: AlertFilter.all,
+                              label: l10n.alertsFilterAll,
                             ),
-                            child: _CaseCard(
-                              alert: alert,
-                              time: DateFormat.Hm(
-                                locale,
-                              ).format(alert.receivedAt),
-                              onOpen: () => _openCase(alert),
+                            AppFilterOption(
+                              value: AlertFilter.accidents,
+                              label: l10n.alertsFilterAccidents,
+                              count: _unread(AlertFilter.accidents),
                             ),
+                            AppFilterOption(
+                              value: AlertFilter.leave,
+                              label: l10n.alertsFilterLeave,
+                              count: _unread(AlertFilter.leave),
+                            ),
+                            AppFilterOption(
+                              value: AlertFilter.attendance,
+                              label: l10n.alertsFilterAttendance,
+                              count: _unread(AlertFilter.attendance),
+                            ),
+                          ],
+                        ),
+                        if (days.isEmpty)
+                          AppEmptyState(
+                            glyph: AppGlyphs.bell,
+                            title: l10n.alertsEmptyTitle,
+                            message: l10n.alertsEmptyMessage,
                           ),
-                        if (alerts.any((a) => !a.opensCase))
-                          AppListGroup(
-                            children: [
-                              for (final alert in alerts.where(
-                                (a) => !a.opensCase,
-                              ))
-                                _AlertRow(
-                                  alert: alert,
-                                  time: DateFormat.Hm(
-                                    locale,
-                                  ).format(alert.receivedAt),
-                                  onTap: () => _markRead(alert),
-                                ),
-                            ],
-                          ),
+                        for (final MapEntry(key: day, value: alerts)
+                            in days.entries) ...[
+                          AppSpacing.gapXl,
+                          AppSectionLabel(_dayLabel(day, now, locale)),
+                          AppSpacing.gapSm,
+                          for (final alert in alerts.where((a) => a.opensCase))
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpacing.smd,
+                              ),
+                              child: _CaseCard(
+                                alert: alert,
+                                time: DateFormat.Hm(
+                                  locale,
+                                ).format(alert.receivedAt),
+                                onOpen: () => _openCase(alert),
+                              ),
+                            ),
+                          if (alerts.any((a) => !a.opensCase))
+                            AppListGroup(
+                              children: [
+                                for (final alert in alerts.where(
+                                  (a) => !a.opensCase,
+                                ))
+                                  _AlertRow(
+                                    alert: alert,
+                                    time: DateFormat.Hm(
+                                      locale,
+                                    ).format(alert.receivedAt),
+                                    onTap: () => _markRead(alert),
+                                  ),
+                              ],
+                            ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),

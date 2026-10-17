@@ -56,6 +56,12 @@ void main() {
     drawn[0] = 0;
     await tester.pump(const Duration(seconds: 1));
     expect(drawn[0], inInclusiveRange(28, 31));
+
+    // …and fewer still on one drawing lite.
+    AppPerformance.debugBudget = RenderBudget.lite;
+    drawn[0] = 0;
+    await tester.pump(const Duration(seconds: 1));
+    expect(drawn[0], inInclusiveRange(22, 25));
   });
 
   testWidgets('a loop on a covered screen rests', (tester) async {

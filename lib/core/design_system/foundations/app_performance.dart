@@ -28,7 +28,9 @@ enum RenderBudget {
 /// The phone's [RenderBudget], one for every screen.
 ///
 /// It starts from the phone itself: lite on an Android phone with four
-/// cores or fewer, or the memory of a 4 GB phone or less. Once [start]ed it
+/// cores or fewer, or the memory of a 4 GB phone or less; steady on one
+/// with the memory of a 6 GB phone, the usual mid-range one, whose 90 or
+/// 120 Hz screen it can't fill with frosted glass. Once [start]ed it
 /// watches the frames as the phone is used, measured against its screen's
 /// own rate, and steps down when they miss it — from full to steady, then
 /// to lite — and stays so until the app starts again.
@@ -63,8 +65,13 @@ abstract final class AppPerformance {
 
   /// How many times a second decoration that loops — pulses, a radar,
   /// trains running round a picture — is drawn: smooth enough on a phone
-  /// with drawing to spare, and no more than it needs on the rest.
-  static int get loopFps => _budget.value == RenderBudget.full ? 60 : 30;
+  /// with drawing to spare, and no more than it needs on the rest; a lite
+  /// phone keeps its frames for what the user moves.
+  static int get loopFps => switch (_budget.value) {
+    RenderBudget.full => 60,
+    RenderBudget.steady => 30,
+    RenderBudget.lite => 24,
+  };
 
   /// `--dart-define=RENDER_BUDGET=lite` (or `steady`, `full`) tries a
   /// budget out on any phone.
@@ -76,6 +83,11 @@ abstract final class AppPerformance {
   /// A phone with no more memory than this, in kB, is lite: a 4 GB phone
   /// has about 3.7 GB of it for Android, a 6 GB one about 5.6 GB.
   static const int _littleMemoryKb = 4608 * 1024;
+
+  /// A phone with no more memory than this, in kB, is steady: a 6 GB
+  /// phone, rather than starting in full and stuttering through its first
+  /// seconds until the frames show it can't keep up.
+  static const int _midMemoryKb = 6656 * 1024;
 
   /// The picture cache on a lite phone, in bytes, less than Flutter's
   /// 100 MB so memory runs out less often.
@@ -94,6 +106,7 @@ abstract final class AppPerformance {
           RegExp(r'MemTotal:\s+(\d+)').firstMatch(info)?.group(1) ?? '',
         );
         if (kb != null && kb <= _littleMemoryKb) return RenderBudget.lite;
+        if (kb != null && kb <= _midMemoryKb) return RenderBudget.steady;
       } else if (Platform.isIOS && Platform.numberOfProcessors <= 2) {
         return RenderBudget.lite;
       }
@@ -219,8 +232,9 @@ class _FrameWatch {
   /// Frames counted at a time: a second or two of movement.
   static const int _window = 120;
 
-  /// The share of a window's frames that, missed, counts against it.
-  static const double _slowShare = 0.2;
+  /// The share of a window's frames that, missed, counts against it: one
+  /// frame in seven missed is a stutter anyone sees.
+  static const double _slowShare = 0.15;
 
   /// Windows in a row that miss before the budget steps down.
   static const int _strikesToSlow = 2;

@@ -140,50 +140,56 @@ class _HomeViewState extends State<HomeView> {
               // Clear of the navigation bar the body runs under.
               AppSpacing.xxl + MediaQuery.paddingOf(context).bottom,
             ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppSizes.contentMaxWidth,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _HomeHeader(
-                      user: _user,
-                      onOpenAlerts: widget.onOpenAlerts,
-                      onOpenProfile: widget.onOpenProfile,
-                    ),
-                    const SizedBox(height: AppSpacing.xl + AppSpacing.xxs),
-                    _Greeting(user: _user, now: (widget.now ?? DateTime.now)()),
-                    const SizedBox(height: AppSpacing.xxl + AppSpacing.xxs),
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        l10n.homeModulesTitle,
-                        style: text.titleLarge,
+            // Scrolled as one picture, not painted afresh every frame.
+            child: RepaintBoundary(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppSizes.contentMaxWidth,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _HomeHeader(
+                        user: _user,
+                        onOpenAlerts: widget.onOpenAlerts,
+                        onOpenProfile: widget.onOpenProfile,
                       ),
-                    ),
-                    AppSpacing.gapMd,
-                    AppGrid(
-                      columns: layout.sizeClass == WindowSizeClass.expanded
-                          ? 4
-                          : 2,
-                      children: [
-                        for (final module in modules)
-                          AppModuleCard(
-                            icon: AppShadowedImage(
-                              asset: module.icon,
-                              size: AppSizes.moduleIcon,
-                              shadow: context.elevations.iconDrop,
+                      const SizedBox(height: AppSpacing.xl + AppSpacing.xxs),
+                      _Greeting(
+                        user: _user,
+                        now: (widget.now ?? DateTime.now)(),
+                      ),
+                      const SizedBox(height: AppSpacing.xxl + AppSpacing.xxs),
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          l10n.homeModulesTitle,
+                          style: text.titleLarge,
+                        ),
+                      ),
+                      AppSpacing.gapMd,
+                      AppGrid(
+                        columns: layout.sizeClass == WindowSizeClass.expanded
+                            ? 4
+                            : 2,
+                        children: [
+                          for (final module in modules)
+                            AppModuleCard(
+                              icon: AppShadowedImage(
+                                asset: module.icon,
+                                size: AppSizes.moduleIcon,
+                                shadow: context.elevations.iconDrop,
+                              ),
+                              title: module.title,
+                              titleSpan: _italicE(module.title),
+                              subtitle: module.subtitle,
+                              onTap: () => _open(context, module),
                             ),
-                            title: module.title,
-                            titleSpan: _italicE(module.title),
-                            subtitle: module.subtitle,
-                            onTap: () => _open(context, module),
-                          ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

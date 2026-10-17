@@ -28,14 +28,17 @@ class FillScrollView extends StatelessWidget {
         // up: the form is still being filled in.
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
         padding: padding,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: math.max(0, constraints.maxHeight - padding.vertical),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [body, ?footer],
+        // Scrolled as one picture, not painted afresh every frame.
+        child: RepaintBoundary(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: math.max(0, constraints.maxHeight - padding.vertical),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [body, ?footer],
+            ),
           ),
         ),
       ),

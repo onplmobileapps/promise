@@ -51,6 +51,9 @@ class AppBackdrop extends StatelessWidget {
     final pattern = patternFade == null
         ? KhatamPatternPainter(color: ink)
         : KhatamPatternPainter(color: ink, fadeHeight: patternFade!);
+    // The page repaints on its own, never the pattern under it: an
+    // animation on the page doesn't paint the whole backdrop again.
+    final child = RepaintBoundary(child: this.child);
     final intensity = blobIntensity;
     if (intensity != null) {
       return ColoredBox(

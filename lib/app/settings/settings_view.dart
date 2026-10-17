@@ -309,102 +309,108 @@ class _SettingsViewState extends State<SettingsView> {
                   layout.gutter,
                   AppSpacing.xxl + MediaQuery.paddingOf(context).bottom,
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: AppSizes.contentMaxWidth,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _ProfileCard(user: _user),
-                        AppSpacing.gapXl,
-                        AppSectionLabel(l10n.profileSectionAppearance),
-                        AppSpacing.gapSm,
-                        const _AppearancePicker(),
-                        AppSpacing.gapXl,
-                        AppSpacing.gapSm,
-                        ValueListenableBuilder<TextLook>(
-                          valueListenable: sl<TextLookController>(),
-                          builder: (context, look, _) => AppListGroup(
+                // Scrolled as one picture, not painted afresh every frame.
+                child: RepaintBoundary(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: AppSizes.contentMaxWidth,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _ProfileCard(user: _user),
+                          AppSpacing.gapXl,
+                          AppSectionLabel(l10n.profileSectionAppearance),
+                          AppSpacing.gapSm,
+                          const _AppearancePicker(),
+                          AppSpacing.gapXl,
+                          AppSpacing.gapSm,
+                          ValueListenableBuilder<TextLook>(
+                            valueListenable: sl<TextLookController>(),
+                            builder: (context, look, _) => AppListGroup(
+                              children: [
+                                AppListRow(
+                                  leading: rowGlyph(AppGlyphs.textSize),
+                                  title: l10n.profileTextDisplay,
+                                  subtitle: l10n.profileTextDisplayDetail(
+                                    switch (look.display) {
+                                      DisplaySize.standard =>
+                                        l10n.displaySizeStandard,
+                                      DisplaySize.large =>
+                                        l10n.displaySizeLarge,
+                                    },
+                                    TextLookCard.textSizeNames(l10n)[look.size],
+                                  ),
+                                  showChevron: true,
+                                  onTap: () => TextDisplayView.open(context),
+                                ),
+                              ],
+                            ),
+                          ),
+                          AppSpacing.gapXl,
+                          AppSectionLabel(l10n.profileSectionAccount),
+                          AppSpacing.gapSm,
+                          BlocBuilder<SettingsCubit, SettingsState>(
+                            builder: (context, state) {
+                              final loaded = state is SettingsLoaded
+                                  ? state
+                                  : null;
+                              return AppListGroup(
+                                children: [
+                                  AppListRow(
+                                    leading: rowGlyph(AppGlyphs.fingerprint),
+                                    title: l10n.profileBiometric,
+                                    trailing: AppSwitch(
+                                      value:
+                                          loaded?.isBiometricEnabled ?? false,
+                                      onChanged:
+                                          loaded?.canCheckBiometrics ?? false
+                                          ? (on) =>
+                                                _toggleBiometrics(context, on)
+                                          : null,
+                                    ),
+                                  ),
+                                  AppListRow(
+                                    leading: rowGlyph(AppGlyphs.lock),
+                                    title: l10n.profileSecurity,
+                                    showChevron: true,
+                                    onTap: () =>
+                                        _showChangePasswordSheet(context),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                          AppSpacing.gapXl,
+                          AppSectionLabel(l10n.profileSectionPreferences),
+                          AppSpacing.gapSm,
+                          AppListGroup(
                             children: [
                               AppListRow(
-                                leading: rowGlyph(AppGlyphs.textSize),
-                                title: l10n.profileTextDisplay,
-                                subtitle: l10n.profileTextDisplayDetail(
-                                  switch (look.display) {
-                                    DisplaySize.standard =>
-                                      l10n.displaySizeStandard,
-                                    DisplaySize.large => l10n.displaySizeLarge,
-                                  },
-                                  TextLookCard.textSizeNames(l10n)[look.size],
-                                ),
+                                leading: rowGlyph(AppGlyphs.info),
+                                title: l10n.profileAppVersion,
                                 showChevron: true,
-                                onTap: () => TextDisplayView.open(context),
+                                onTap: () => _showWhatsNewSheet(context),
+                                trailing: FutureBuilder<AppInfo?>(
+                                  future: _appInfo,
+                                  builder: (context, info) => Text(
+                                    switch (info.data) {
+                                      final app? =>
+                                        '${app.version}+${app.build}',
+                                      null => '',
+                                    },
+                                    style: context.textTheme.bodyMedium
+                                        ?.copyWith(color: colors.textTertiary),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                        AppSpacing.gapXl,
-                        AppSectionLabel(l10n.profileSectionAccount),
-                        AppSpacing.gapSm,
-                        BlocBuilder<SettingsCubit, SettingsState>(
-                          builder: (context, state) {
-                            final loaded = state is SettingsLoaded
-                                ? state
-                                : null;
-                            return AppListGroup(
-                              children: [
-                                AppListRow(
-                                  leading: rowGlyph(AppGlyphs.fingerprint),
-                                  title: l10n.profileBiometric,
-                                  trailing: AppSwitch(
-                                    value: loaded?.isBiometricEnabled ?? false,
-                                    onChanged:
-                                        loaded?.canCheckBiometrics ?? false
-                                        ? (on) => _toggleBiometrics(context, on)
-                                        : null,
-                                  ),
-                                ),
-                                AppListRow(
-                                  leading: rowGlyph(AppGlyphs.lock),
-                                  title: l10n.profileSecurity,
-                                  showChevron: true,
-                                  onTap: () =>
-                                      _showChangePasswordSheet(context),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        AppSpacing.gapXl,
-                        AppSectionLabel(l10n.profileSectionPreferences),
-                        AppSpacing.gapSm,
-                        AppListGroup(
-                          children: [
-                            AppListRow(
-                              leading: rowGlyph(AppGlyphs.info),
-                              title: l10n.profileAppVersion,
-                              showChevron: true,
-                              onTap: () => _showWhatsNewSheet(context),
-                              trailing: FutureBuilder<AppInfo?>(
-                                future: _appInfo,
-                                builder: (context, info) => Text(
-                                  switch (info.data) {
-                                    final app? => '${app.version}+${app.build}',
-                                    null => '',
-                                  },
-                                  style: context.textTheme.bodyMedium?.copyWith(
-                                    color: colors.textTertiary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        AppSpacing.gapXl,
-                        _LogoutCard(onTap: _confirmLogout),
-                      ],
+                          AppSpacing.gapXl,
+                          _LogoutCard(onTap: _confirmLogout),
+                        ],
+                      ),
                     ),
                   ),
                 ),
