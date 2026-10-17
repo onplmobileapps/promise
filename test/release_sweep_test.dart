@@ -387,10 +387,6 @@ const List<_Config> _configs = [
 
 class _Trains implements TrainRepository {
   @override
-  Future<Either<AppException, Response>> getStations({String? pageUrl}) async =>
-      Right(_ok(const <Object>[]));
-
-  @override
   Future<Either<AppException, Response>> getTrainDetail(String trainId) async =>
       Right(_ok(const <String, Object>{}));
 

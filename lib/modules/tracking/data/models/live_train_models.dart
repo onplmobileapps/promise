@@ -18,6 +18,18 @@ LatLng? _parseLatLng(Object? lat, Object? lng) {
 int? _parseInt(Object? v) =>
     v is num ? v.toInt() : (v is String ? int.tryParse(v) : null);
 
+/// A number however the server writes it, as 53.9 or "53.9".
+double? _parseDouble(Object? v) {
+  final n = v is num ? v.toDouble() : double.tryParse('${v ?? ''}');
+  return n != null && n.isFinite ? n : null;
+}
+
+/// Text, if the server sent any.
+String? _parseText(Object? v) {
+  final text = v is String ? v.trim() : null;
+  return text == null || text.isEmpty ? null : text;
+}
+
 /// A station on a train's journey. [position] is null when the API has no
 /// coordinates for it.
 class TrainStation extends Equatable {
@@ -73,22 +85,6 @@ class TrainStation extends Equatable {
       arrivalTime: arrTime,
       departureTime: depTime,
     );
-  }
-
-  /// A page of `tracking/station/`: a list, or an object wrapping it in
-  /// `results` (with the `next` page's URL) or `data`.
-  static (List<TrainStation>, String?) parsePage(Object? data) {
-    var list = const <Object?>[];
-    String? next;
-    if (data is List) {
-      list = data;
-    } else if (data is Map<String, dynamic>) {
-      final items = data['results'] ?? data['data'] ?? data['stations'];
-      if (items is List) list = items;
-      final more = data['next'];
-      if (more is String && more.isNotEmpty) next = more;
-    }
-    return ([for (final item in list) ?TrainStation.fromJson(item)], next);
   }
 
   bool isSameStation(TrainStation other) =>
@@ -387,25 +383,21 @@ class TrainPosition extends Equatable {
         ? json['attributes'] as Map<String, dynamic>
         : const <String, dynamic>{};
     final rawSpeed =
-        (json['speed'] as num?)?.toDouble() ??
-        (attributes['speed'] as num?)?.toDouble() ??
-        0.0;
+        _parseDouble(json['speed']) ?? _parseDouble(attributes['speed']) ?? 0.0;
     final speedKmh = rawSpeed * kKnotsToKmh;
     final motion = attributes['motion'] ?? json['motion'];
     final parking = attributes['parking'] == true;
     final deviceStatus = attributes['deviceStatus']?.toString();
-    final validFix = json['valid'] != false && json['outdated'] != true;
+    bool flag(Object? v) => v == true || v == 'true';
+    bool unset(Object? v) => v == false || v == 'false';
+    final validFix = !unset(json['valid']) && !flag(json['outdated']);
     final moving =
-        parking ||
-            deviceStatus == 'offline' ||
-            (motion is bool && !motion) ||
-            !validFix
+        parking || deviceStatus == 'offline' || unset(motion) || !validFix
         ? false
         : true;
 
     final address =
-        (json['address'] as String?)?.trim() ??
-        (attributes['address'] as String?)?.trim();
+        _parseText(json['address']) ?? _parseText(attributes['address']);
 
     final stopMs = attributes['stopTime'] ?? json['stopTime'];
     final serverTime = DateTime.tryParse('${json['serverTime'] ?? ''}');
@@ -426,15 +418,13 @@ class TrainPosition extends Equatable {
       position: position,
       speedKmh: speedKmh,
       course:
-          (json['course'] as num?)?.toDouble() ??
-          (json['bearing'] as num?)?.toDouble() ??
-          0.0,
+          _parseDouble(json['course']) ?? _parseDouble(json['bearing']) ?? 0.0,
       moving: moving,
       validFix: validFix,
       fixTime: fixTime.toLocal(),
       address: address,
-      stoppedFor: !moving && stopMs is num && stopMs > 0
-          ? Duration(milliseconds: stopMs.toInt())
+      stoppedFor: !moving && (_parseDouble(stopMs) ?? 0) > 0
+          ? Duration(milliseconds: _parseDouble(stopMs)!.round())
           : null,
     );
   }

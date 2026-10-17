@@ -28,13 +28,4 @@ class TrainRepositoryImpl implements TrainRepository {
       return Left(ErrorHandler.handle(e));
     }
   }
-
-  @override
-  Future<Either<AppException, Response>> getStations({String? pageUrl}) async {
-    try {
-      return Right(await _remoteDataSource.getStations(pageUrl: pageUrl));
-    } catch (e) {
-      return Left(ErrorHandler.handle(e));
-    }
-  }
 }

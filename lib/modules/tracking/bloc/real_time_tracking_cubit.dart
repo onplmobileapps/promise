@@ -88,39 +88,37 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
   static const Duration _rerouteGap = Duration(seconds: 30);
   static const Duration _fleetRerouteGap = Duration(seconds: 90);
 
-  Future<void> initialize() async {
-    await Future.wait([loadTrains(), loadStations()]);
-  }
+  /// Everything tracking shows comes from two places: the day's trains
+  /// from `tracking/mobile/` (a train's own detail from the same, when it is
+  /// opened) and every train's live position from the proxy socket.
+  Future<void> initialize() => loadTrains();
 
-  /// The most pages of stations read, in case `next` never runs out.
-  static const int _maxStationPages = 30;
+  /// The stations now, if [stations] are the same: the map redraws its
+  /// stations only when they change.
+  List<TrainStation> _sameOr(List<TrainStation> stations) =>
+      listEquals(stations, state.stations) ? state.stations : stations;
 
-  Future<void> loadStations() async {
-    // They don't change in a day.
-    if (state.stations.isNotEmpty) return;
+  /// The stations on [trains]' journeys that have a place on the map, each
+  /// once: what the all-trains map marks.
+  static List<TrainStation> stationsOf(Iterable<LiveTrain> trains) {
     final found = <String, TrainStation>{};
-    String? page;
-    try {
-      for (var i = 0; i < _maxStationPages; i++) {
-        final result = await _trainRepository.getStations(pageUrl: page);
-        final data = result.fold((_) => null, (response) => response.data);
-        if (data == null) break;
-        final (stations, next) = TrainStation.parsePage(data);
-        for (final station in stations) {
-          if (station.position == null) continue;
-          found['${station.id ?? station.code ?? station.name}'] = station;
-        }
-        if (next == null || next == page) break;
-        page = next;
+    for (final train in trains) {
+      for (final station in train.journey) {
+        if (station.position == null) continue;
+        final key = '${station.id ?? station.code ?? station.name}';
+        // A stop's own record, with its times, is no different a station.
+        found.putIfAbsent(
+          key,
+          () => TrainStation(
+            id: station.id,
+            name: station.name,
+            code: station.code,
+            position: station.position,
+          ),
+        );
       }
-    } catch (e) {
-      debugPrint('Loading stations failed: $e');
     }
-    if (found.isNotEmpty) {
-      // Only for the all-trains map's stations; a train's own stations
-      // and stops come from its detail alone.
-      emit(state.copyWith(stations: found.values.toList()));
-    }
+    return found.values.toList();
   }
 
   Future<void> loadTrains() async {
@@ -131,10 +129,12 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
         (error) =>
             emit(state.copyWith(isLoading: false, errorMessage: error.message)),
         (response) {
+          final trains = LiveTrain.parseList(response.data);
           emit(
             state.copyWith(
               isLoading: false,
-              trains: LiveTrain.parseList(response.data),
+              trains: trains,
+              stations: _sameOr(stationsOf(trains)),
               errorMessage: null,
             ),
           );
@@ -358,7 +358,14 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
           final stops = path == null
               ? const <RouteStop>[]
               : stopsAlong(path, updated.journey);
-          emit(state.copyWith(trains: trains, routeStops: stops));
+          emit(
+            state.copyWith(
+              trains: trains,
+              // Its stops are stations on the map too.
+              stations: _sameOr(stationsOf(trains)),
+              routeStops: stops,
+            ),
+          );
         }
       });
     } catch (e) {

@@ -141,30 +141,18 @@ void main() {
     expect(train.stops.last.arrivalTime, '09:10:00');
   });
 
-  test('reads a page of stations, as a list or wrapped with the next page', () {
-    final (plain, none) = TrainStation.parsePage([
-      {
-        'id': 1,
-        'name': 'Rawalpindi',
-        'station_code': 'RWP',
-        'latitude': '33.60',
-        'longitude': '73.05',
-      },
-      'junk',
-    ]);
-    expect(plain.single.code, 'RWP');
-    expect(plain.single.position, const LatLng(33.60, 73.05));
-    expect(none, isNull);
-
-    final (paged, next) = TrainStation.parsePage({
-      'count': 2,
-      'next': 'https://example.org/stations/?page=2',
-      'results': [
-        {'id': 2, 'name': 'Multan Cantt', 'station_code': 'MUL'},
-      ],
-    });
-    expect(paged.single.name, 'Multan Cantt');
-    expect(next, 'https://example.org/stations/?page=2');
+  test('reads a socket report however its numbers are written', () {
+    final report = TrainPosition.fromJson({
+      ..._report,
+      'speed': '53.9957',
+      'course': '143',
+      'valid': 'true',
+      'attributes': {'motion': 'false', 'stopTime': '120000'},
+    })!;
+    expect(report.speedKmh, closeTo(100, 0.1));
+    expect(report.course, 143);
+    expect(report.moving, isFalse);
+    expect(report.stoppedFor, const Duration(minutes: 2));
   });
 
   test('parses a list, skipping malformed records and sorting by number', () {

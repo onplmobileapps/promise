@@ -24,15 +24,6 @@ class _FakeTrainRepository implements TrainRepository {
       );
 
   @override
-  Future<Either<AppException, Response>> getStations({String? pageUrl}) async =>
-      Right(
-        Response(
-          requestOptions: RequestOptions(path: ''),
-          data: const [],
-        ),
-      );
-
-  @override
   Future<Either<AppException, Response>> getTrains() async => Right(
     Response(
       requestOptions: RequestOptions(path: ''),

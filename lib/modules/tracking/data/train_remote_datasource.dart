@@ -8,9 +8,6 @@ abstract class TrainRemoteDataSource {
 
   /// Detail for a single train run including schedule, stops, and ETA.
   Future<Response> getTrainDetail(String trainId);
-
-  /// The railway's stations; [pageUrl] for a page after the first.
-  Future<Response> getStations({String? pageUrl});
 }
 
 class TrainRemoteDataSourceImpl implements TrainRemoteDataSource {
@@ -23,8 +20,4 @@ class TrainRemoteDataSourceImpl implements TrainRemoteDataSource {
   @override
   Future<Response> getTrainDetail(String trainId) =>
       _dioClient.get('${ApiEndpoints.getTrainsUrl}$trainId/');
-
-  @override
-  Future<Response> getStations({String? pageUrl}) =>
-      _dioClient.get(pageUrl ?? ApiEndpoints.getStationsUrl);
 }

@@ -31,10 +31,6 @@ class _Trains implements TrainRepository {
           ),
         ),
       );
-
-  @override
-  Future<Either<AppException, Response>> getStations({String? pageUrl}) async =>
-      Left(AppException('none'));
 }
 
 class _Feed implements TrainFeed {

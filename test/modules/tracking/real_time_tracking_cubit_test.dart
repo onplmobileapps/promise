@@ -10,28 +10,23 @@ import 'package:railway_hrms/modules/tracking/services/tracking_cache.dart';
 import 'package:railway_hrms/modules/tracking/services/train_live_feed.dart';
 
 class _FakeTrainRepository implements TrainRepository {
-  _FakeTrainRepository(this.result, {this.stationPages = const {}});
+  _FakeTrainRepository(this.result);
 
   Either<AppException, Response> result;
 
-  /// Station pages by URL; null for the first page.
-  final Map<String?, Object> stationPages;
-  final List<String?> requestedPages = [];
+  /// Each call made, as the API it asks: the trains, or one train's detail.
+  final List<String> calls = [];
 
   @override
-  Future<Either<AppException, Response>> getTrains() async => result;
+  Future<Either<AppException, Response>> getTrains() async {
+    calls.add('tracking/mobile');
+    return result;
+  }
 
   @override
-  Future<Either<AppException, Response>> getTrainDetail(String trainId) async =>
-      result;
-
-  @override
-  Future<Either<AppException, Response>> getStations({String? pageUrl}) async {
-    requestedPages.add(pageUrl);
-    final page = stationPages[pageUrl];
-    return page == null
-        ? Left(AppException('Not found'))
-        : Right(_response(page));
+  Future<Either<AppException, Response>> getTrainDetail(String trainId) async {
+    calls.add('tracking/mobile/$trainId');
+    return result;
   }
 }
 
@@ -183,53 +178,48 @@ void main() {
     await cubit.close();
   });
 
-  test(
-    'loads every page of stations, keeping those with coordinates',
-    () async {
-      const next = 'https://pakistanrailway.org/api/tracking/station/?page=2';
-      final repository = _FakeTrainRepository(
-        Right(_response(const [])),
-        stationPages: {
-          null: {
-            'next': next,
-            'results': [
-              {
-                'id': 1,
-                'name': 'Lahore Jn',
-                'station_code': 'LHR',
-                'latitude': '31.58',
-                'longitude': '74.34',
-              },
-              {
-                'id': 2,
-                'name': 'Nowhere',
-                'station_code': 'ZZZ',
-                'latitude': null,
-                'longitude': null,
-              },
-            ],
+  test('the map\'s stations are the trains\' own, each once, from the trains '
+      'API alone', () async {
+    final repository = _FakeTrainRepository(
+      Right(
+        _response([
+          {
+            ..._train(1, 101),
+            'origin_station': {
+              'id': 1,
+              'name': 'Lahore Jn',
+              'station_code': 'LHR',
+              'latitude': '31.58',
+              'longitude': '74.34',
+            },
           },
-          next: {
-            'next': null,
-            'results': [
-              {
-                'id': 3,
-                'name': 'Khanewal Jn',
-                'station_code': 'KWL',
-                'latitude': 30.30,
-                'longitude': 71.93,
-              },
-            ],
+          {
+            ..._train(2, 102),
+            'origin_station': {
+              'id': 1,
+              'name': 'Lahore Jn',
+              'station_code': 'LHR',
+              'latitude': '31.58',
+              'longitude': '74.34',
+            },
+            'destination_station': {
+              'id': 3,
+              'name': 'Khanewal Jn',
+              'station_code': 'KWL',
+              'latitude': 30.30,
+              'longitude': 71.93,
+            },
           },
-        },
-      );
-      final cubit = RealTimeTrackingCubit(repository);
-      await cubit.loadStations();
-      expect(repository.requestedPages, [null, next]);
-      expect(cubit.state.stations.map((s) => s.code), ['LHR', 'KWL']);
-      await cubit.close();
-    },
-  );
+        ]),
+      ),
+    );
+    final cubit = RealTimeTrackingCubit(repository);
+    await cubit.initialize();
+    // Rawalpindi has no place on the map; Lahore is marked once.
+    expect(cubit.state.stations.map((s) => s.code), ['LHR', 'KWL']);
+    expect(repository.calls, ['tracking/mobile']);
+    await cubit.close();
+  });
 
   test('keeps the stations as the trains API sends them', () async {
     final repository = _FakeTrainRepository(
@@ -241,19 +231,14 @@ void main() {
           },
         ]),
       ),
-      stationPages: {
-        // The station list has no codes; ids match the trains API's.
-        null: [
-          {'id': 77, 'name': 'Abad', 'latitude': 25.4, 'longitude': 68.9},
-        ],
-      },
     );
     final cubit = RealTimeTrackingCubit(repository);
     await cubit.initialize();
     final origin = cubit.state.trains.single.origin!;
     expect(origin.code, 'AAD');
-    // Nothing is borrowed from the station list.
+    // No place is made up for a station the API has none for.
     expect(origin.position, isNull);
+    expect(cubit.state.stations, isEmpty);
     await cubit.close();
   });
 
@@ -268,12 +253,19 @@ void main() {
               _FakeFeed(onPosition: onPosition, onLinkChanged: onLinkChanged),
         );
     final repository = _FakeTrainRepository(
-      Right(_response([_trainWithDevice(1, 101, 11)])),
-      stationPages: {
-        null: [
-          {'id': 1, 'name': 'Lahore Jn', 'latitude': 31.58, 'longitude': 74.34},
-        ],
-      },
+      Right(
+        _response([
+          {
+            ..._trainWithDevice(1, 101, 11),
+            'origin_station': {
+              'id': 1,
+              'name': 'Lahore Jn',
+              'latitude': 31.58,
+              'longitude': 74.34,
+            },
+          },
+        ]),
+      ),
     );
     final first = open(repository);
     await first.initialize();
@@ -299,9 +291,10 @@ void main() {
     expect(second.state.trains.single.number, 101);
     expect(second.state.positions[11], report);
     expect(second.state.stations, isNotEmpty);
-    repository.requestedPages.clear();
+    repository.calls.clear();
     await second.initialize();
-    expect(repository.requestedPages, isEmpty);
+    // Refreshed from the trains API alone.
+    expect(repository.calls, ['tracking/mobile']);
 
     // The feed was open just now: in touch since then, not only now.
     second.watchFleet();

@@ -25,8 +25,6 @@ class ApiEndpoints {
   static const String approveChangeRequest = '/attendance/approveChangeRequest';
   static const String getTrainsUrl =
       'https://pakistanrailway.org/api/tracking/mobile/';
-  static const String getStationsUrl =
-      'https://pakistanrailway.org/api/tracking/station/';
   static const String submitInspection = 'footplate/inspection/submit/';
   static const String userStations = 'inspection/signal-telecom/user_stations/';
   static const String submitStationInspectionComplete =
