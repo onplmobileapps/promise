@@ -5109,6 +5109,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove this crossing'**
   String get inspTrafficRemoveCrossing;
+
+  /// What an inspection form's time field says before a time is picked.
+  ///
+  /// In en, this message translates to:
+  /// **'Select time'**
+  String get inspFormSelectTime;
+
+  /// Title of the dialog confirming a photo is removed from an inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this photo?'**
+  String get inspFormRemovePhoto;
+
+  /// Stands in for a signature pad on an inspection template.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed with your face check when the report is submitted.'**
+  String get inspFormSignedByFace;
+
+  /// Takes the phone's location for an inspection question.
+  ///
+  /// In en, this message translates to:
+  /// **'Locate'**
+  String get inspFormLocate;
+
+  /// Adds a question of the inspector's own to an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a question'**
+  String get inspFormAddField;
+
+  /// Label of a question the inspector adds to a form.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get inspFormFieldLabel;
+
+  /// What kind of answer a question the inspector adds takes.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer type'**
+  String get inspFormFieldType;
+
+  /// Whether a question the inspector adds must be answered.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be answered'**
+  String get inspFormFieldRequired;
+
+  /// Title of the footplate inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Footplate inspection'**
+  String get inspFootplateTitle;
+
+  /// Title of the footplate inspection approval request.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspection approval'**
+  String get inspApprovalTitle;
+
+  /// Heading while a footplate inspection's approval is being requested.
+  ///
+  /// In en, this message translates to:
+  /// **'Request inspection approval'**
+  String get inspApprovalRequest;
+
+  /// Explains the footplate approval request.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the planned train movement with the concerned officer before you start.'**
+  String get inspApprovalRequestAbout;
+
+  /// Heading once a footplate inspection's request is approved.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspection approved'**
+  String get inspApprovalApproved;
+
+  /// Says the footplate inspection can start.
+  ///
+  /// In en, this message translates to:
+  /// **'This request is approved for now. You can start the inspection.'**
+  String get inspApprovalApprovedAbout;
+
+  /// Heading of the train part of the approval request.
+  ///
+  /// In en, this message translates to:
+  /// **'Train assignment'**
+  String get inspApprovalTrain;
+
+  /// Label of the officer the approval request goes to.
+  ///
+  /// In en, this message translates to:
+  /// **'Concerned officer'**
+  String get inspApprovalOfficer;
+
+  /// Heading of the schedule part of the approval request.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get inspApprovalSchedule;
+
+  /// Heading of the route part of the approval request.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspection route'**
+  String get inspApprovalRoute;
+
+  /// Label of the station the inspection starts from.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get inspApprovalFrom;
+
+  /// Label of the station the inspection ends at.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get inspApprovalTo;
+
+  /// Sends the footplate inspection approval request.
+  ///
+  /// In en, this message translates to:
+  /// **'Send for approval'**
+  String get inspApprovalSend;
+
+  /// Starts the approved footplate inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Start inspection'**
+  String get inspApprovalStart;
+
+  /// Shown when the approval request is incomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the train, officer, date, times and route first.'**
+  String get inspApprovalMissing;
 }
 
 class _AppLocalizationsDelegate

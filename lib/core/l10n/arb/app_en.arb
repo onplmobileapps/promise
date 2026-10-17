@@ -3953,5 +3953,97 @@
   "inspTrafficRemoveCrossing": "Remove this crossing",
   "@inspTrafficRemoveCrossing": {
     "description": "Removes a level crossing from the traffic form."
+  },
+  "inspFormSelectTime": "Select time",
+  "@inspFormSelectTime": {
+    "description": "What an inspection form's time field says before a time is picked."
+  },
+  "inspFormRemovePhoto": "Remove this photo?",
+  "@inspFormRemovePhoto": {
+    "description": "Title of the dialog confirming a photo is removed from an inspection."
+  },
+  "inspFormSignedByFace": "Signed with your face check when the report is submitted.",
+  "@inspFormSignedByFace": {
+    "description": "Stands in for a signature pad on an inspection template."
+  },
+  "inspFormLocate": "Locate",
+  "@inspFormLocate": {
+    "description": "Takes the phone's location for an inspection question."
+  },
+  "inspFormAddField": "Add a question",
+  "@inspFormAddField": {
+    "description": "Adds a question of the inspector's own to an inspection form."
+  },
+  "inspFormFieldLabel": "Question",
+  "@inspFormFieldLabel": {
+    "description": "Label of a question the inspector adds to a form."
+  },
+  "inspFormFieldType": "Answer type",
+  "@inspFormFieldType": {
+    "description": "What kind of answer a question the inspector adds takes."
+  },
+  "inspFormFieldRequired": "Must be answered",
+  "@inspFormFieldRequired": {
+    "description": "Whether a question the inspector adds must be answered."
+  },
+  "inspFootplateTitle": "Footplate inspection",
+  "@inspFootplateTitle": {
+    "description": "Title of the footplate inspection form."
+  },
+  "inspApprovalTitle": "Inspection approval",
+  "@inspApprovalTitle": {
+    "description": "Title of the footplate inspection approval request."
+  },
+  "inspApprovalRequest": "Request inspection approval",
+  "@inspApprovalRequest": {
+    "description": "Heading while a footplate inspection's approval is being requested."
+  },
+  "inspApprovalRequestAbout": "Share the planned train movement with the concerned officer before you start.",
+  "@inspApprovalRequestAbout": {
+    "description": "Explains the footplate approval request."
+  },
+  "inspApprovalApproved": "Inspection approved",
+  "@inspApprovalApproved": {
+    "description": "Heading once a footplate inspection's request is approved."
+  },
+  "inspApprovalApprovedAbout": "This request is approved for now. You can start the inspection.",
+  "@inspApprovalApprovedAbout": {
+    "description": "Says the footplate inspection can start."
+  },
+  "inspApprovalTrain": "Train assignment",
+  "@inspApprovalTrain": {
+    "description": "Heading of the train part of the approval request."
+  },
+  "inspApprovalOfficer": "Concerned officer",
+  "@inspApprovalOfficer": {
+    "description": "Label of the officer the approval request goes to."
+  },
+  "inspApprovalSchedule": "Schedule",
+  "@inspApprovalSchedule": {
+    "description": "Heading of the schedule part of the approval request."
+  },
+  "inspApprovalRoute": "Inspection route",
+  "@inspApprovalRoute": {
+    "description": "Heading of the route part of the approval request."
+  },
+  "inspApprovalFrom": "From",
+  "@inspApprovalFrom": {
+    "description": "Label of the station the inspection starts from."
+  },
+  "inspApprovalTo": "To",
+  "@inspApprovalTo": {
+    "description": "Label of the station the inspection ends at."
+  },
+  "inspApprovalSend": "Send for approval",
+  "@inspApprovalSend": {
+    "description": "Sends the footplate inspection approval request."
+  },
+  "inspApprovalStart": "Start inspection",
+  "@inspApprovalStart": {
+    "description": "Starts the approved footplate inspection."
+  },
+  "inspApprovalMissing": "Fill in the train, officer, date, times and route first.",
+  "@inspApprovalMissing": {
+    "description": "Shown when the approval request is incomplete."
   }
 }

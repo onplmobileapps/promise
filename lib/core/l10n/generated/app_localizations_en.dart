@@ -2821,4 +2821,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inspTrafficRemoveCrossing => 'Remove this crossing';
+
+  @override
+  String get inspFormSelectTime => 'Select time';
+
+  @override
+  String get inspFormRemovePhoto => 'Remove this photo?';
+
+  @override
+  String get inspFormSignedByFace =>
+      'Signed with your face check when the report is submitted.';
+
+  @override
+  String get inspFormLocate => 'Locate';
+
+  @override
+  String get inspFormAddField => 'Add a question';
+
+  @override
+  String get inspFormFieldLabel => 'Question';
+
+  @override
+  String get inspFormFieldType => 'Answer type';
+
+  @override
+  String get inspFormFieldRequired => 'Must be answered';
+
+  @override
+  String get inspFootplateTitle => 'Footplate inspection';
+
+  @override
+  String get inspApprovalTitle => 'Inspection approval';
+
+  @override
+  String get inspApprovalRequest => 'Request inspection approval';
+
+  @override
+  String get inspApprovalRequestAbout =>
+      'Share the planned train movement with the concerned officer before you start.';
+
+  @override
+  String get inspApprovalApproved => 'Inspection approved';
+
+  @override
+  String get inspApprovalApprovedAbout =>
+      'This request is approved for now. You can start the inspection.';
+
+  @override
+  String get inspApprovalTrain => 'Train assignment';
+
+  @override
+  String get inspApprovalOfficer => 'Concerned officer';
+
+  @override
+  String get inspApprovalSchedule => 'Schedule';
+
+  @override
+  String get inspApprovalRoute => 'Inspection route';
+
+  @override
+  String get inspApprovalFrom => 'From';
+
+  @override
+  String get inspApprovalTo => 'To';
+
+  @override
+  String get inspApprovalSend => 'Send for approval';
+
+  @override
+  String get inspApprovalStart => 'Start inspection';
+
+  @override
+  String get inspApprovalMissing =>
+      'Fill in the train, officer, date, times and route first.';
 }

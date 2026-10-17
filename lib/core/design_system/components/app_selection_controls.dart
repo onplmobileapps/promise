@@ -320,6 +320,43 @@ class AppChoiceChips<T> extends StatelessWidget {
   }
 }
 
+/// Several of a few short choices, as chips that wrap: each picked one
+/// sinks into a tint of its tone with a small check key.
+class AppMultiChoiceChips<T> extends StatelessWidget {
+  const AppMultiChoiceChips({
+    super.key,
+    required this.choices,
+    required this.selected,
+    required this.onToggled,
+  });
+
+  final List<AppChoice<T>> choices;
+  final Set<T> selected;
+
+  /// A choice tapped, to be picked or let go.
+  final ValueChanged<T> onToggled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        for (final choice in choices)
+          Semantics(
+            inMutuallyExclusiveGroup: false,
+            child: _Chip(
+              label: choice.label,
+              tone: choice.tone,
+              selected: selected.contains(choice.value),
+              onTap: () => onToggled(choice.value),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _Chip extends StatelessWidget {
   const _Chip({
     required this.label,

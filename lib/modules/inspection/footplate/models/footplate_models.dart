@@ -568,8 +568,4 @@ class FootplateInspectionData {
   final List<PunctualityEntry> punctuality = [];
   final List<OPEntry> ops = [];
   String finalRemarks = '';
-  String? startSelfiePath;
-  DateTime? startSelfieTime;
-  String? endSelfiePath;
-  DateTime? endSelfieTime;
 }

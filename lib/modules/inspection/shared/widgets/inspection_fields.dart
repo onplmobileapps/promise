@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart' show ImageSource;
 import 'package:intl/intl.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
+import 'package:railway_hrms/core/media/photo_picker.dart';
+import 'package:railway_hrms/modules/inspection/shared/file_utils.dart';
 import 'package:railway_hrms/modules/inspection/shared/report/inspection_report.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/stored_image.dart';
 
 /// The fields every inspection form is built from, on the app's design:
 /// pressed-in wells for what is typed or picked, chips for answers, and
@@ -802,6 +806,196 @@ class InspectionFacts extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Several of a few answers, as chips, as the defects seen on a part.
+class InspectionMultiChoiceInput extends StatelessWidget {
+  const InspectionMultiChoiceInput({
+    super.key,
+    required this.label,
+    required this.options,
+    required this.values,
+    required this.onChanged,
+    this.note,
+    this.toneOf = answerTone,
+  });
+
+  final String label;
+  final List<String> options;
+  final List<String> values;
+  final ValueChanged<List<String>> onChanged;
+  final String? note;
+  final AppTone Function(String answer) toneOf;
+
+  @override
+  Widget build(BuildContext context) => InspectionQuestion(
+    label: label,
+    note: note,
+    child: AppMultiChoiceChips<String>(
+      choices: [
+        for (final option in options)
+          AppChoice(option, option, tone: toneOf(option)),
+      ],
+      selected: values.toSet(),
+      onToggled: (option) {
+        HapticFeedback.selectionClick();
+        onChanged(
+          values.contains(option)
+              ? [...values.where((v) => v != option)]
+              : [...values, option],
+        );
+      },
+    ),
+  );
+}
+
+/// A time of day, picked on a wheel from a sheet.
+class InspectionTimeInput extends StatelessWidget {
+  const InspectionTimeInput({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final TimeOfDay? value;
+  final ValueChanged<TimeOfDay> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final value = this.value;
+    final shown = value?.format(context) ?? l10n.inspFormSelectTime;
+    return Semantics(
+      button: true,
+      label: label,
+      value: shown,
+      child: ExcludeSemantics(
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: AppRadius.borderLg,
+            splashFactory: NoSplash.splashFactory,
+            onTap: () async {
+              final picked = await showAppTimeSheet(
+                context: context,
+                title: label,
+                closeLabel: l10n.actionClose,
+                doneLabel: l10n.inspFormDone,
+                initial: value ?? TimeOfDay.now(),
+              );
+              if (picked != null) onChanged(picked);
+            },
+            child: AppFieldFrame(
+              label: label,
+              glyph: AppGlyphs.clock,
+              child: Text(
+                shown,
+                style: value == null
+                    ? context.textTheme.labelLarge?.copyWith(
+                        color: colors.textTertiary,
+                        fontWeight: FontWeight.normal,
+                      )
+                    : const TextStyle(fontFeatures: AppFonts.tabularFigures),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Photos taken for part of an inspection: a strip of them, the camera
+/// key that adds one, and a hold that offers to remove one. Kept as the
+/// paths the forms store.
+class InspectionPhotosInput extends StatelessWidget {
+  const InspectionPhotosInput({
+    super.key,
+    required this.photos,
+    required this.onChanged,
+  });
+
+  final List<String> photos;
+  final ValueChanged<List<String>> onChanged;
+
+  Future<void> _take(BuildContext context) async {
+    final shot = await PhotoPicker.pick(
+      source: ImageSource.camera,
+      context: context,
+      maxWidth: 1600,
+      imageQuality: 80,
+    );
+    if (shot == null) return;
+    final kept = await FootplateFileUtils.saveImagePermanently(shot.path);
+    onChanged([...photos, kept]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    return InspectionQuestion(
+      label: l10n.inspFormPhotos,
+      child: AppGrid(
+        columns: 3,
+        spacing: AppSpacing.smd,
+        children: [
+          for (final photo in photos)
+            GestureDetector(
+              onLongPress: () async {
+                final sure = await showAppDialog(
+                  context: context,
+                  tone: AppDialogTone.warning,
+                  title: l10n.inspFormRemovePhoto,
+                  primaryLabel: l10n.inspFormRemoveRow,
+                  secondaryLabel: l10n.actionCancel,
+                );
+                if (sure == true) {
+                  onChanged([...photos.where((p) => p != photo)]);
+                }
+              },
+              child: ClipRRect(
+                borderRadius: AppRadius.borderLg,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: StoredImage(path: photo),
+                ),
+              ),
+            ),
+          AspectRatio(
+            aspectRatio: 1,
+            child: Material(
+              color: colors.surfaceSunken,
+              borderRadius: AppRadius.borderLg,
+              child: InkWell(
+                borderRadius: AppRadius.borderLg,
+                onTap: () => _take(context),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AppGlyphIcon(
+                      AppGlyphs.camera,
+                      color: colors.iconAccent,
+                      depth: true,
+                    ),
+                    AppSpacing.gapXs,
+                    Text(
+                      l10n.inspFormAddPhoto,
+                      style: context.textTheme.labelSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

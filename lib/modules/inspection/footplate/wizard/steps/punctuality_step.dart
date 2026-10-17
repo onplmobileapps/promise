@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:railway_hrms/core/design_system/design_system.dart';
+import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/modules/inspection/footplate/models/footplate_models.dart';
-import 'package:railway_hrms/modules/inspection/shared/widgets/common_widgets.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
 
-class PunctualityStep extends StatefulWidget {
-  final List<PunctualityEntry> punctuality;
-  final List<OPEntry> ops;
-  final VoidCallback onChanged;
-
+/// How the train kept time at each station, and the caution orders it was
+/// given on the way.
+class PunctualityStep extends StatelessWidget {
   const PunctualityStep({
     super.key,
     required this.punctuality,
@@ -14,351 +14,226 @@ class PunctualityStep extends StatefulWidget {
     required this.onChanged,
   });
 
-  @override
-  State<PunctualityStep> createState() => _PunctualityStepState();
-}
-
-class _PunctualityStepState extends State<PunctualityStep> {
-  String _fmtDiff(Duration? d) {
-    if (d == null) return '—';
-    final neg = d.isNegative;
-    final abs = d.abs();
-    final h = abs.inHours;
-    final m = abs.inMinutes % 60;
-    final s = abs.inSeconds % 60;
-    final parts = <String>[];
-    if (h > 0) parts.add('${h}h');
-    if (m > 0) parts.add('${m}m');
-    parts.add('${s}s');
-    return (neg ? '-' : '+') + parts.join(' ');
-  }
-
-  Future<void> _pickTime(PunctualityEntry e, String field) async {
-    final now = DateTime.now();
-    final initial = TimeOfDay.now();
-    final picked = await showTimePicker(context: context, initialTime: initial);
-    if (picked == null) return;
-    final dt = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      picked.hour,
-      picked.minute,
-    );
-    setState(() {
-      switch (field) {
-        case 'schedArr':
-          e.scheduleArrival = dt;
-          break;
-        case 'actArr':
-          e.actualArrival = dt;
-          break;
-        case 'schedDep':
-          e.scheduleDeparture = dt;
-          break;
-        case 'actDep':
-          e.actualDeparture = dt;
-          break;
-      }
-    });
-    widget.onChanged();
-  }
-
-  void _addStation() {
-    setState(
-      () => widget.punctuality.add(PunctualityEntry(station: kStations.first)),
-    );
-    widget.onChanged();
-  }
+  final List<PunctualityEntry> punctuality;
+  final List<OPEntry> ops;
+  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(20),
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Punctuality & Caution Orders',
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 18),
-        SectionCard(
+        InspectionCard(
           title: 'Punctuality of Trains',
-          icon: Icons.timer,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ...widget.punctuality.map(
-                (e) => _PunctualityCard(
-                  entry: e,
-                  fmtDiff: _fmtDiff,
-                  onPickTime: (f) => _pickTime(e, f),
-                  onStationChanged: (v) => setState(() {
-                    e.station = v;
-                    widget.onChanged();
-                  }),
-                  onRemarksChanged: (v) {
-                    e.remarks = v;
-                    widget.onChanged();
-                  },
-                  onDelete: () => setState(() {
-                    widget.punctuality.remove(e);
-                    widget.onChanged();
-                  }),
-                ),
+          glyph: AppGlyphs.clock,
+          children: [
+            for (final (i, entry) in punctuality.indexed)
+              _Stop(
+                key: ObjectKey(entry),
+                number: i + 1,
+                entry: entry,
+                onChanged: onChanged,
+                onRemove: () {
+                  punctuality.remove(entry);
+                  onChanged();
+                },
               ),
-              OutlinedButton.icon(
-                onPressed: _addStation,
-                icon: const Icon(Icons.add),
-                label: const Text('Add Station Record'),
-              ),
-            ],
-          ),
+            AppButton(
+              label: l10n.inspFormAddRow('station'),
+              variant: AppButtonVariant.secondary,
+              leadingGlyph: AppGlyphs.plus,
+              onPressed: () {
+                punctuality.add(PunctualityEntry(station: kStations.first));
+                onChanged();
+              },
+            ),
+          ],
         ),
-        SectionCard(
+        AppSpacing.gapMd,
+        InspectionCard(
           title: 'Caution Orders / OPs',
-          icon: Icons.report_gmailerrorred,
-          subtitle:
-              'Select every OP received and note the decimal it applies to.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: kCautionOrders.map((op) {
-                  final selected = widget.ops.any((o) => o.opCode == op);
-                  return FilterChip(
-                    label: Text(op),
-                    selected: selected,
-                    onSelected: (v) => setState(() {
-                      if (v) {
-                        widget.ops.add(OPEntry(opCode: op));
-                      } else {
-                        widget.ops.removeWhere((o) => o.opCode == op);
-                      }
-                      widget.onChanged();
-                    }),
-                  );
-                }).toList(),
+          subtitle: 'Pick every OP received and the decimal it applies to.',
+          glyph: AppGlyphs.triangleAlert,
+          children: [
+            AppMultiChoiceChips<String>(
+              choices: [for (final op in kCautionOrders) AppChoice(op, op)],
+              selected: {for (final op in ops) op.opCode},
+              onToggled: (code) {
+                final had = ops.any((op) => op.opCode == code);
+                had
+                    ? ops.removeWhere((op) => op.opCode == code)
+                    : ops.add(OPEntry(opCode: code));
+                onChanged();
+              },
+            ),
+            for (final op in ops)
+              InspectionTextInput(
+                key: ValueKey(op.opCode),
+                label: '${op.opCode} · Decimal',
+                hint: 'e.g. 425/0.987',
+                value: op.decimal,
+                onChanged: (typed) {
+                  op.decimal = typed;
+                  onChanged();
+                },
               ),
-              if (widget.ops.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 8),
-                ...widget.ops.map(
-                  (o) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          child: Text(
-                            o.opCode,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        Expanded(
-                          child: TextFormField(
-                            key: ValueKey(o.opCode),
-                            initialValue: o.decimal,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) =>
-                                FocusScope.of(context).unfocus(),
-                            decoration: InputDecoration(
-                              hintText: 'Decimal (e.g. 425/0.987)',
-                              isDense: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onChanged: (v) {
-                              o.decimal = v;
-                              widget.onChanged();
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
+          ],
         ),
-        const SizedBox(height: 40),
       ],
     );
   }
 }
 
-class _PunctualityCard extends StatelessWidget {
-  final PunctualityEntry entry;
-  final String Function(Duration?) fmtDiff;
-  final void Function(String field) onPickTime;
-  final ValueChanged<String> onStationChanged;
-  final ValueChanged<String> onRemarksChanged;
-  final VoidCallback onDelete;
-
-  const _PunctualityCard({
+/// One station's times: scheduled and actual, arriving and leaving, with
+/// how far off they were.
+class _Stop extends StatelessWidget {
+  const _Stop({
+    super.key,
+    required this.number,
     required this.entry,
-    required this.fmtDiff,
-    required this.onPickTime,
-    required this.onStationChanged,
-    required this.onRemarksChanged,
-    required this.onDelete,
+    required this.onChanged,
+    required this.onRemove,
   });
 
-  Widget _timeChip(
-    BuildContext context,
-    String label,
-    DateTime? value,
-    VoidCallback onTap,
-  ) {
-    return Expanded(
-      child: OutlinedButton(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-        ),
-        child: Column(
-          children: [
-            Text(label, style: Theme.of(context).textTheme.labelSmall),
-            Text(
-              value == null
-                  ? '--:--'
-                  : TimeOfDay.fromDateTime(value).format(context),
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-      ),
-    );
+  final int number;
+  final PunctualityEntry entry;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
+
+  static String _off(Duration? d) {
+    if (d == null) return '—';
+    final minutes = d.inMinutes;
+    if (minutes == 0) return 'On time';
+    return minutes > 0 ? '$minutes min late' : '${-minutes} min early';
   }
+
+  DateTime _today(TimeOfDay t) {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day, t.hour, t.minute);
+  }
+
+  TimeOfDay? _time(DateTime? at) =>
+      at == null ? null : TimeOfDay.fromDateTime(at);
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(14),
+    final colors = context.colors;
+    Widget time(String label, DateTime? value, void Function(DateTime) set) =>
+        InspectionTimeInput(
+          label: label,
+          value: _time(value),
+          onChanged: (t) {
+            set(_today(t));
+            onChanged();
+          },
+        );
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(14),
+        color: colors.surfaceMuted,
+        borderRadius: AppRadius.borderXl,
+        border: Border.all(color: colors.outline),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: entry.station,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    labelText: 'Station',
-                  ),
-                  items: kStations
-                      .map(
-                        (s) => DropdownMenuItem(
-                          value: s,
-                          child: Text(s, overflow: TextOverflow.ellipsis),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) onStationChanged(v);
-                  },
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: onDelete,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _timeChip(
-                context,
-                'Sched. Arrival',
-                entry.scheduleArrival,
-                () => onPickTime('schedArr'),
-              ),
-              const SizedBox(width: 8),
-              _timeChip(
-                context,
-                'Actual Arrival',
-                entry.actualArrival,
-                () => onPickTime('actArr'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _timeChip(
-                context,
-                'Sched. Departure',
-                entry.scheduleDeparture,
-                () => onPickTime('schedDep'),
-              ),
-              const SizedBox(width: 8),
-              _timeChip(
-                context,
-                'Actual Departure',
-                entry.actualDeparture,
-                () => onPickTime('actDep'),
-              ),
-            ],
-          ),
-          if (entry.arrivalDiff != null || entry.departureDiff != null) ...[
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
               children: [
-                if (entry.arrivalDiff != null)
-                  StatusPill(
-                    text: 'Arrival ${fmtDiff(entry.arrivalDiff)}',
-                    color: entry.arrivalDiff!.inSeconds == 0
-                        ? Colors.green.shade600
-                        : Colors.orange.shade700,
+                Expanded(
+                  child: Text(
+                    'Station $number',
+                    style: context.textTheme.titleSmall,
                   ),
-                if (entry.departureDiff != null)
-                  StatusPill(
-                    text: 'Departure ${fmtDiff(entry.departureDiff)}',
-                    color: entry.departureDiff!.inSeconds == 0
-                        ? Colors.green.shade600
-                        : Colors.orange.shade700,
-                  ),
+                ),
+                AppButton(
+                  label: context.l10n.inspFormRemoveRow,
+                  size: AppButtonSize.small,
+                  variant: AppButtonVariant.quietDanger,
+                  leadingGlyph: AppGlyphs.trash,
+                  expand: false,
+                  onPressed: onRemove,
+                ),
               ],
             ),
-          ],
-          if (entry.hasDifference) ...[
-            const SizedBox(height: 10),
-            TextField(
-              autocorrect: false,
-              enableSuggestions: false,
-              decoration: InputDecoration(
-                labelText: 'Remarks (required — time differs from schedule)',
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              maxLines: 2,
-              onChanged: onRemarksChanged,
+            AppSpacing.gapMd,
+            InspectionSelectInput(
+              label: 'Station',
+              options: kStations,
+              value: entry.station,
+              glyph: AppGlyphs.station,
+              onChanged: (v) {
+                entry.station = v;
+                onChanged();
+              },
             ),
+            AppSpacing.gapMd,
+            InspectionFieldGrid(
+              items: [
+                InspectionGridItem(
+                  time(
+                    'Scheduled arrival',
+                    entry.scheduleArrival,
+                    (at) => entry.scheduleArrival = at,
+                  ),
+                ),
+                InspectionGridItem(
+                  time(
+                    'Actual arrival',
+                    entry.actualArrival,
+                    (at) => entry.actualArrival = at,
+                  ),
+                ),
+                InspectionGridItem(
+                  time(
+                    'Scheduled departure',
+                    entry.scheduleDeparture,
+                    (at) => entry.scheduleDeparture = at,
+                  ),
+                ),
+                InspectionGridItem(
+                  time(
+                    'Actual departure',
+                    entry.actualDeparture,
+                    (at) => entry.actualDeparture = at,
+                  ),
+                ),
+              ],
+            ),
+            AppSpacing.gapSm,
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              children: [
+                AppPill(
+                  'Arrival: ${_off(entry.arrivalDiff)}',
+                  tone: (entry.arrivalDiff?.inMinutes ?? 0) > 0
+                      ? AppTone.danger
+                      : AppTone.brand,
+                ),
+                AppPill(
+                  'Departure: ${_off(entry.departureDiff)}',
+                  tone: (entry.departureDiff?.inMinutes ?? 0) > 0
+                      ? AppTone.danger
+                      : AppTone.brand,
+                ),
+              ],
+            ),
+            if (entry.hasDifference) ...[
+              AppSpacing.gapMd,
+              InspectionTextInput(
+                label: 'Reason for the difference',
+                kind: InspectionTextKind.multiline,
+                value: entry.remarks,
+                onChanged: (typed) {
+                  entry.remarks = typed;
+                  onChanged();
+                },
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

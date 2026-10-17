@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-
+import 'package:railway_hrms/core/design_system/design_system.dart';
+import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/modules/inspection/footplate/models/footplate_models.dart';
 import 'package:railway_hrms/modules/inspection/footplate/wizard/wizard_screen.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
 
+/// Asks the concerned officer's approval for a footplate inspection: the
+/// train, the day and times, and the route; once approved, the inspection
+/// starts with them filled in.
 class InspectionApprovalScreen extends StatefulWidget {
   const InspectionApprovalScreen({super.key});
 
@@ -12,389 +17,204 @@ class InspectionApprovalScreen extends StatefulWidget {
 }
 
 class _InspectionApprovalScreenState extends State<InspectionApprovalScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _officerController = TextEditingController();
-
   String? _train;
+  String _officer = '';
   String? _origin;
   String? _destination;
-  DateTime? _inspectionDate;
-  TimeOfDay? _departureTime;
-  TimeOfDay? _arrivalTime;
-  bool _requestSubmitted = false;
+  DateTime? _date;
+  TimeOfDay? _departure;
+  TimeOfDay? _arrival;
+  bool _approved = false;
 
-  @override
-  void dispose() {
-    _officerController.dispose();
-    super.dispose();
-  }
+  bool get _complete =>
+      _train != null &&
+      _officer.trim().isNotEmpty &&
+      _date != null &&
+      _departure != null &&
+      _arrival != null &&
+      _origin != null &&
+      _destination != null;
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _inspectionDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null) setState(() => _inspectionDate = picked);
-  }
-
-  Future<void> _pickTime({required bool departure}) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: departure
-          ? (_departureTime ?? TimeOfDay.now())
-          : (_arrivalTime ?? TimeOfDay.now()),
-    );
-    if (picked == null) return;
-    setState(() {
-      if (departure) {
-        _departureTime = picked;
-      } else {
-        _arrivalTime = picked;
-      }
-    });
-  }
-
-  void _submitRequest() {
-    if (!_formKey.currentState!.validate() ||
-        _inspectionDate == null ||
-        _departureTime == null ||
-        _arrivalTime == null) {
-      setState(() {});
+  Future<void> _send() async {
+    final l10n = context.l10n;
+    if (!_complete) {
+      await showAppDialog(
+        context: context,
+        tone: AppDialogTone.info,
+        title: l10n.inspApprovalRequest,
+        message: l10n.inspApprovalMissing,
+        primaryLabel: l10n.actionOk,
+      );
       return;
     }
-
-    setState(() => _requestSubmitted = true);
+    setState(() => _approved = true);
   }
+
+  Future<void> _start() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => FootplateWizardScreen(
+        initialTrain: _train,
+        initialStation: _origin,
+        initialDeparture: _departure,
+        initialArrival: _arrival,
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Inspection Approval')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final text = context.textTheme;
+    final now = DateTime.now();
+    final fields = IgnorePointer(
+      ignoring: _approved,
+      child: AnimatedOpacity(
+        duration: AppMotion.short,
+        opacity: _approved ? 0.6 : 1,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              _requestSubmitted
-                  ? 'Inspection approved'
-                  : 'Request inspection approval',
-              style: textTheme.headlineSmall,
+            InspectionCard(
+              title: l10n.inspApprovalTrain,
+              glyph: AppGlyphs.train,
+              children: [
+                InspectionSelectInput(
+                  label: 'Train',
+                  options: kTrainNumbers,
+                  value: _train,
+                  glyph: AppGlyphs.trainFilled,
+                  onChanged: (v) => setState(() => _train = v),
+                ),
+                InspectionTextInput(
+                  label: l10n.inspApprovalOfficer,
+                  value: _officer,
+                  glyph: AppGlyphs.userCheck,
+                  onChanged: (v) => setState(() => _officer = v),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              _requestSubmitted
-                  ? 'This request is approved for now. You can start the inspection.'
-                  : 'Share the planned train movement with the concern officer before starting the inspection.',
-              style: textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 24),
-            _SectionCard(
-              title: 'Train assignment',
-              icon: Icons.train_rounded,
-              child: Column(
-                children: [
-                  DropdownButtonFormField<String>(
-                    initialValue: _train,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Train',
-                      hintText: 'Select train number',
-                    ),
-                    items: kTrainNumbers
-                        .map(
-                          (train) => DropdownMenuItem(
-                            value: train,
-                            child: Text(train),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: _requestSubmitted
-                        ? null
-                        : (value) => setState(() => _train = value),
-                    validator: (value) =>
-                        value == null ? 'Select a train' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _officerController,
-                    enabled: !_requestSubmitted,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
-                    decoration: const InputDecoration(
-                      labelText: 'Concern officer',
-                      hintText: 'Enter officer name or designation',
-                      prefixIcon: Icon(Icons.person_search_rounded),
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Enter the concern officer'
-                        : null,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _SectionCard(
-              title: 'Schedule',
-              icon: Icons.schedule_rounded,
-              child: Column(
-                children: [
-                  _PickerTile(
-                    icon: Icons.calendar_today_rounded,
-                    label: 'Inspection date',
-                    value: _inspectionDate == null
-                        ? null
-                        : MaterialLocalizations.of(
-                            context,
-                          ).formatMediumDate(_inspectionDate!),
-                    onTap: _requestSubmitted ? null : _pickDate,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _PickerTile(
-                          icon: Icons.departure_board_rounded,
-                          label: 'Departure',
-                          value: _departureTime?.format(context),
-                          onTap: _requestSubmitted
-                              ? null
-                              : () => _pickTime(departure: true),
-                        ),
+            AppSpacing.gapMd,
+            InspectionCard(
+              title: l10n.inspApprovalSchedule,
+              glyph: AppGlyphs.calendar,
+              children: [
+                InspectionDateInput(
+                  label: l10n.inspFormDate,
+                  value: _date,
+                  firstDate: DateTime(now.year, now.month, now.day),
+                  lastDate: now.add(const Duration(days: 365)),
+                  onChanged: (d) => setState(() => _date = d),
+                ),
+                InspectionFieldGrid(
+                  items: [
+                    InspectionGridItem(
+                      InspectionTimeInput(
+                        label: 'Departure',
+                        value: _departure,
+                        onChanged: (t) => setState(() => _departure = t),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _PickerTile(
-                          icon: Icons.flag_rounded,
-                          label: 'Arrival',
-                          value: _arrivalTime?.format(context),
-                          onTap: _requestSubmitted
-                              ? null
-                              : () => _pickTime(departure: false),
+                    ),
+                    InspectionGridItem(
+                      InspectionTimeInput(
+                        label: 'Arrival',
+                        value: _arrival,
+                        onChanged: (t) => setState(() => _arrival = t),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            AppSpacing.gapMd,
+            InspectionCard(
+              title: l10n.inspApprovalRoute,
+              glyph: AppGlyphs.route,
+              children: [
+                InspectionSelectInput(
+                  label: l10n.inspApprovalFrom,
+                  options: kStations,
+                  value: _origin,
+                  glyph: AppGlyphs.mapPin,
+                  onChanged: (v) => setState(() => _origin = v),
+                ),
+                InspectionSelectInput(
+                  label: l10n.inspApprovalTo,
+                  options: kStations,
+                  value: _destination,
+                  glyph: AppGlyphs.flag,
+                  onChanged: (v) => setState(() => _destination = v),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    return Scaffold(
+      body: AppScrollPage(
+        backdrop: AppPageBackdrop.blobs,
+        children: [
+          AppHeaderBar(
+            title: l10n.inspApprovalTitle,
+            subtitle: l10n.inspFootplate,
+            onBack: () => Navigator.of(context).maybePop(),
+          ),
+          AppSpacing.gapLg,
+          AnimatedSwitcher(
+            duration: AppMotion.medium,
+            child: Row(
+              key: ValueKey(_approved),
+              children: [
+                AppToneIcon(
+                  glyph: _approved ? AppGlyphs.badgeCheck : AppGlyphs.hourglass,
+                  tone: _approved ? AppTone.brand : AppTone.warning,
+                ),
+                AppSpacing.gapMd,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _approved
+                            ? l10n.inspApprovalApproved
+                            : l10n.inspApprovalRequest,
+                        style: text.titleMedium,
+                      ),
+                      Text(
+                        _approved
+                            ? l10n.inspApprovalApprovedAbout
+                            : l10n.inspApprovalRequestAbout,
+                        style: text.bodySmall?.copyWith(
+                          color: colors.textSecondary,
                         ),
                       ),
                     ],
                   ),
-                  if (!_requestSubmitted &&
-                      (_inspectionDate == null ||
-                          _departureTime == null ||
-                          _arrivalTime == null))
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Date and both schedule times are required.',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: scheme.error,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _SectionCard(
-              title: 'Inspection route',
-              icon: Icons.alt_route_rounded,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _origin,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'From'),
-                      items: kStations
-                          .map(
-                            (station) => DropdownMenuItem(
-                              value: station,
-                              child: Text(
-                                station,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: _requestSubmitted
-                          ? null
-                          : (value) => setState(() => _origin = value),
-                      validator: (value) => value == null ? 'Required' : null,
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Icon(Icons.arrow_forward_rounded),
-                  ),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _destination,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'To'),
-                      items: kStations
-                          .map(
-                            (station) => DropdownMenuItem(
-                              value: station,
-                              child: Text(
-                                station,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: _requestSubmitted
-                          ? null
-                          : (value) => setState(() => _destination = value),
-                      validator: (value) => value == null ? 'Required' : null,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            if (_requestSubmitted)
-              _ApprovalStatusCard(
-                onStartInspection: () {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => FootplateWizardScreen(
-                        initialTrain: _train,
-                        initialStation: _origin,
-                        initialDeparture: _departureTime,
-                        initialArrival: _arrivalTime,
-                        initialDriver: kStaffDirectory[5],
-                        initialAssistantDriver: kStaffDirectory[4],
-                        initialGuardIncharge: kStaffDirectory[6],
-                      ),
-                    ),
-                  );
-                },
-              )
-            else
-              FilledButton.icon(
-                onPressed: _submitRequest,
-                icon: const Icon(Icons.send_rounded),
-                label: const Text('Send for approval'),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Widget child;
-
-  const _SectionCard({
-    required this.title,
-    required this.icon,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: scheme.primary),
-                const SizedBox(width: 10),
-                Text(title, style: Theme.of(context).textTheme.titleMedium),
-              ],
-            ),
-            const SizedBox(height: 16),
-            child,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PickerTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String? value;
-  final VoidCallback? onTap;
-
-  const _PickerTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon),
-          suffixIcon: const Icon(Icons.expand_more_rounded),
-        ),
-        child: Text(
-          value ?? 'Select',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ),
-    );
-  }
-}
-
-class _ApprovalStatusCard extends StatelessWidget {
-  final VoidCallback onStartInspection;
-
-  const _ApprovalStatusCard({required this.onStartInspection});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      color: scheme.secondaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.check_circle_rounded, color: scheme.primary),
-                const SizedBox(width: 10),
-                Text(
-                  'Approved for inspection',
-                  style: Theme.of(context).textTheme.titleMedium,
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'The approval is enabled temporarily. Start the inspection when you are ready.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: onStartInspection,
-              icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('Start inspection'),
-            ),
-          ],
-        ),
+          ),
+          AppSpacing.gapLg,
+          fields,
+          AppSpacing.gapXl,
+          AnimatedSwitcher(
+            duration: AppMotion.medium,
+            child: _approved
+                ? AppButton(
+                    key: const ValueKey('start'),
+                    label: l10n.inspApprovalStart,
+                    leadingGlyph: AppGlyphs.scanFace,
+                    onPressed: _start,
+                  )
+                : AppButton(
+                    key: const ValueKey('send'),
+                    label: l10n.inspApprovalSend,
+                    leadingGlyph: AppGlyphs.arrowUpRight,
+                    onPressed: _send,
+                  ),
+          ),
+        ],
       ),
     );
   }

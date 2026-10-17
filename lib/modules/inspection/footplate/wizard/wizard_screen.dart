@@ -1,30 +1,31 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
+import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/core/storage/storage_service.dart';
+import 'package:railway_hrms/core/utils/either.dart';
 import 'package:railway_hrms/modules/inspection/footplate/models/footplate_models.dart';
 import 'package:railway_hrms/modules/inspection/footplate/models/station_asset_model.dart';
-import 'package:railway_hrms/modules/inspection/footplate/wizard/start_selfie_gate.dart';
-import 'package:railway_hrms/modules/inspection/footplate/wizard/step_sidebar.dart';
+import 'package:railway_hrms/modules/inspection/footplate/wizard/footplate_report.dart';
 import 'package:railway_hrms/modules/inspection/footplate/wizard/steps/asset_checks_step.dart';
 import 'package:railway_hrms/modules/inspection/footplate/wizard/steps/locomotive_step.dart';
 import 'package:railway_hrms/modules/inspection/footplate/wizard/steps/punctuality_step.dart';
-import 'package:railway_hrms/modules/inspection/footplate/wizard/steps/review_step.dart';
 import 'package:railway_hrms/modules/inspection/footplate/wizard/steps/station_asset_inspection_step.dart';
 import 'package:railway_hrms/modules/inspection/footplate/wizard/steps/train_schedule_step.dart';
+import 'package:railway_hrms/modules/inspection/shared/flow/inspection_review_screen.dart';
+import 'package:railway_hrms/modules/inspection/shared/flow/inspection_session.dart';
+import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_form_scaffold.dart';
 
-class FootplateWizardScreen extends StatefulWidget {
-  final String? resumeId;
-  final String? initialTrain;
-  final String? initialStation;
-  final TimeOfDay? initialDeparture;
-  final TimeOfDay? initialArrival;
-  final Person? initialDriver;
-  final Person? initialAssistantDriver;
-  final Person? initialGuardIncharge;
-
+/// A footplate inspection, ridden on the train: the inspector's face
+/// first, then the train and crew, the locomotive, each station's assets,
+/// the assets passed, punctuality and caution orders, and the signed
+/// report kept on the phone for the supervisor.
+class FootplateWizardScreen extends StatelessWidget {
   const FootplateWizardScreen({
     super.key,
     this.resumeId,
@@ -35,44 +36,73 @@ class FootplateWizardScreen extends StatefulWidget {
     this.initialDriver,
     this.initialAssistantDriver,
     this.initialGuardIncharge,
+    this.verifier,
   });
+
+  final String? resumeId;
+  final String? initialTrain;
+  final String? initialStation;
+  final TimeOfDay? initialDeparture;
+  final TimeOfDay? initialArrival;
+  final Person? initialDriver;
+  final Person? initialAssistantDriver;
+  final Person? initialGuardIncharge;
+
+  /// Checks the face; the app's own unless a test stands in.
+  final InspectionFaceVerifier? verifier;
+
   @override
-  State<FootplateWizardScreen> createState() => _FootplateWizardScreenState();
+  Widget build(BuildContext context) => InspectionStartGate(
+    title: context.l10n.inspFootplateTitle,
+    verifier: verifier,
+    child: _FootplateForm(screen: this),
+  );
 }
 
-class _FootplateWizardScreenState extends State<FootplateWizardScreen> {
-  final FootplateInspectionData data = FootplateInspectionData();
-  int currentStep = 0;
-  int maxReachedStep = 0;
-  bool _isRestoringDraft = true;
+class _FootplateForm extends StatefulWidget {
+  const _FootplateForm({required this.screen});
 
-  static const double _wideBreakpoint = 900;
+  final FootplateWizardScreen screen;
+
+  @override
+  State<_FootplateForm> createState() => _FootplateFormState();
+}
+
+class _FootplateFormState extends State<_FootplateForm> {
+  final FootplateInspectionData data = FootplateInspectionData();
+  bool _ready = false;
+  bool _dirty = false;
+  int _step = 0;
+  Timer? _autosave;
 
   @override
   void initState() {
     super.initState();
-    if (widget.resumeId != null) {
-      data.id = widget.resumeId!;
-      _restoreDraft();
-    } else {
-      data.trainSchedule
-        ..trainNo = widget.initialTrain
-        ..station = widget.initialStation
-        ..departure = widget.initialDeparture
-        ..arrival = widget.initialArrival
-        ..driver = widget.initialDriver ?? kStaffDirectory[5]
-        ..assistantDriver = widget.initialAssistantDriver ?? kStaffDirectory[4]
-        ..guardIncharge = widget.initialGuardIncharge ?? kStaffDirectory[6];
-      data.ops.addAll([
-        OPEntry(opCode: 'OP-354', decimal: '425/0.987'),
-        OPEntry(opCode: 'OP-373', decimal: '430/1.204'),
-      ]);
-      // Initialize station assets if empty
-      if (data.stationAssets.isEmpty) {
-        data.stationAssets.addAll(StationAssetData.getMockStations());
-      }
-      _isRestoringDraft = false;
+    final screen = widget.screen;
+    final resume = screen.resumeId;
+    if (resume != null) {
+      data.id = resume;
+      unawaited(_restoreDraft());
+      return;
     }
+    data.trainSchedule
+      ..trainNo = screen.initialTrain
+      ..station = screen.initialStation
+      ..departure = screen.initialDeparture
+      ..arrival = screen.initialArrival
+      ..driver = screen.initialDriver
+      ..assistantDriver = screen.initialAssistantDriver
+      ..guardIncharge = screen.initialGuardIncharge;
+    // The stations on the run and their assets. There is no register to
+    // load them from yet, so these stand in.
+    data.stationAssets.addAll(StationAssetData.getMockStations());
+    _ready = true;
+  }
+
+  @override
+  void dispose() {
+    _autosave?.cancel();
+    super.dispose();
   }
 
   Future<void> _restoreDraft() async {
@@ -80,74 +110,24 @@ class _FootplateWizardScreenState extends State<FootplateWizardScreen> {
     if (raw != null && raw.isNotEmpty) {
       try {
         _restorePayload(jsonDecode(raw) as Map<String, dynamic>);
-      } catch (_) {
-        // Keep defaults when an older draft cannot be decoded.
+      } on Object {
+        // An older draft that can't be read starts afresh.
       }
     }
-    if (mounted) setState(() => _isRestoringDraft = false);
-  }
-
-  void _goTo(int step) {
-    if (step > maxReachedStep) return;
-    setState(() => currentStep = step);
-  }
-
-  void _next() {
-    setState(() {
-      if (currentStep < kSteps.length - 1) {
-        currentStep++;
-        if (currentStep > maxReachedStep) maxReachedStep = currentStep;
-      }
-    });
-  }
-
-  void _onDataChanged() {
-    if (!mounted) return;
-    setState(() {});
-    _persistDraft();
-  }
-
-  void _back() {
-    if (currentStep > 0) setState(() => currentStep--);
-  }
-
-  void _submit() {
-    FocusScope.of(context).unfocus();
-    _saveInspectionRecord('pending');
-    StorageService.clearInspectionDraft(data.id);
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        icon: const Icon(Icons.check_circle, color: Colors.green, size: 40),
-        title: const Text('Inspection Submitted'),
-        content: const Text(
-          'The Footplate Inspection has been submitted for review by your supervisor.',
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              FocusScope.of(context).unfocus();
-            },
-            child: const Text('Done'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _saveDraft() async {
-    await _persistDraft();
-    if (mounted) {
-      showAppMessage(
-        context,
-        'Inspection draft saved',
-        tone: AppDialogTone.success,
-      );
+    if (data.stationAssets.isEmpty) {
+      data.stationAssets.addAll(StationAssetData.getMockStations());
     }
+    if (mounted) setState(() => _ready = true);
+  }
+
+  void _changed() {
+    setState(() => _dirty = true);
+    _autosave?.cancel();
+    _autosave = Timer(const Duration(milliseconds: 800), _persistDraft);
   }
 
   Future<void> _persistDraft() async {
+    _autosave?.cancel();
     await StorageService.saveInspectionDraft(
       data.id,
       jsonEncode(_buildPayload('in_progress')),
@@ -155,22 +135,40 @@ class _FootplateWizardScreenState extends State<FootplateWizardScreen> {
     await _saveInspectionRecord('in_progress');
   }
 
-  Future<void> _saveInspectionRecord(String status) async {
-    final payload = _buildPayload(status);
-    await StorageService.saveInspectionRecord({
-      'id': data.id,
-      'status': status,
-      'train': data.trainSchedule.trainNo ?? 'Inspection',
-      'date': DateTime.now().toIso8601String(),
-      'payload': payload,
-    });
+  Future<void> _saveInspectionRecord(
+    String status, {
+    Map<String, dynamic> extra = const {},
+  }) => StorageService.saveInspectionRecord({
+    'id': data.id,
+    'status': status,
+    'train': data.trainSchedule.trainNo ?? 'Inspection',
+    'date': DateTime.now().toIso8601String(),
+    'payload': {..._buildPayload(status), ...extra},
+  });
+
+  Future<void> _review() async {
+    final l10n = context.l10n;
+    await _persistDraft();
+    if (!mounted) return;
+    final kept = await reviewAndSubmit(
+      context,
+      verifier: widget.screen.verifier,
+      report: footplateReport(data, title: l10n.inspFootplateTitle),
+      submit: (signatures) async {
+        // Kept for the supervisor's approval, signed.
+        await _saveInspectionRecord('pending', extra: signatures.toJson());
+        await StorageService.clearInspectionDraft(data.id);
+        return Right(l10n.inspFormSavedLocally);
+      },
+    );
+    if (kept && mounted) Navigator.of(context).pop();
   }
 
   Map<String, dynamic> _buildPayload(String status) {
     return {
       'id': data.id,
       'status': status,
-      'step': currentStep,
+      'step': _step,
       'trainSchedule': {
         'trainNo': data.trainSchedule.trainNo,
         'load': data.trainSchedule.load,
@@ -206,11 +204,18 @@ class _FootplateWizardScreenState extends State<FootplateWizardScreen> {
       'ops': data.ops
           .map((op) => {'code': op.opCode, 'decimal': op.decimal})
           .toList(),
+      'punctuality': [
+        for (final stop in data.punctuality)
+          {
+            'station': stop.station,
+            'scheduleArrival': stop.scheduleArrival?.toIso8601String(),
+            'actualArrival': stop.actualArrival?.toIso8601String(),
+            'scheduleDeparture': stop.scheduleDeparture?.toIso8601String(),
+            'actualDeparture': stop.actualDeparture?.toIso8601String(),
+            'remarks': stop.remarks,
+          },
+      ],
       'remarks': data.finalRemarks,
-      'startSelfiePath': data.startSelfiePath,
-      'startSelfieTime': data.startSelfieTime?.toIso8601String(),
-      'endSelfiePath': data.endSelfiePath,
-      'endSelfieTime': data.endSelfieTime?.toIso8601String(),
       'savedAt': DateTime.now().toIso8601String(),
     };
   }
@@ -263,11 +268,9 @@ class _FootplateWizardScreenState extends State<FootplateWizardScreen> {
       ..station = schedule['station'] as String?
       ..arrival = _timeFromJson(schedule['arrival'])
       ..departure = _timeFromJson(schedule['departure'])
-      ..driver = _personFromDisplay(schedule['driver']) ?? kStaffDirectory[5]
-      ..assistantDriver =
-          _personFromDisplay(schedule['assistantDriver']) ?? kStaffDirectory[4]
-      ..guardIncharge =
-          _personFromDisplay(schedule['guardIncharge']) ?? kStaffDirectory[6];
+      ..driver = _personFromDisplay(schedule['driver'])
+      ..assistantDriver = _personFromDisplay(schedule['assistantDriver'])
+      ..guardIncharge = _personFromDisplay(schedule['guardIncharge']);
 
     final locomotive = payload['locomotive'];
     if (locomotive is Map) {
@@ -331,156 +334,108 @@ class _FootplateWizardScreenState extends State<FootplateWizardScreen> {
           ),
         ),
       );
+    data.punctuality
+      ..clear()
+      ..addAll(
+        (payload['punctuality'] as List? ?? []).whereType<Map>().map(
+          (item) => PunctualityEntry(station: '${item['station'] ?? ''}')
+            ..scheduleArrival = DateTime.tryParse('${item['scheduleArrival']}')
+            ..actualArrival = DateTime.tryParse('${item['actualArrival']}')
+            ..scheduleDeparture = DateTime.tryParse(
+              '${item['scheduleDeparture']}',
+            )
+            ..actualDeparture = DateTime.tryParse('${item['actualDeparture']}')
+            ..remarks = '${item['remarks'] ?? ''}',
+        ),
+      );
     data.finalRemarks = payload['remarks'] as String? ?? '';
-    data.startSelfiePath = payload['startSelfiePath'] as String?;
-    data.startSelfieTime = payload['startSelfieTime'] != null
-        ? DateTime.tryParse(payload['startSelfieTime'] as String)
-        : null;
-    data.endSelfiePath = payload['endSelfiePath'] as String?;
-    data.endSelfieTime = payload['endSelfieTime'] != null
-        ? DateTime.tryParse(payload['endSelfieTime'] as String)
-        : null;
-    currentStep = (payload['step'] as num?)?.toInt() ?? 0;
-    maxReachedStep = currentStep;
-  }
-
-  void _onStartSelfieCaptured(String path) {
-    setState(() {
-      data.startSelfiePath = path;
-      data.startSelfieTime = DateTime.now();
-    });
-    _persistDraft();
-  }
-
-  Widget _buildStepContent() {
-    if (_isRestoringDraft) {
-      return Center(child: AppLoader());
-    }
-
-    switch (currentStep) {
-      case 0:
-        return TrainScheduleStep(
-          data: data.trainSchedule,
-          onChanged: _onDataChanged,
-        );
-      case 1:
-        return LocomotiveStep(data: data.locomotive, onChanged: _onDataChanged);
-      case 2:
-        return StationAssetInspectionStep(
-          stationAssets: data.stationAssets,
-          onChanged: _onDataChanged,
-        );
-      case 3:
-        return AssetChecksStep(
-          entries: data.assetChecks,
-          onChanged: _onDataChanged,
-        );
-      case 4:
-        return PunctualityStep(
-          punctuality: data.punctuality,
-          ops: data.ops,
-          onChanged: _onDataChanged,
-        );
-      case 5:
-        return ReviewStep(
-          data: data,
-          onChanged: _onDataChanged,
-          onSubmit: _submit,
-          onSaveDraft: _saveDraft,
-        );
-      default:
-        return const SizedBox.shrink();
-    }
+    _step = (payload['step'] as num?)?.toInt() ?? 0;
   }
 
   @override
   Widget build(BuildContext context) {
-    // The inspection envelope must be bounded by a start selfie before any
-    // wizard step is reachable — the matching end selfie is captured on the
-    // Review & Submit step.
-    if (!_isRestoringDraft && data.startSelfiePath == null) {
-      return StartSelfieGate(
-        trainLabel: data.trainSchedule.trainNo ?? '',
-        onCaptured: _onStartSelfieCaptured,
-      );
-    }
-
-    final isWide = MediaQuery.of(context).size.width >= _wideBreakpoint;
-    final isLastStep = currentStep == kSteps.length - 1;
-
-    final content = Column(
-      children: [
-        Expanded(child: _buildStepContent()),
-        SafeArea(
-          top: false,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
+    final l10n = context.l10n;
+    if (!_ready) return const Scaffold(body: Center(child: AppLoader()));
+    final schedule = data.trainSchedule;
+    return InspectionFormScaffold(
+      title: l10n.inspFootplateTitle,
+      subtitle: schedule.trainNo ?? l10n.inspFootplateAbout,
+      initialStep: _step,
+      dirty: _dirty,
+      onLeave: _persistDraft,
+      onStepChanged: (step) {
+        _step = step;
+        unawaited(_persistDraft());
+      },
+      missing: () => [
+        if (schedule.trainNo == null) 'Train No',
+        if (schedule.engineNo == null) 'Engine No',
+      ],
+      onReview: _review,
+      steps: [
+        InspectionStep(
+          title: 'Train Schedule',
+          total: 6,
+          answered: [
+            schedule.trainNo,
+            schedule.engineNo,
+            schedule.station,
+            schedule.driver,
+            schedule.assistantDriver,
+            schedule.guardIncharge,
+          ].nonNulls.length,
+          builder: (_) =>
+              TrainScheduleStep(data: schedule, onChanged: _changed),
+        ),
+        InspectionStep(
+          title: 'Locomotive',
+          builder: (_) =>
+              LocomotiveStep(data: data.locomotive, onChanged: _changed),
+        ),
+        InspectionStep(
+          title: 'Station Assets',
+          total: data.stationAssets.fold(0, (n, s) => n + s.totalAssets),
+          answered: data.stationAssets.fold(0, (n, s) => n + s.completedAssets),
+          builder: (_) => StationAssetInspectionStep(
+            stationAssets: data.stationAssets,
+            onChanged: _changed,
+          ),
+        ),
+        InspectionStep(
+          title: 'Asset Checks',
+          total: kAssetTypes.length,
+          answered: data.assetChecks.where((e) => e.answers.isNotEmpty).length,
+          builder: (_) =>
+              AssetChecksStep(entries: data.assetChecks, onChanged: _changed),
+        ),
+        InspectionStep(
+          title: 'Punctuality & OPs',
+          builder: (_) => PunctualityStep(
+            punctuality: data.punctuality,
+            ops: data.ops,
+            onChanged: _changed,
+          ),
+        ),
+        InspectionStep(
+          title: 'Remarks',
+          builder: (_) => InspectionCard(
+            title: l10n.inspFormNote,
+            glyph: AppGlyphs.fileEdit,
+            children: [
+              InspectionTextInput(
+                label: l10n.inspFormRemarkLabel,
+                hint: l10n.inspFormNoteHint,
+                kind: InspectionTextKind.multiline,
+                value: data.finalRemarks,
+                onChanged: (typed) {
+                  data.finalRemarks = typed;
+                  _changed();
+                },
               ),
-            ),
-            child: Row(
-              children: [
-                if (currentStep > 0)
-                  OutlinedButton.icon(
-                    onPressed: _back,
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Back'),
-                  )
-                else
-                  const SizedBox(width: 96),
-                const Spacer(),
-                Text(
-                  'Step ${currentStep + 1} of ${kSteps.length}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const Spacer(),
-                if (!isLastStep)
-                  FilledButton.icon(
-                    onPressed: _next,
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Next'),
-                  )
-                else
-                  const SizedBox(width: 96),
-              ],
-            ),
+            ],
           ),
         ),
       ],
-    );
-
-    if (isWide) {
-      return Scaffold(
-        body: Row(
-          children: [
-            StepSidebar(
-              currentStep: currentStep,
-              maxReachedStep: maxReachedStep,
-              onStepTapped: _goTo,
-            ),
-            const VerticalDivider(width: 1),
-            Expanded(child: content),
-          ],
-        ),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(kSteps[currentStep].title),
-        centerTitle: false,
-        bottom: StepTopBar(
-          currentStep: currentStep,
-          maxReachedStep: maxReachedStep,
-          onStepTapped: _goTo,
-        ),
-      ),
-      body: content,
     );
   }
 }

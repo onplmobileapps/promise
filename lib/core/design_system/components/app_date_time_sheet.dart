@@ -230,3 +230,56 @@ class _AppDatePickerState extends State<AppDatePicker> {
     );
   }
 }
+
+/// Picks a time of day on a sheet with a wheel of hours and minutes. Gives
+/// the time picked, or null if the sheet is closed.
+Future<TimeOfDay?> showAppTimeSheet({
+  required BuildContext context,
+  required String title,
+  required String closeLabel,
+  required String doneLabel,
+  required TimeOfDay initial,
+}) {
+  var picked = initial;
+  return showAppSheet<TimeOfDay>(
+    context: context,
+    title: title,
+    closeLabel: closeLabel,
+    builder: (sheetContext) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: AppSizes.timeWheelHeight,
+          child: CupertinoTheme(
+            data: CupertinoThemeData(
+              brightness: Theme.of(sheetContext).brightness,
+              textTheme: CupertinoTextThemeData(
+                dateTimePickerTextStyle: sheetContext.textTheme.titleLarge
+                    ?.copyWith(color: sheetContext.colors.textPrimary),
+              ),
+            ),
+            child: CupertinoDatePicker(
+              mode: CupertinoDatePickerMode.time,
+              initialDateTime: DateTime(
+                2000,
+                1,
+                1,
+                initial.hour,
+                initial.minute,
+              ),
+              use24hFormat: MediaQuery.alwaysUse24HourFormatOf(sheetContext),
+              onDateTimeChanged: (at) => picked = TimeOfDay.fromDateTime(at),
+            ),
+          ),
+        ),
+        AppSpacing.gapLg,
+        AppButton(
+          label: doneLabel,
+          variant: AppButtonVariant.primary,
+          onPressed: () => Navigator.of(sheetContext).pop(picked),
+        ),
+      ],
+    ),
+  );
+}
