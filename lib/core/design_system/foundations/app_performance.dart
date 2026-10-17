@@ -78,16 +78,13 @@ abstract final class AppPerformance {
   static const String _forced = String.fromEnvironment('RENDER_BUDGET');
 
   /// A phone with this many cores or fewer is lite.
-  static const int _fewCores = 4;
+  static const int _fewCores = 2;
 
-  /// A phone with no more memory than this, in kB, is lite: a 4 GB phone
-  /// has about 3.7 GB of it for Android, a 6 GB one about 5.6 GB.
-  static const int _littleMemoryKb = 4608 * 1024;
+  /// A phone with no more memory than this, in kB, is lite: low-end 2 GB phone.
+  static const int _littleMemoryKb = 2048 * 1024;
 
-  /// A phone with no more memory than this, in kB, is steady: a 6 GB
-  /// phone, rather than starting in full and stuttering through its first
-  /// seconds until the frames show it can't keep up.
-  static const int _midMemoryKb = 6656 * 1024;
+  /// A phone with no more memory than this, in kB, is steady.
+  static const int _midMemoryKb = 3072 * 1024;
 
   /// The picture cache on a lite phone, in bytes, less than Flutter's
   /// 100 MB so memory runs out less often.
@@ -127,7 +124,7 @@ abstract final class AppPerformance {
   }
 
   static void _apply() {
-    if (_budget.value != RenderBudget.full) _capRefreshRate();
+    _requestHighRefreshRate();
     if (!lite) return;
     final cache = PaintingBinding.instance.imageCache;
     cache.maximumSizeBytes = math.min(
@@ -139,14 +136,13 @@ abstract final class AppPerformance {
   static const MethodChannel _display = MethodChannel('railway_hrms/display');
   static bool _capped = false;
 
-  /// Asks for 60 frames a second where the screen runs faster; Android
-  /// only, and only once.
-  static void _capRefreshRate() {
+  /// Asks Android for native display refresh rate (0.0 asks for native max, e.g. 90/120Hz).
+  static void _requestHighRefreshRate() {
     if (_capped || kIsWeb || !Platform.isAndroid) return;
     _capped = true;
     unawaited(
       _display
-          .invokeMethod<bool>('preferRefreshRate', {'rate': 60.0})
+          .invokeMethod<bool>('preferRefreshRate', {'rate': 0.0})
           .catchError((Object _) => false),
     );
   }

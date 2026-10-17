@@ -194,29 +194,6 @@ class _LoginViewState extends State<LoginView> with TickerProviderStateMixin {
                     // ),
                   ),
                 ),
-                if (!tight) ...[
-                  AppSpacing.gapMd,
-                  _rise(
-                    4,
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AppGlyphIcon(
-                          AppGlyphs.train,
-                          size: AppSizes.iconSm,
-                          color: context.colors.iconAccent,
-                        ),
-                        AppSpacing.gapXs,
-                        Flexible(
-                          child: Text(
-                            l10n.loginSecure,
-                            style: context.textTheme.bodySmall,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ],
             ),
           );

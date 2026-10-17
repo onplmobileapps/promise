@@ -42,6 +42,10 @@ class TrainStation extends Equatable {
   final String? arrivalTime;
   final String? departureTime;
 
+  /// Whether the train stops here (`is_stoppage`), only for stations from
+  /// a schedule; null where the API doesn't say.
+  final bool? halts;
+
   const TrainStation({
     this.id,
     required this.name,
@@ -49,6 +53,7 @@ class TrainStation extends Equatable {
     this.position,
     this.arrivalTime,
     this.departureTime,
+    this.halts,
   });
 
   /// `{"id", "name", "station_code", "line", "latitude", "longitude"}`;
@@ -84,6 +89,10 @@ class TrainStation extends Equatable {
       position: _parseLatLng(lat, lng),
       arrivalTime: arrTime,
       departureTime: depTime,
+      halts: switch (stop?['is_stoppage'] ?? json['is_stoppage']) {
+        final bool halts => halts,
+        _ => null,
+      },
     );
   }
 
@@ -98,6 +107,7 @@ class TrainStation extends Equatable {
     position,
     arrivalTime,
     departureTime,
+    halts,
   ];
 }
 
@@ -150,6 +160,25 @@ class LiveTrain extends Equatable {
     return parsed == null
         ? null
         : DateTime(parsed.year, parsed.month, parsed.day);
+  }
+
+  /// The day the journey's timetable starts on: the day of its first
+  /// scheduled departure that the train's dispatch came after (or a little
+  /// before), so a train dispatched hours late past midnight is still on
+  /// the day it was due. Without a dispatch or timetable, [runDate].
+  DateTime? get departureDay {
+    final at = dispatchedAt;
+    final raw = origin?.departureTime;
+    final parts = raw?.split(':');
+    final h = parts == null ? null : int.tryParse(parts[0]);
+    final m = parts == null || parts.length < 2 ? null : int.tryParse(parts[1]);
+    if (at == null || h == null || m == null) return runDate;
+    var day = DateTime(at.year, at.month, at.day);
+    final due = DateTime(day.year, day.month, day.day, h, m);
+    if (due.isAfter(at.add(const Duration(hours: 2)))) {
+      day = day.subtract(const Duration(days: 1));
+    }
+    return day;
   }
 
   /// What runs of the same train share: its number and direction, or its
@@ -242,13 +271,35 @@ class LiveTrain extends Equatable {
                   ),
         );
 
-    final stops = <TrainStation>[
+    final scheduled = <TrainStation>[
       for (final stop in stopsJson)
-        if (TrainStation.fromJson(stop['station'] ?? stop, stop: stop)
-            case final station?)
-          if (!(origin?.isSameStation(station) ?? false) &&
-              !(destination?.isSameStation(station) ?? false))
-            station,
+        ?TrainStation.fromJson(stop['station'] ?? stop, stop: stop),
+    ];
+    // The schedule's own first and last stations carry the times the
+    // origin and destination don't.
+    TrainStation? timed(TrainStation? end) {
+      if (end == null) return null;
+      for (final station in scheduled) {
+        if (end.isSameStation(station)) {
+          return TrainStation(
+            id: end.id ?? station.id,
+            name: end.name,
+            code: end.code ?? station.code,
+            position: end.position ?? station.position,
+            arrivalTime: station.arrivalTime,
+            departureTime: station.departureTime,
+            halts: true,
+          );
+        }
+      }
+      return end;
+    }
+
+    final stops = [
+      for (final station in scheduled)
+        if (!(origin?.isSameStation(station) ?? false) &&
+            !(destination?.isSameStation(station) ?? false))
+          station,
     ];
 
     final deviceId = _parseInt(json['device_id'] ?? train['device_id']);
@@ -265,8 +316,8 @@ class LiveTrain extends Equatable {
       number: _parseInt(train['train_no'] ?? json['train_no']),
       direction: _parseInt(json['direction'] ?? train['direction']),
       deviceId: (deviceId ?? 0) > 0 ? deviceId : null,
-      origin: origin,
-      destination: destination,
+      origin: timed(origin),
+      destination: timed(destination),
       stops: stops,
       date: (json['effective_date'] ?? json['date']) as String?,
       dispatchedAt: switch (json['dispatch']) {
@@ -363,7 +414,26 @@ class TrainPosition extends Equatable {
     required this.fixTime,
     this.address,
     this.stoppedFor,
+    this.online,
   });
+
+  /// The device online or offline, as the live feed says — its report's
+  /// own `deviceStatus`, or the feed's device list; null where it hasn't.
+  final bool? online;
+
+  /// This report, with the device [online] or not.
+  TrainPosition withOnline(bool? online) => TrainPosition(
+    deviceId: deviceId,
+    position: position,
+    speedKmh: speedKmh,
+    course: course,
+    moving: moving,
+    validFix: validFix,
+    fixTime: fixTime,
+    address: address,
+    stoppedFor: stoppedFor,
+    online: online,
+  );
 
   static TrainPosition? fromJson(
     Map<String, dynamic> json, {
@@ -426,6 +496,11 @@ class TrainPosition extends Equatable {
       stoppedFor: !moving && (_parseDouble(stopMs) ?? 0) > 0
           ? Duration(milliseconds: _parseDouble(stopMs)!.round())
           : null,
+      online: switch (deviceStatus) {
+        'online' => true,
+        'offline' => false,
+        _ => null,
+      },
     );
   }
 
@@ -451,5 +526,6 @@ class TrainPosition extends Equatable {
     fixTime,
     address,
     stoppedFor,
+    online,
   ];
 }

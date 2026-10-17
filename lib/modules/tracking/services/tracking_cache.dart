@@ -24,6 +24,9 @@ class TrackingCache {
   Map<int, TrainPosition> positions = const {};
   Map<String, RoutePath> paths = const {};
 
+  /// Trains' details — stops and times — by id, kept for the session.
+  Map<String, LiveTrain> details = const {};
+
   DateTime? _inTouchSince;
   DateTime? _inTouchUntil;
 

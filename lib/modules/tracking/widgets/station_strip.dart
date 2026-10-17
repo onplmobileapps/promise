@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart'
     show AppLoop, AppLoopsMixin;
 import 'package:railway_hrms/modules/tracking/data/models/live_train_models.dart';
@@ -23,12 +24,16 @@ class StationStrip extends StatefulWidget {
   /// The day the journey began, for placing timetable times.
   final DateTime? runDate;
 
+  /// When the train reached each of [stops], where known.
+  final List<DateTime?> reached;
+
   const StationStrip({
     super.key,
     required this.stops,
     required this.coveredKm,
     required this.position,
     this.runDate,
+    this.reached = const [],
   });
 
   @override
@@ -161,14 +166,20 @@ class _StationStripState extends State<StationStrip> with AppLoopsMixin {
     final trainX = _trainX(stops, covered);
     final moving = widget.position?.moving ?? false;
     // Timetable times, each on the first day that keeps them in order.
-    final scheduled = <DateTime?>[];
-    DateTime? lastDue;
-    for (final stop in stops) {
-      final due = scheduledAt(stop, widget.runDate, after: lastDue);
-      scheduled.add(due);
-      if (due != null) lastDue = due;
-    }
+    final scheduled = timetableOf(stops, widget.runDate);
     final timetable = scheduled.any((due) => due != null);
+    final reached = [
+      for (var i = 0; i < stops.length; i++)
+        i < widget.reached.length ? widget.reached[i] : null,
+    ];
+    // How late it is where its last report puts it; else where it was
+    // last seen at a station.
+    final reportedAt = widget.position?.fixTime;
+    final delay =
+        (covered == null || reportedAt == null
+            ? null
+            : delayAtPosition(stops, scheduled, covered, reportedAt)) ??
+        delayNow(scheduled, reached);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,6 +210,10 @@ class _StationStripState extends State<StationStrip> with AppLoopsMixin {
                 ),
               ),
             ),
+            if (delay != null) ...[
+              const SizedBox(width: 6),
+              _DelayChip(delay: delay),
+            ],
             const SizedBox(width: 8),
             Expanded(
               child: stops.length > 3
@@ -229,7 +244,7 @@ class _StationStripState extends State<StationStrip> with AppLoopsMixin {
         const SizedBox(height: 6),
         SizedBox(
           // Name, place or distance, then time, and how late if timetabled.
-          height: (timetable ? 172 : 152) + 52 * (textScale - 1),
+          height: (timetable ? 214 : 168) + 64 * (textScale - 1),
           child: NotificationListener<UserScrollNotification>(
             onNotification: (_) {
               _userScrolledAt = DateTime.now();
@@ -250,6 +265,8 @@ class _StationStripState extends State<StationStrip> with AppLoopsMixin {
                 trainMoving: moving,
                 coveredKm: covered,
                 scheduled: scheduled[i],
+                reached: reached[i],
+                delay: delay,
                 pulse: _pulse,
               ),
             ),
@@ -270,6 +287,38 @@ class _StationStripState extends State<StationStrip> with AppLoopsMixin {
 }
 
 enum _StopKind { unknown, passed, at, next, ahead }
+
+/// How late the train is, in words: red when late, green on time or early.
+class _DelayChip extends StatelessWidget {
+  const _DelayChip({required this.delay, this.small = false});
+
+  final Duration delay;
+  final bool small;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = TrackPalette.of(context);
+    final late = delay.inMinutes > 2;
+    final ink = late ? palette.red : palette.g1;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: small ? 6 : 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: late ? palette.redSoft : palette.soft,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        delayLabel(delay),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: small ? 9.5 : 11.5,
+          fontWeight: FontWeight.w900,
+          color: ink,
+        ),
+      ),
+    );
+  }
+}
 
 class _NextStopCard extends StatelessWidget {
   final List<RouteStop> stops;
@@ -418,6 +467,12 @@ class _StopItem extends StatelessWidget {
 
   /// When the timetable has it here.
   final DateTime? scheduled;
+
+  /// When the train reached this stop, where known.
+  final DateTime? reached;
+
+  /// How late the train is running now, where known.
+  final Duration? delay;
   final Animation<double> pulse;
 
   const _StopItem({
@@ -430,6 +485,8 @@ class _StopItem extends StatelessWidget {
     required this.trainMoving,
     required this.coveredKm,
     this.scheduled,
+    this.reached,
+    this.delay,
     required this.pulse,
   });
 
@@ -457,31 +514,31 @@ class _StopItem extends StatelessWidget {
     };
   }
 
-  /// Station arrival / departure time directly from API response.
-  (String, String, bool)? get _time {
-    final schedArr = stop.station.arrivalTime;
-    final schedDep = stop.station.departureTime;
-    if (schedArr != null && schedArr.trim().isNotEmpty) {
-      return ('ARR', _formatTimeString(schedArr), true);
+  static final DateFormat _clock = DateFormat('h:mm a');
+
+  /// The timetable's time here, then what happened: when the train reached
+  /// it and how late, or, still ahead, when it is expected at the delay it
+  /// runs at.
+  List<(String, String, Color)> _times(TrackPalette palette) {
+    final due = scheduled;
+    final at = reached;
+    final lines = <(String, String, Color)>[];
+    if (due != null) lines.add(('SCH', _clock.format(due), palette.ink));
+    if (at != null) {
+      lines.add(('ACT', _clock.format(at), palette.g1));
+    } else if (due != null &&
+        delay != null &&
+        (kind == _StopKind.next || kind == _StopKind.ahead)) {
+      lines.add(('EXP', _clock.format(due.add(delay!)), palette.blue));
     }
-    if (schedDep != null && schedDep.trim().isNotEmpty) {
-      return ('DEP', _formatTimeString(schedDep), true);
-    }
-    return null;
+    return lines;
   }
 
-  static String _formatTimeString(String raw) {
-    final parts = raw.split(':');
-    if (parts.length >= 2) {
-      final h = int.tryParse(parts[0]);
-      final m = parts[1];
-      if (h != null) {
-        final period = h >= 12 ? 'PM' : 'AM';
-        final hour = h % 12 == 0 ? 12 : h % 12;
-        return '$hour:$m $period';
-      }
-    }
-    return raw;
+  /// How late it was here, once it has been.
+  Duration? get _lateHere {
+    final due = scheduled;
+    final at = reached;
+    return due == null || at == null ? null : at.difference(due);
   }
 
   @override
@@ -572,31 +629,51 @@ class _StopItem extends StatelessWidget {
             color: highlighted ? palette.g2 : palette.grey,
           ),
         ),
-        if (_time case (final label, final clock, final expected)) ...[
-          const SizedBox(height: 4),
+        if (stop.station.halts case final halts?) ...[
+          const SizedBox(height: 3),
           Text(
-            label,
+            halts ? 'STOPS HERE' : 'NO STOP',
             maxLines: 1,
             style: TextStyle(
               fontSize: 8.5,
               fontWeight: FontWeight.w900,
-              letterSpacing: 0.8,
-              color: expected ? palette.g2 : palette.grey,
+              letterSpacing: 0.6,
+              color: halts ? palette.amber : palette.grey,
             ),
           ),
-          Text(
-            clock,
+        ],
+        for (final (label, clock, color) in _times(palette)) ...[
+          const SizedBox(height: 2),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '$label ',
+                  style: TextStyle(
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.6,
+                    color: palette.grey,
+                  ),
+                ),
+                TextSpan(
+                  text: clock,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w900,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    color: passed && label == 'SCH' ? palette.mute : color,
+                  ),
+                ),
+              ],
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              color: expected
-                  ? palette.g1
-                  : (passed ? palette.mute : palette.ink),
-            ),
           ),
+        ],
+        if (_lateHere case final late?) ...[
+          const SizedBox(height: 3),
+          _DelayChip(delay: late, small: true),
         ],
       ],
     );

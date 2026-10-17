@@ -708,56 +708,58 @@ class InspectionCard extends StatelessWidget {
     final subtitle = this.subtitle;
     final glyph = this.glyph;
     final trailing = this.trailing;
-    return DecoratedBox(
-      decoration: appCardDecoration(context, radius: AppRadius.borderHeroCard),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (title != null) ...[
-              Row(
-                children: [
-                  if (glyph != null) ...[
-                    AppIconTile(
-                      size: AppSizes.rowTile,
-                      child: AppGlyphIcon(
-                        glyph,
-                        size: AppSizes.iconMd,
-                        color: colors.iconAccent,
-                        depth: true,
+    return RepaintBoundary(
+      child: DecoratedBox(
+        decoration: appCardDecoration(context, radius: AppRadius.borderHeroCard),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (title != null) ...[
+                Row(
+                  children: [
+                    if (glyph != null) ...[
+                      AppIconTile(
+                        size: AppSizes.rowTile,
+                        child: AppGlyphIcon(
+                          glyph,
+                          size: AppSizes.iconMd,
+                          color: colors.iconAccent,
+                          depth: true,
+                        ),
+                      ),
+                      AppSpacing.gapSm,
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Semantics(
+                            header: true,
+                            child: Text(title, style: text.titleSmall),
+                          ),
+                          if (subtitle != null)
+                            Text(
+                              subtitle,
+                              style: text.bodySmall?.copyWith(
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    AppSpacing.gapSm,
+                    if (trailing != null) ...[AppSpacing.gapSm, trailing],
                   ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Semantics(
-                          header: true,
-                          child: Text(title, style: text.titleSmall),
-                        ),
-                        if (subtitle != null)
-                          Text(
-                            subtitle,
-                            style: text.bodySmall?.copyWith(
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  if (trailing != null) ...[AppSpacing.gapSm, trailing],
-                ],
-              ),
-              AppSpacing.gapLg,
+                ),
+                AppSpacing.gapLg,
+              ],
+              for (final (i, child) in children.indexed) ...[
+                if (i > 0) AppSpacing.gapLg,
+                child,
+              ],
             ],
-            for (final (i, child) in children.indexed) ...[
-              if (i > 0) AppSpacing.gapLg,
-              child,
-            ],
-          ],
+          ),
         ),
       ),
     );

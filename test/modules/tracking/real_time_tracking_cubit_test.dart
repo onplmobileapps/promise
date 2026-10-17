@@ -26,7 +26,18 @@ class _FakeTrainRepository implements TrainRepository {
   @override
   Future<Either<AppException, Response>> getTrainDetail(String trainId) async {
     calls.add('tracking/mobile/$trainId');
-    return result;
+    // As the API: the one train, by its id.
+    return result.fold(Left.new, (response) {
+      final data = response.data;
+      final one = data is List
+          ? data.whereType<Map<String, dynamic>>().where(
+              (t) => '${t['id']}' == trainId,
+            )
+          : const <Map<String, dynamic>>[];
+      return one.isEmpty
+          ? Left(AppException('Not found'))
+          : Right(_response(one.first));
+    });
   }
 }
 

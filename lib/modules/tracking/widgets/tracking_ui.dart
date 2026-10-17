@@ -239,7 +239,18 @@ LiveStatus liveStatusOf(
     );
   }
   final age = now.difference(position.fixTime);
-  if (age > (position.moving ? kStaleWhileMovingAfter : kStaleAfter)) {
+  // The live feed says whether the device is online: taken as it says.
+  if (position.online == false) {
+    return LiveStatus(
+      TrainLiveStatus.stale,
+      'Offline',
+      palette.grey,
+      Icons.cloud_off_rounded,
+    );
+  }
+  // Only where it doesn't say, the report's age tells.
+  if (position.online == null &&
+      age > (position.moving ? kStaleWhileMovingAfter : kStaleAfter)) {
     // Out of touch with the server: the device may be reporting.
     if (link != null && link != LinkState.open) {
       return LiveStatus(

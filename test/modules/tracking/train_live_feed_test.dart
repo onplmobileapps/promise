@@ -59,6 +59,46 @@ void main() {
     expect(next.single.position.latitude, 29.21);
   });
 
+  test('the proxy\'s device list says, as it is, whether a device is '
+      'online', () {
+    final reports = ProxyReports()..watch({2562});
+    final report = _report(2562, fix: '2026-10-16T09:55:02Z');
+    (report['attributes']! as Map<String, Object?>).remove('deviceStatus');
+    final first = reports.read(_message([report]));
+    // Nothing said yet.
+    expect(first.single.online, isNull);
+
+    final offline = reports.read(
+      jsonEncode({
+        'devices': [
+          {'id': 2562, 'status': 'offline'},
+          {'id': 2723, 'status': 'online'},
+        ],
+      }),
+    );
+    // The same report, now offline.
+    expect(offline.single.online, isFalse);
+    expect(offline.single.fixTime, first.single.fixTime);
+
+    // Said again: nothing new.
+    expect(
+      reports.read(
+        jsonEncode({
+          'devices': [
+            {'id': 2562, 'status': 'offline'},
+          ],
+        }),
+      ),
+      isEmpty,
+    );
+
+    // A new report carries the device's last status.
+    (report['attributes']! as Map<String, Object?>).remove('deviceStatus');
+    report['fixTime'] = '2026-10-16T09:55:20Z';
+    report['serverTime'] = '2026-10-16T09:55:20Z';
+    expect(reports.read(_message([report])).single.online, isFalse);
+  });
+
   test('a device watched later gets its last known report at once', () {
     final reports = ProxyReports()..watch(const {});
     reports.read(_message([_report(2641, fix: '2026-10-16T09:50:00Z')]));

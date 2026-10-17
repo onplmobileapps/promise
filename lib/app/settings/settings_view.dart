@@ -9,6 +9,7 @@ import 'package:railway_hrms/app/settings/settings_cubit.dart';
 import 'package:railway_hrms/app/settings/settings_states.dart';
 import 'package:railway_hrms/app/settings/text_display_view.dart';
 import 'package:railway_hrms/app/settings/text_look_card.dart';
+import 'package:railway_hrms/core/config/app_flags.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
@@ -22,6 +23,7 @@ import 'package:railway_hrms/core/theme/text_look_controller.dart';
 import 'package:railway_hrms/core/update/app_info.dart';
 import 'package:railway_hrms/core/utils/field_rules.dart';
 import 'package:railway_hrms/modules/auth/data/auth_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// The profile: who is signed in, their account and preferences, and the
 /// way out.
@@ -407,6 +409,13 @@ class _SettingsViewState extends State<SettingsView> {
                               ),
                             ],
                           ),
+                          // Never in a release.
+                          if (AppFlags.testingTools) ...[
+                            AppSpacing.gapXl,
+                            const AppSectionLabel('Testing'),
+                            AppSpacing.gapSm,
+                            const _InspectionChecksSwitch(),
+                          ],
                           AppSpacing.gapXl,
                           _LogoutCard(onTap: _confirmLogout),
                         ],
@@ -947,4 +956,46 @@ class _SplitSwatch extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Turns eInspection's face and location check off for testing away from
+/// the office, and on again. Shown outside a release only.
+class _InspectionChecksSwitch extends StatefulWidget {
+  const _InspectionChecksSwitch();
+
+  @override
+  State<_InspectionChecksSwitch> createState() =>
+      _InspectionChecksSwitchState();
+}
+
+class _InspectionChecksSwitchState extends State<_InspectionChecksSwitch> {
+  bool _on = AppFlags.inspectionFaceCheck;
+
+  Future<void> _set(bool on) async {
+    setState(() => _on = on);
+    await AppFlags.setInspectionChecks(
+      on,
+      await SharedPreferences.getInstance(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppListGroup(
+      children: [
+        AppListRow(
+          leading: AppGlyphIcon(
+            AppGlyphs.scanFace,
+            size: AppSizes.iconMd,
+            color: context.colors.iconAccent,
+          ),
+          title: 'eInspection face check',
+          subtitle: _on
+              ? 'On: face and office location are checked'
+              : 'Off: inspections open without face or location',
+          trailing: AppSwitch(value: _on, onChanged: _set),
+        ),
+      ],
+    );
+  }
 }

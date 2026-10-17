@@ -234,8 +234,15 @@ class _ProformaFormState extends State<_ProformaForm> {
     });
   }
 
+  int _lastSectionsCount = 0;
+
   void _changed() {
-    setState(() => _dirty = true);
+    final count = _sections.length;
+    final sectionsChanged = count != _lastSectionsCount;
+    _lastSectionsCount = count;
+    if (!_dirty || sectionsChanged) {
+      setState(() => _dirty = true);
+    }
     _autosave?.cancel();
     _autosave = Timer(const Duration(milliseconds: 800), _saveDraft);
   }

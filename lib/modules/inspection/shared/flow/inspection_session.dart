@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:railway_hrms/core/config/app_flags.dart';
 import 'package:railway_hrms/core/constants/app_assets.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/di/service_locator.dart';
@@ -51,7 +52,11 @@ class InspectionStartGate extends StatefulWidget {
 }
 
 class _InspectionStartGateState extends State<InspectionStartGate> {
-  InspectionIdentity? _start;
+  // With the face check turned off (see [AppFlags]) the form opens at
+  // once, as if the face had been checked.
+  InspectionIdentity? _start = AppFlags.inspectionFaceCheck
+      ? null
+      : InspectionIdentity(photoPath: '', verifiedAt: DateTime.now());
   bool _busy = false;
 
   InspectionFaceVerifier get _verifier =>

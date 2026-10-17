@@ -125,7 +125,6 @@ class _StationFormState extends State<_StationForm> {
   }
 
   void _changed() {
-    setState(() {});
     _autosave?.cancel();
     _autosave = Timer(const Duration(milliseconds: 800), _saveDraft);
   }

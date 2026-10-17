@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:railway_hrms/core/utils/equatable.dart';
 import 'package:railway_hrms/modules/tracking/data/models/live_train_models.dart';
 import 'package:railway_hrms/modules/tracking/services/route_geometry.dart';
+import 'package:railway_hrms/modules/tracking/services/track_history_store.dart';
 
 /// A station on a train's route and how far along the route it is.
 class RouteStop extends Equatable {
@@ -67,4 +68,107 @@ DateTime? scheduledAt(RouteStop stop, DateTime? runDate, {DateTime? after}) {
     at = at.add(const Duration(days: 1));
   }
   return at;
+}
+
+/// Each stop's timetable time, from the day the journey began, each on the
+/// first day that keeps them in order (a journey runs past midnight).
+List<DateTime?> timetableOf(List<RouteStop> stops, DateTime? day) {
+  final due = <DateTime?>[];
+  DateTime? last;
+  for (final stop in stops) {
+    final at = scheduledAt(stop, day, after: last);
+    due.add(at);
+    if (at != null) last = at;
+  }
+  return due;
+}
+
+/// A train this close to a station has reached it.
+const double reachedWithinKm = 1.5;
+
+/// When the train reached each stop: the time of its first GPS report
+/// within [reachedWithinKm] of it after the stop before it was reached,
+/// counting only reports from [since] on (this journey's). Null where it
+/// hasn't been seen there — not yet, or while no one watched. (A
+/// dispatch's time is when it was entered, not when the train left, so it
+/// isn't taken as one.)
+List<DateTime?> reachedAt(
+  List<RouteStop> stops,
+  List<TrackFix> fixes, {
+  DateTime? since,
+}) {
+  final reached = List<DateTime?>.filled(stops.length, null);
+  if (stops.isEmpty) return reached;
+  final mine = [
+    for (final fix in fixes)
+      if (since == null || !fix.$1.isBefore(since)) fix,
+  ]..sort((a, b) => a.$1.compareTo(b.$1));
+  var from = 0;
+  for (var i = 0; i < stops.length; i++) {
+    final at = stops[i].station.position;
+    if (at == null) continue;
+    for (var k = from; k < mine.length; k++) {
+      if (haversineMeters(mine[k].$2, at) <= reachedWithinKm * 1000) {
+        reached[i] = mine[k].$1;
+        from = k;
+        break;
+      }
+    }
+  }
+  return reached;
+}
+
+/// How late the train is running, at the last stop it reached that has a
+/// timetable time; negative when early, null when nothing says.
+Duration? delayNow(List<DateTime?> due, List<DateTime?> reached) {
+  for (var i = math.min(due.length, reached.length) - 1; i >= 0; i--) {
+    final d = due[i];
+    final r = reached[i];
+    if (d != null && r != null) return r.difference(d);
+  }
+  return null;
+}
+
+/// How late the train is where it is: when its report put it [coveredKm]
+/// along the route, against when the timetable has it there — between the
+/// two timetabled stops either side, in proportion to the distance. Null
+/// off the timetable.
+Duration? delayAtPosition(
+  List<RouteStop> stops,
+  List<DateTime?> due,
+  double coveredKm,
+  DateTime reportedAt,
+) {
+  int? before;
+  for (var i = 0; i < stops.length && i < due.length; i++) {
+    if (due[i] == null) continue;
+    if (stops[i].km <= coveredKm) {
+      before = i;
+      continue;
+    }
+    final b = before;
+    if (b == null) return null;
+    final span = stops[i].km - stops[b].km;
+    final share = span <= 0 ? 1.0 : (coveredKm - stops[b].km) / span;
+    final gap = due[i]!.difference(due[b]!);
+    final dueHere = due[b]!.add(gap * share);
+    return reportedAt.difference(dueHere);
+  }
+  // Past the last timetabled stop: as late as there.
+  final b = before;
+  return b == null ? null : reportedAt.difference(due[b]!);
+}
+
+/// [delay] in words: "On time" within two minutes, else "12 min late",
+/// "6 h 54 min late" or "5 min early".
+String delayLabel(Duration delay) {
+  final minutes = delay.inMinutes;
+  if (minutes.abs() <= 2) return 'On time';
+  final size = minutes.abs();
+  final text = size < 60
+      ? '$size min'
+      : size % 60 == 0
+      ? '${size ~/ 60} h'
+      : '${size ~/ 60} h ${size % 60} min';
+  return minutes > 0 ? '$text late' : '$text early';
 }

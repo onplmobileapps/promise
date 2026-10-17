@@ -1469,6 +1469,8 @@ class _JourneySheet extends StatelessWidget {
             a.routeLoading != b.routeLoading ||
             !identical(a.stationKm, b.stationKm) ||
             !identical(a.routeStops, b.routeStops) ||
+            !identical(a.reached, b.reached) ||
+            a.trainById(train.id) != b.trainById(train.id) ||
             a.listeningSinceOf(train) != b.listeningSinceOf(train),
         builder: (context, state) => TimeTicker(
           builder: (context, now) {
@@ -1517,7 +1519,8 @@ class _JourneySheet extends StatelessWidget {
                         ? null
                         : state.fix!.alongM / 1000,
                     position: position,
-                    runDate: train.runDate,
+                    runDate: (state.trainById(train.id) ?? train).departureDay,
+                    reached: state.reached,
                   ),
                 ],
                 const SizedBox(height: 22),

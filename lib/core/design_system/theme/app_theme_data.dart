@@ -95,7 +95,12 @@ abstract final class AppThemeData {
       scaffoldBackgroundColor: c.background,
       canvasColor: c.background,
       dividerColor: c.outline,
-      splashFactory: InkRipple.splashFactory,
+      // A touch lights what it presses with a faint wash of the brand, as on
+      // iOS, rather than Material's grey box and spreading ripple.
+      splashFactory: NoSplash.splashFactory,
+      splashColor: AppPalette.transparent,
+      highlightColor: c.primary.withValues(alpha: 0.07),
+      hoverColor: AppPalette.transparent,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       extensions: [c, elevations, AppSpheres.standard],
       appBarTheme: AppBarTheme(

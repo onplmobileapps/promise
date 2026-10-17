@@ -456,7 +456,7 @@ class _InspectionFormScaffoldState extends State<InspectionFormScaffold> {
               },
               child: KeyedSubtree(
                 key: _StepKey(_step),
-                child: Builder(builder: step.builder),
+                child: RepaintBoundary(child: Builder(builder: step.builder)),
               ),
             ),
           ],

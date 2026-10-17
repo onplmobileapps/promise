@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:railway_hrms/core/config/app_flags.dart';
 import 'package:railway_hrms/core/error/exceptions.dart';
 import 'package:railway_hrms/core/l10n/generated/app_localizations_en.dart';
 import 'package:railway_hrms/core/reports/report_assets.dart';
@@ -158,6 +159,27 @@ void main() {
       ),
     );
     expect(find.text('the form'), findsOneWidget);
+  });
+
+  testWidgets('with the face check turned off, the form opens at once', (
+    tester,
+  ) async {
+    AppFlags.inspectionFaceCheck = false;
+    addTearDown(() => AppFlags.inspectionFaceCheck = true);
+    final verifier = _Verifier();
+    await pumpScreen(
+      tester,
+      InspectionStartGate(
+        title: 'Station inspection',
+        verifier: verifier,
+        child: Builder(
+          builder: (context) =>
+              Text('started: ${InspectionSession.maybeOf(context) != null}'),
+        ),
+      ),
+    );
+    expect(find.text('Verify your face to start'), findsNothing);
+    expect(find.text('started: true'), findsOneWidget);
   });
 
   testWidgets('submit opens only after the report is confirmed and the face '

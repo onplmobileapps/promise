@@ -11,7 +11,7 @@ class GlyphShape {
   final GlyphFill fill;
 }
 
-final _shapes = Expando<List<GlyphShape>>('glyph shapes');
+final Map<AppGlyph, List<GlyphShape>> _shapes = {};
 
 /// [glyph]'s parts as paths, read from their SVG once and kept.
 List<GlyphShape> glyphShapes(AppGlyph glyph) => _shapes[glyph] ??= [

@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:face_kit/face_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:railway_hrms/core/config/app_flags.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/core/error/exceptions.dart';
@@ -119,6 +120,16 @@ class ServerInspectionFaceVerifier
     BuildContext context,
     InspectionMoment moment,
   ) async {
+    // Turned off for testing away from the office (see [AppFlags]).
+    if (!AppFlags.inspectionFaceCheck) {
+      return FaceCheckPassed(
+        InspectionIdentity(
+          photoPath: '',
+          verifiedAt: DateTime.now(),
+          matched: true,
+        ),
+      );
+    }
     final l10n = context.l10n;
     final allowed = await sl<PermissionGate>().requestAll(const [
       AppPermission.camera,

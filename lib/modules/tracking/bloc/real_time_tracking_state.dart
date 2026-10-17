@@ -48,6 +48,10 @@ class RealTimeTrackingState extends Equatable {
   /// Every station along [path], the train's own and those it passes.
   final List<RouteStop> routeStops;
 
+  /// When the selected train reached each of [routeStops], where known:
+  /// the first from its dispatch, the rest from its GPS reports.
+  final List<DateTime?> reached;
+
   const RealTimeTrackingState({
     this.isLoading = true,
     this.errorMessage,
@@ -63,6 +67,7 @@ class RealTimeTrackingState extends Equatable {
     this.fix,
     this.stationKm = const [],
     this.routeStops = const [],
+    this.reached = const [],
   });
 
   LiveTrain? get selectedTrain => trainById(selectedTrainId);
@@ -132,6 +137,7 @@ class RealTimeTrackingState extends Equatable {
     Object? fix = _keep,
     List<double?>? stationKm,
     List<RouteStop>? routeStops,
+    List<DateTime?>? reached,
   }) {
     return RealTimeTrackingState(
       isLoading: isLoading ?? this.isLoading,
@@ -152,6 +158,7 @@ class RealTimeTrackingState extends Equatable {
       fix: identical(fix, _keep) ? this.fix : fix as RouteFix?,
       stationKm: stationKm ?? this.stationKm,
       routeStops: routeStops ?? this.routeStops,
+      reached: reached ?? this.reached,
     );
   }
 
@@ -171,6 +178,7 @@ class RealTimeTrackingState extends Equatable {
     fix,
     stationKm,
     routeStops,
+    reached,
   ];
 }
 

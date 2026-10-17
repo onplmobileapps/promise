@@ -58,8 +58,40 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     );
   }
 
+  /// What [_reachedOf] was last worked out from.
+  Object? _reachedFrom;
+
+  /// When the selected train reached each of its stops, worked out again
+  /// only when its stops or its reports have changed.
+  List<DateTime?>? _reachedOf(RealTimeTrackingState state) {
+    final train = state.selectedTrain;
+    final stops = state.routeStops;
+    final fixes = train?.deviceId == null
+        ? const <TrackFix>[]
+        : _history[train!.deviceId] ?? const <TrackFix>[];
+    final from = (
+      identityHashCode(stops),
+      fixes.length,
+      train?.dispatchedAt,
+      train?.id,
+    );
+    if (from == _reachedFrom) return null;
+    _reachedFrom = from;
+    if (train == null || stops.isEmpty) return const [];
+    // This journey's reports: from an hour before it was due out.
+    final due = timetableOf(stops, train.departureDay).nonNulls;
+    final since = due.isEmpty
+        ? train.departureDay
+        : due.first.subtract(const Duration(hours: 1));
+    return reachedAt(stops, fixes, since: since);
+  }
+
   @override
   void emit(RealTimeTrackingState state) {
+    final reached = _reachedOf(state);
+    if (reached != null && !listEquals(reached, state.reached)) {
+      state = state.copyWith(reached: reached);
+    }
     super.emit(state);
     final cache = _cache;
     if (cache == null || isClosed) return;
@@ -129,7 +161,11 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
         (error) =>
             emit(state.copyWith(isLoading: false, errorMessage: error.message)),
         (response) {
-          final trains = LiveTrain.parseList(response.data);
+          // A train whose detail is known keeps its stops and times.
+          final trains = [
+            for (final t in LiveTrain.parseList(response.data))
+              _details[t.id] ?? t,
+          ];
           emit(
             state.copyWith(
               isLoading: false,
@@ -139,6 +175,7 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
             ),
           );
           _syncFleet();
+          unawaited(_loadDetails());
           // Trains whose position is already known get their routes.
           for (final train in state.trains) {
             final position = state.positionOf(train);
@@ -254,7 +291,12 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     final previous =
         _pendingPositions[position.deviceId] ??
         state.positions[position.deviceId];
-    if (previous != null && !position.fixTime.isAfter(previous.fixTime)) {
+    // The same report again counts only when the feed now says the device
+    // is online or offline otherwise.
+    if (previous != null &&
+        !position.fixTime.isAfter(previous.fixTime) &&
+        !(position.fixTime == previous.fixTime &&
+            position.online != previous.online)) {
       return;
     }
     _pendingPositions[position.deviceId] = position;
@@ -341,36 +383,91 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     _checkSoon();
   }
 
-  // ─── Selected train ───────────────────────────────────────────────────
+  // ─── Train details ────────────────────────────────────────────────────
 
-  Future<void> loadTrainDetail(String trainId) async {
+  /// Each train's detail from `tracking/mobile/<id>/`, by id: its stops,
+  /// every station it calls at or passes, with their times.
+  late final Map<String, LiveTrain> _details = {...?_cache?.details};
+
+  /// Details asked for at once.
+  static const int _detailsAtOnce = 3;
+
+  /// Loads the detail of every train with a GPS device that lacks one, a
+  /// few at a time, and puts them on show a handful at a time: so the
+  /// map has every station the day's trains call at, and every train its
+  /// timetable.
+  Future<void> _loadDetails() async {
+    final wanted = [
+      for (final t in state.trains)
+        if (t.hasDevice && !_details.containsKey(t.id)) t.id,
+    ];
+    if (wanted.isEmpty) return;
+    final arrived = <LiveTrain>[];
+    var next = 0;
+    Future<void> worker() async {
+      while (next < wanted.length && !isClosed) {
+        final id = wanted[next++];
+        final detail = await _fetchDetail(id);
+        if (detail == null || isClosed) continue;
+        arrived.add(detail);
+        if (arrived.length >= 6) _showDetails(arrived);
+      }
+    }
+
+    await Future.wait([for (var i = 0; i < _detailsAtOnce; i++) worker()]);
+    if (!isClosed) _showDetails(arrived);
+  }
+
+  Future<LiveTrain?> _fetchDetail(String trainId) async {
     try {
       final result = await _trainRepository.getTrainDetail(trainId);
-      result.fold((_) => null, (response) {
-        if (response.data is Map<String, dynamic>) {
-          final updated = LiveTrain.fromJson(
-            response.data as Map<String, dynamic>,
-          );
-          final trains = [
-            for (final t in state.trains) t.id == updated.id ? updated : t,
-          ];
-          final path = state.pathOf(updated.id);
-          final stops = path == null
-              ? const <RouteStop>[]
-              : stopsAlong(path, updated.journey);
-          emit(
-            state.copyWith(
-              trains: trains,
-              // Its stops are stations on the map too.
-              stations: _sameOr(stationsOf(trains)),
-              routeStops: stops,
-            ),
-          );
-        }
+      return result.fold<LiveTrain?>((_) => null, (response) {
+        final data = response.data;
+        if (data is! Map<String, dynamic>) return null;
+        final detail = LiveTrain.fromJson(data);
+        if (detail.id != trainId) return null;
+        _details[trainId] = detail;
+        _cache?.details = Map.of(_details);
+        return detail;
       });
     } catch (e) {
       debugPrint('Loading train detail $trainId failed: $e');
+      return null;
     }
+  }
+
+  /// Puts [arrived] details in place of their trains, and empties it.
+  void _showDetails(List<LiveTrain> arrived) {
+    if (arrived.isEmpty) return;
+    final byId = {for (final d in arrived) d.id: d};
+    arrived.clear();
+    final trains = [for (final t in state.trains) byId[t.id] ?? t];
+    final selected = state.selectedTrain;
+    final selectedDetail = selected == null ? null : byId[selected.id];
+    final path = selectedDetail == null ? null : state.pathOf(selected!.id);
+    emit(
+      state.copyWith(
+        trains: trains,
+        // Their stops are stations on the map too.
+        stations: _sameOr(stationsOf(trains)),
+        stationKm: selectedDetail == null
+            ? null
+            : _stationKm(selectedDetail, path),
+        routeStops: selectedDetail == null
+            ? null
+            : path == null
+            ? const <RouteStop>[]
+            : stopsAlong(path, selectedDetail.journey),
+      ),
+    );
+  }
+
+  // ─── Selected train ───────────────────────────────────────────────────
+
+  Future<void> loadTrainDetail(String trainId) async {
+    final detail = _details[trainId] ?? await _fetchDetail(trainId);
+    if (detail == null || isClosed) return;
+    _showDetails([detail]);
   }
 
   void selectTrain(String trainId) {

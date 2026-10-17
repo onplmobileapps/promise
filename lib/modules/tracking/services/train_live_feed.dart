@@ -461,6 +461,9 @@ class _ProxyConnection {
 class ProxyReports {
   final Map<int, TrainPosition> _latest = {};
   final Map<int, DateTime> _passed = {};
+
+  /// Each device online or not, as the proxy's device list last said.
+  final Map<int, bool> _online = {};
   Set<int> _watched = const {};
 
   /// The watched devices are now [ids]: the newest report known of each
@@ -479,6 +482,10 @@ class ProxyReports {
     } catch (_) {
       return const [];
     }
+    // The proxy's device list: whether each device is online, as it says.
+    if (decoded case {'devices': final List<Object?> devices}) {
+      return _readDevices(devices);
+    }
     final reports = switch (decoded) {
       {'positions': final List<Object?> list} => list,
       {'type': 'position_update', 'data': final Object? one} => [one],
@@ -489,19 +496,45 @@ class ProxyReports {
     final fresh = <TrainPosition>[];
     for (final json in reports) {
       if (json is! Map<String, dynamic>) continue;
-      final TrainPosition? report;
+      TrainPosition? report;
       try {
         report = TrainPosition.fromJson(json);
       } catch (_) {
         continue;
       }
       if (report == null) continue;
+      // Its own status first, else the device list's.
+      final online = report.online ?? _online[report.deviceId];
+      if (online != report.online) report = report.withOnline(online);
       final known = _latest[report.deviceId];
       if (known != null && !report.fixTime.isAfter(known.fixTime)) continue;
       _latest[report.deviceId] = report;
       if (_take(report) case final passed?) fresh.add(passed);
     }
     return fresh;
+  }
+
+  /// The device list's statuses; a watched device's newest report again,
+  /// with its new status, where the status changed.
+  List<TrainPosition> _readDevices(List<Object?> devices) {
+    final changed = <TrainPosition>[];
+    for (final device in devices) {
+      if (device is! Map<String, dynamic>) continue;
+      final id = device['id'];
+      final online = switch (device['status']) {
+        'online' => true,
+        'offline' => false,
+        _ => null,
+      };
+      if (id is! int || online == null) continue;
+      _online[id] = online;
+      final known = _latest[id];
+      if (known == null || known.online == online) continue;
+      final updated = known.withOnline(online);
+      _latest[id] = updated;
+      if (_watched.contains(id)) changed.add(updated);
+    }
+    return changed;
   }
 
   /// [report], if its device is watched and it is newer than what was

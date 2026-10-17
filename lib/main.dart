@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:railway_hrms/app/app.dart';
 import 'package:railway_hrms/app/di/injection_container.dart' as di;
 import 'package:railway_hrms/core/config/app_env.dart';
+import 'package:railway_hrms/core/config/app_flags.dart';
 import 'package:railway_hrms/core/design_system/components/app_liquid_glass.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_performance.dart';
 import 'package:railway_hrms/core/design_system/foundations/font_licences.dart';
@@ -60,6 +61,8 @@ void main() async {
     };
   }
   final prefs = await SharedPreferences.getInstance();
+  // The testing switches as last left; a release always checks.
+  AppFlags.restore(prefs);
   // A phone that was seen to need a lighter budget starts with it.
   AppPerformance.restore(
     read: () => prefs.getString('render_budget'),

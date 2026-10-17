@@ -65,7 +65,9 @@ class _ProformaSectionBodyState extends State<ProformaSectionBody> {
 
   void _set(ProformaItem item, String key, Object? value) {
     widget.answers.set(_section.key, item, key, value);
-    if (_marked.isNotEmpty) setState(() => _marked = const []);
+    setState(() {
+      if (_marked.isNotEmpty) _marked = const [];
+    });
     widget.onChanged();
   }
 
@@ -87,12 +89,14 @@ class _ProformaSectionBodyState extends State<ProformaSectionBody> {
         }
       }
       children.add(
-        ProformaItemTile(
-          key: ValueKey('${_section.key}/${item.no}'),
-          item: item,
-          answer: widget.answers.of(_section.key, item),
-          noteLabel: widget.noteLabel ?? l10n.inspFormObservation,
-          onChanged: (key, value) => _set(item, key, value),
+        RepaintBoundary(
+          child: ProformaItemTile(
+            key: ValueKey('${_section.key}/${item.no}'),
+            item: item,
+            answer: widget.answers.of(_section.key, item),
+            noteLabel: widget.noteLabel ?? l10n.inspFormObservation,
+            onChanged: (key, value) => _set(item, key, value),
+          ),
         ),
       );
     }

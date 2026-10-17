@@ -55,12 +55,29 @@ class AppBackdrop extends StatelessWidget {
     // animation on the page doesn't paint the whole backdrop again.
     final child = RepaintBoundary(child: this.child);
     final intensity = blobIntensity;
+    final backgroundPattern = RepaintBoundary(
+      child: CustomPaint(
+        painter: pattern,
+        child: const SizedBox.expand(),
+      ),
+    );
+
     if (intensity != null) {
-      return ColoredBox(
-        color: colors.background,
+      final blobBackground = RepaintBoundary(
         child: CustomPaint(
           painter: _BlobsPainter(colors: colors, intensity: intensity),
-          child: CustomPaint(painter: pattern, child: child),
+          child: const SizedBox.expand(),
+        ),
+      );
+      return ColoredBox(
+        color: colors.background,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            blobBackground,
+            backgroundPattern,
+            child,
+          ],
         ),
       );
     }
@@ -81,7 +98,13 @@ class AppBackdrop extends StatelessWidget {
               stops: [0, washEnd],
             ),
           ),
-          child: CustomPaint(painter: pattern, child: child),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              backgroundPattern,
+              child,
+            ],
+          ),
         );
       },
     );
