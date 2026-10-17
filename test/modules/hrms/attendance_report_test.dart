@@ -289,6 +289,33 @@ void main() {
       });
       expect(attendance.asked.toSet(), {'201', '203'});
       expect(savedAs, 'Team_Attendance_October_2026.pdf');
+
+      // Sharing keeps the dialog, so the file can still be opened after.
+      final calls = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        AppDownloads.channel,
+        (call) async {
+          calls.add(call.method);
+          return true;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          AppDownloads.channel,
+          null,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Share'));
+      await tester.pumpAndSettle();
+      expect(calls, ['share']);
+      expect(find.text('Share'), findsOneWidget);
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      expect(calls, ['share', 'open']);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      expect(find.text('Share'), findsNothing);
     });
   });
 }

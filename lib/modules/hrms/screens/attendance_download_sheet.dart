@@ -210,25 +210,20 @@ class _AttendanceDownloadSheetState extends State<AttendanceDownloadSheet> {
     return (user?.fullName ?? user?.name ?? '').trim();
   }
 
-  /// Says where the PDF went and offers to open or share it.
+  /// Says where the PDF went and offers to open or share it. The dialog
+  /// stays while the file is opened or shared, so it can be shared again
+  /// or opened after sharing; it closes only when dismissed.
   static Future<void> _saved(BuildContext context, SavedFile file) async {
     final l10n = context.l10n;
-    final open = await showAppDialog(
+    await showAppDialog(
       context: context,
       tone: AppDialogTone.success,
       glyph: AppGlyphs.download,
       title: l10n.downloadSavedTitle,
       message: l10n.downloadSavedMessage(file.name),
-      primaryLabel: l10n.downloadOpen,
-      secondaryLabel: l10n.downloadShare,
+      content: _SavedFileActions(file: file),
+      primaryLabel: l10n.actionClose,
     );
-    if (open == null) return;
-    final done = open
-        ? await AppDownloads.open(file)
-        : await AppDownloads.share(file, title: file.name);
-    if (!done && open && context.mounted) {
-      showAppMessage(context, l10n.downloadNoViewer, tone: AppDialogTone.error);
-    }
   }
 
   @override
@@ -451,6 +446,72 @@ class _AttendanceDownloadSheetState extends State<AttendanceDownloadSheet> {
               ),
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// Opens or shares a saved report, as often as wanted, without leaving
+/// the dialog it is in.
+class _SavedFileActions extends StatefulWidget {
+  const _SavedFileActions({required this.file});
+
+  final SavedFile file;
+
+  @override
+  State<_SavedFileActions> createState() => _SavedFileActionsState();
+}
+
+class _SavedFileActionsState extends State<_SavedFileActions> {
+  bool _busy = false;
+
+  Future<void> _run(
+    Future<bool> Function() action, {
+    bool opening = false,
+  }) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final done = await action();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!done && opening) {
+      showAppMessage(
+        context,
+        context.l10n.downloadNoViewer,
+        tone: AppDialogTone.error,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final file = widget.file;
+    return Row(
+      children: [
+        Expanded(
+          child: AppButton(
+            label: l10n.downloadOpen,
+            size: AppButtonSize.medium,
+            variant: AppButtonVariant.secondary,
+            leadingGlyph: AppGlyphs.expand,
+            onPressed: _busy
+                ? null
+                : () => _run(() => AppDownloads.open(file), opening: true),
+          ),
+        ),
+        AppSpacing.gapSm,
+        Expanded(
+          child: AppButton(
+            label: l10n.downloadShare,
+            size: AppButtonSize.medium,
+            variant: AppButtonVariant.secondary,
+            leadingGlyph: AppGlyphs.share,
+            onPressed: _busy
+                ? null
+                : () => _run(() => AppDownloads.share(file, title: file.name)),
+          ),
+        ),
       ],
     );
   }
