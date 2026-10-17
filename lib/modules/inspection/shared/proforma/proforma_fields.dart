@@ -181,6 +181,8 @@ class _ProformaItemTileState extends State<ProformaItemTile> {
     final asksReading =
         item.reading &&
         (item.readingOn.isEmpty || item.readingOn.contains(status));
+    // The note is open: at fault, opened, or written in.
+    final noted = fault || _noting || (note != null && note.isNotEmpty);
     final parts = <Widget>[
       Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,6 +204,18 @@ class _ProformaItemTileState extends State<ProformaItemTile> {
               ],
             ),
           ),
+          // A note can be added to any item, from beside its name.
+          if (!noted)
+            IconButton(
+              tooltip: l10n.inspFormAddNote,
+              visualDensity: VisualDensity.compact,
+              onPressed: () => setState(() => _noting = true),
+              icon: AppGlyphIcon(
+                AppGlyphs.fileEdit,
+                size: AppSizes.iconSm,
+                color: colors.textTertiary,
+              ),
+            ),
         ],
       ),
       if (item.options.isNotEmpty)
@@ -253,7 +267,11 @@ class _ProformaItemTileState extends State<ProformaItemTile> {
           value: DateTime.tryParse('${answer['expiry_date'] ?? ''}'),
           onChanged: (day) => set('expiry_date', proformaDay(day)),
         ),
-      if (item.counts) _Counts(answer: answer, onChanged: set),
+      // How many, once it is answered, or once counted before.
+      if (item.counts &&
+          (status != null ||
+              const ['ok', 'defective', 'missing'].any(answer.containsKey)))
+        _Counts(answer: answer, onChanged: set),
       if (item.record)
         InspectionTextInput(
           label: l10n.inspFormRecord,
@@ -278,24 +296,12 @@ class _ProformaItemTileState extends State<ProformaItemTile> {
           value: note,
           onChanged: (typed) => set('note', typed),
         )
-      else if (_noting || (note != null && note.isNotEmpty))
+      else if (noted)
         InspectionTextInput(
           label: widget.noteLabel,
           value: note,
           glyph: AppGlyphs.fileEdit,
           onChanged: (typed) => set('note', typed),
-        )
-      else
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: AppButton(
-            label: l10n.inspFormAddNote,
-            variant: AppButtonVariant.text,
-            size: AppButtonSize.small,
-            leadingGlyph: AppGlyphs.plus,
-            expand: false,
-            onPressed: () => setState(() => _noting = true),
-          ),
         ),
     ];
     return Column(
