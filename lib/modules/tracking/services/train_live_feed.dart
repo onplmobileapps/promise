@@ -30,12 +30,15 @@ abstract interface class TrainFeed {
 }
 
 /// Makes the feed a cubit listens to: [onPosition] with each new report of
-/// a watched device, [onLinkChanged] as its connection comes and goes
-/// (null once it is no longer watched).
+/// a watched device, [onLinkChanged] as the connection comes and goes for
+/// the [deviceIds] it carries (null once they are no longer watched). The
+/// devices share one connection, so they hear of a change together, in one
+/// call, however many there are.
 typedef LiveFeedFactory =
     TrainFeed Function({
       required void Function(TrainPosition position) onPosition,
-      required void Function(int deviceId, LinkState? state) onLinkChanged,
+      required void Function(Iterable<int> deviceIds, LinkState? state)
+      onLinkChanged,
     });
 
 /// Live positions of every train from the tracking server's one shared
@@ -44,72 +47,95 @@ typedef LiveFeedFactory =
 /// every 10 s; a single train's own socket can take half a minute to say
 /// anything.
 ///
+/// Every feed of the app shares one connection: tracking closed and opened
+/// again soon after finds the socket still open and is live at once, with
+/// the last report of each train it shows.
+///
 /// The socket and its JSON, tens of kilobytes a message for hundreds of
 /// devices, are handled on a background isolate, so the app's frames never
 /// wait on them; only the newer reports of watched devices come across.
 /// The socket reconnects by itself, with growing pauses, when it drops or
-/// goes quiet, and at once when the phone's internet comes back; it closes
-/// while the app is in the background or nothing is watched.
+/// goes quiet, and at once when the phone's internet comes back, a socket
+/// that died with the old network included; it closes once the app has
+/// been in the background a while, or nothing is watched.
 class TrainProxyFeed implements TrainFeed {
   TrainProxyFeed({
     required this.onPosition,
     required this.onLinkChanged,
-    this.url = proxyUrl,
+    String url = proxyUrl,
     ValueListenable<NetworkStatus>? network,
-  }) : _network = network ?? NetworkMonitor.instance.status {
-    _lifecycle = AppLifecycleListener(onStateChange: _onAppState);
-    _wasOffline = _network.value == NetworkStatus.offline;
-    _network.addListener(_onNetwork);
+  }) : _connection = network == null && url == proxyUrl
+           ? _ProxyConnection.shared
+           : _ProxyConnection(url, network: network) {
+    _connection.attach(this);
   }
 
   static const String proxyUrl =
       'wss://pakistanrailway.org/api/ws/track/proxy/';
 
   final void Function(TrainPosition position) onPosition;
-  final void Function(int deviceId, LinkState? state) onLinkChanged;
-  final String url;
-
-  /// The phone's connection, to reconnect the moment it is back.
-  final ValueListenable<NetworkStatus> _network;
-  bool _wasOffline = false;
+  final void Function(Iterable<int> deviceIds, LinkState? state) onLinkChanged;
+  final _ProxyConnection _connection;
 
   /// A device nobody watches stays watched this long, so a card scrolled
   /// out of view and back keeps its status.
   static const Duration _linger = Duration(seconds: 20);
 
-  /// With nothing watched for this long, the socket closes.
-  static const Duration _idle = Duration(seconds: 30);
+  /// Devices unwatched this close together linger together, and are let
+  /// go of in one change: a whole fleet let go of over a moment goes at
+  /// once, not train by train.
+  static const Duration _lingerSlack = Duration(seconds: 2);
 
   /// Watchers of each watched device; 0 while it lingers.
   final Map<int, int> _watchers = {};
-  final Map<int, Timer> _lingering = {};
-  LinkState _link = LinkState.connecting;
 
-  Isolate? _isolate;
-  ReceivePort? _inbox;
-  SendPort? _worker;
-  bool _starting = false;
-  Timer? _idleTimer;
-  late final AppLifecycleListener _lifecycle;
-  bool _paused = false;
+  /// The lingering devices, in groups that are let go of together; new
+  /// ones join [_openLinger] while it takes them.
+  final List<_Linger> _lingers = [];
+  _Linger? _openLinger;
+
+  /// Devices newly watched, told the link and their last report together
+  /// once the watching that added them is done.
+  final Set<int> _joined = {};
+  bool _joinScheduled = false;
   bool _disposed = false;
 
-  /// Tests have no network: there the feed stays connecting.
-  static bool get _offline =>
-      !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
+  /// The devices watched, lingering ones included.
+  Iterable<int> get watched => _watchers.keys;
 
   @override
   void watch(int deviceId) {
     if (_disposed) return;
-    _lingering.remove(deviceId)?.cancel();
     final before = _watchers[deviceId];
-    _watchers[deviceId] = (before ?? 0) + 1;
-    _idleTimer?.cancel();
-    if (before == null) {
-      onLinkChanged(deviceId, _link);
-      _sendWatched();
+    if (before == 0) {
+      for (final linger in _lingers) {
+        linger.ids.remove(deviceId);
+      }
     }
-    _start();
+    _watchers[deviceId] = (before ?? 0) + 1;
+    if (before != null) return;
+    _joined.add(deviceId);
+    if (!_joinScheduled) {
+      _joinScheduled = true;
+      scheduleMicrotask(_announceJoined);
+    }
+    _connection.watchedChanged();
+  }
+
+  void _announceJoined() {
+    _joinScheduled = false;
+    if (_disposed) return;
+    final joined = [
+      for (final id in _joined)
+        if (_watchers.containsKey(id)) id,
+    ];
+    _joined.clear();
+    if (joined.isEmpty) return;
+    onLinkChanged(joined, _connection.link);
+    // What the connection already heard of them, at once.
+    for (final id in joined) {
+      if (_connection.known[id] case final report?) onPosition(report);
+    }
   }
 
   @override
@@ -118,63 +144,251 @@ class TrainProxyFeed implements TrainFeed {
     if (count == null || count == 0) return;
     _watchers[deviceId] = count - 1;
     if (count > 1) return;
-    _lingering[deviceId] = Timer(_linger, () {
-      _lingering.remove(deviceId);
-      _watchers.remove(deviceId);
-      onLinkChanged(deviceId, null);
-      _sendWatched();
-      if (_watchers.isEmpty) _idleTimer = Timer(_idle, _stop);
-    });
+    final linger = _openLinger ?? _openNewLinger();
+    linger.ids.add(deviceId);
   }
 
-  void _sendWatched() => _worker?.send(_watchers.keys.toSet());
+  _Linger _openNewLinger() {
+    final linger = _Linger();
+    linger
+      ..timer = Timer(_linger, () => _letGo(linger))
+      ..window = Timer(_lingerSlack, () {
+        if (identical(_openLinger, linger)) _openLinger = null;
+      });
+    _lingers.add(linger);
+    return _openLinger = linger;
+  }
+
+  /// Lets go of [linger]'s devices that nobody watched again meanwhile.
+  void _letGo(_Linger linger) {
+    _lingers.remove(linger);
+    linger.window?.cancel();
+    if (identical(_openLinger, linger)) _openLinger = null;
+    if (_disposed) return;
+    final expired = [
+      for (final id in linger.ids)
+        if (_watchers[id] == 0) id,
+    ];
+    if (expired.isEmpty) return;
+    for (final id in expired) {
+      _watchers.remove(id);
+      _joined.remove(id);
+    }
+    onLinkChanged(expired, null);
+    _connection.watchedChanged();
+  }
+
+  void _linkChanged(LinkState link) {
+    if (_watchers.isEmpty) return;
+    onLinkChanged(_watchers.keys.toList(), link);
+  }
+
+  void _reports(List<TrainPosition> reports) {
+    for (final report in reports) {
+      if (_watchers.containsKey(report.deviceId)) onPosition(report);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    for (final linger in _lingers) {
+      linger.timer?.cancel();
+      linger.window?.cancel();
+    }
+    _lingers.clear();
+    _openLinger = null;
+    _watchers.clear();
+    _joined.clear();
+    _connection.detach(this);
+  }
+}
+
+/// Devices that stopped being watched at about the same time, let go of
+/// together once they have lingered.
+class _Linger {
+  final Set<int> ids = {};
+  Timer? timer;
+
+  /// While it runs, devices unwatched join this group.
+  Timer? window;
+}
+
+/// The one socket every [TrainProxyFeed] reads, on its background isolate:
+/// open while any of them watches a device, and a while after.
+class _ProxyConnection {
+  _ProxyConnection(this.url, {ValueListenable<NetworkStatus>? network})
+    : _network = network ?? NetworkMonitor.instance.status,
+      _isShared = false;
+
+  _ProxyConnection._shared()
+    : url = TrainProxyFeed.proxyUrl,
+      _network = NetworkMonitor.instance.status,
+      _isShared = true;
+
+  static final _ProxyConnection shared = _ProxyConnection._shared();
+
+  final String url;
+
+  /// The phone's connection, to reconnect the moment it is back.
+  final ValueListenable<NetworkStatus> _network;
+
+  /// The app's own, which outlives the screens: one made for a single feed
+  /// closes with it.
+  final bool _isShared;
+
+  final Set<TrainProxyFeed> _feeds = {};
+
+  /// Each device's newest report passed on, for a screen that starts
+  /// watching it later.
+  final Map<int, TrainPosition> known = {};
+
+  LinkState link = LinkState.connecting;
+
+  /// With nothing watched for this long, the socket closes: long enough
+  /// that tracking opened again soon after finds it still open.
+  static const Duration _idle = Duration(seconds: 45);
+
+  Isolate? _isolate;
+  ReceivePort? _inbox;
+  SendPort? _worker;
+  bool _starting = false;
+  Timer? _idleTimer;
+  AppLifecycleListener? _lifecycle;
+  bool _paused = false;
+  bool _wasOffline = false;
+
+  /// The devices the worker was last told of.
+  Set<int> _sent = const {};
+  bool _syncScheduled = false;
+
+  /// Tests have no network: there the feed stays connecting.
+  static bool get _offline =>
+      !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
+
+  void attach(TrainProxyFeed feed) => _feeds.add(feed);
+
+  void detach(TrainProxyFeed feed) {
+    _feeds.remove(feed);
+    watchedChanged();
+  }
+
+  /// What the feeds watch changed: the worker hears of it once the change
+  /// is done, however many devices it took.
+  void watchedChanged() {
+    if (_syncScheduled) return;
+    _syncScheduled = true;
+    scheduleMicrotask(_syncWatched);
+  }
+
+  void _syncWatched() {
+    _syncScheduled = false;
+    final ids = {for (final feed in _feeds) ...feed.watched};
+    if (ids.isEmpty) {
+      if (!_isShared && _feeds.isEmpty) {
+        _stop();
+        return;
+      }
+      if (_idleTimer == null && (_isolate != null || _starting)) {
+        _idleTimer = Timer(_idle, _stop);
+      }
+    } else {
+      _idleTimer?.cancel();
+      _idleTimer = null;
+      unawaited(_start());
+    }
+    if (setEquals(ids, _sent)) return;
+    _sent = ids;
+    _worker?.send(ids);
+  }
 
   Future<void> _start() async {
-    if (_disposed || _offline || _isolate != null || _starting) return;
+    if (_offline || _isolate != null || _starting) return;
     _starting = true;
+    _listen();
     final inbox = ReceivePort();
     _inbox = inbox;
     inbox.listen(_onWorkerMessage);
+    final Isolate isolate;
     try {
-      _isolate = await Isolate.spawn(_proxyWorkerMain, (
+      isolate = await Isolate.spawn(_proxyWorkerMain, (
         inbox.sendPort,
         url,
         _paused,
+        _network.value == NetworkStatus.offline,
       ), debugName: 'train-proxy-feed');
     } catch (e) {
       debugPrint('⚠️ Live feed: could not start: $e');
       inbox.close();
-      _inbox = null;
+      if (identical(_inbox, inbox)) _inbox = null;
+      return;
     } finally {
       _starting = false;
     }
-    if (_disposed) _stop();
+    // Closed while it started: started again if it is wanted after all.
+    if (!identical(_inbox, inbox)) {
+      isolate.kill();
+      watchedChanged();
+      return;
+    }
+    _isolate = isolate;
+    watchedChanged();
+  }
+
+  void _listen() {
+    if (_lifecycle != null) return;
+    final state = WidgetsBinding.instance.lifecycleState;
+    _paused =
+        state == AppLifecycleState.paused || state == AppLifecycleState.hidden;
+    _lifecycle = AppLifecycleListener(onStateChange: _onAppState);
+    _wasOffline = _network.value == NetworkStatus.offline;
+    _network.addListener(_onNetwork);
+  }
+
+  void _unlisten() {
+    _lifecycle?.dispose();
+    _lifecycle = null;
+    _network.removeListener(_onNetwork);
   }
 
   void _onWorkerMessage(Object? message) {
     switch (message) {
       case final SendPort worker:
         _worker = worker;
-        _sendWatched();
-      case final int link:
-        _setLink(LinkState.values[link]);
+        _sent = {for (final feed in _feeds) ...feed.watched};
+        worker
+          ..send(_sent)
+          // What changed while it started.
+          ..send(_paused ? 'pause' : 'resume');
+        if (_network.value == NetworkStatus.offline) worker.send('offline');
+      case final int state:
+        _setLink(LinkState.values[state]);
       case final List<Object?> reports:
-        for (final report in reports) {
-          if (report is TrainPosition) onPosition(report);
+        final fresh = <TrainPosition>[
+          for (final report in reports)
+            if (report is TrainPosition) report,
+        ];
+        for (final report in fresh) {
+          known[report.deviceId] = report;
+        }
+        for (final feed in _feeds.toList()) {
+          feed._reports(fresh);
         }
     }
   }
 
-  void _setLink(LinkState link) {
-    if (link == _link) return;
-    _link = link;
-    for (final deviceId in _watchers.keys.toList()) {
-      onLinkChanged(deviceId, link);
+  void _setLink(LinkState next) {
+    if (next == link) return;
+    link = next;
+    for (final feed in _feeds.toList()) {
+      feed._linkChanged(next);
     }
   }
 
   void _stop() {
     _idleTimer?.cancel();
+    _idleTimer = null;
     _worker?.send('close');
     _worker = null;
     _inbox?.close();
@@ -185,13 +399,16 @@ class TrainProxyFeed implements TrainFeed {
     if (isolate != null) {
       Timer(const Duration(seconds: 2), () => isolate.kill());
     }
-    _link = LinkState.connecting;
+    _sent = const {};
+    _unlisten();
+    _setLink(LinkState.connecting);
   }
 
   void _onNetwork() {
     final offline = _network.value == NetworkStatus.offline;
-    if (_wasOffline && !offline) _worker?.send('now');
+    if (offline == _wasOffline) return;
     _wasOffline = offline;
+    _worker?.send(offline ? 'offline' : 'now');
   }
 
   void _onAppState(AppLifecycleState state) {
@@ -209,20 +426,6 @@ class TrainProxyFeed implements TrainFeed {
       case AppLifecycleState.detached:
         break;
     }
-  }
-
-  @override
-  void dispose() {
-    if (_disposed) return;
-    _disposed = true;
-    _lifecycle.dispose();
-    _network.removeListener(_onNetwork);
-    for (final timer in _lingering.values) {
-      timer.cancel();
-    }
-    _lingering.clear();
-    _watchers.clear();
-    _stop();
   }
 }
 
@@ -289,17 +492,23 @@ class ProxyReports {
 }
 
 /// The proxy socket's side of [TrainProxyFeed], on its own isolate.
-void _proxyWorkerMain((SendPort, String, bool) start) {
-  final (out, url, paused) = start;
+void _proxyWorkerMain((SendPort, String, bool, bool) start) {
+  final (out, url, paused, offline) = start;
   final inbox = ReceivePort();
-  final worker = _ProxyWorker(out, url, paused: paused);
+  final worker = _ProxyWorker(out, url, paused: paused, offline: offline);
   inbox.listen(worker.command);
   out.send(inbox.sendPort);
   worker.connect();
 }
 
 class _ProxyWorker {
-  _ProxyWorker(this._out, this._url, {required bool paused}) : _paused = paused;
+  _ProxyWorker(
+    this._out,
+    this._url, {
+    required bool paused,
+    required bool offline,
+  }) : _paused = paused,
+       _offline = offline;
 
   final SendPort _out;
   final String _url;
@@ -309,12 +518,20 @@ class _ProxyWorker {
   StreamSubscription<dynamic>? _subscription;
   Timer? _retryTimer;
   Timer? _quietTimer;
+  Timer? _pauseTimer;
 
   /// Each connection made; a callback of an older one is ignored.
   int _attempt = 0;
   int _failures = 0;
   bool _paused;
   bool _closed = false;
+
+  /// The phone has no internet: the socket is not knocked at again and
+  /// again for nothing, only now and then in case the phone is wrong.
+  bool _offline;
+
+  /// When the socket last said anything.
+  DateTime? _lastHeard;
 
   static const List<int> _retrySeconds = [1, 2, 3, 5, 8, 13, 20, 30];
 
@@ -325,19 +542,39 @@ class _ProxyWorker {
   /// client knocking too often does: a real rest before asking again.
   static const List<int> _refusedSeconds = [30, 60, 120];
 
+  /// While the phone is offline.
+  static const List<int> _offlineSeconds = [30];
+
   /// Not before this, after being turned away, even when the app comes
   /// back to the front.
   DateTime _restUntil = DateTime(0);
 
   /// A handshake taking longer than this has failed; the proxy usually
   /// opens in a second or two.
-  static const Duration _handshakeTimeout = Duration(seconds: 20);
+  static const Duration _handshakeTimeout = Duration(seconds: 15);
+
+  /// How often the socket is pinged: a socket whose pong doesn't come back
+  /// in this long is closed, and opened again.
+  static const Duration _pingEvery = Duration(seconds: 10);
 
   /// The proxy sends something every 10 s or so; this long without a word
   /// and the socket has quietly died.
-  static const Duration _quietAfter = Duration(seconds: 45);
+  static const Duration _quietAfter = Duration(seconds: 30);
+
+  /// How long the socket stays open while the app is in the background.
+  static const Duration _keepWhilePaused = Duration(seconds: 30);
+
+  /// When the phone's network changes, a socket that has said nothing for
+  /// this long went with the old network: it is opened again at once
+  /// rather than after the pings or the quiet give up on it.
+  static const Duration _stillAfter = Duration(seconds: 6);
 
   static final math.Random _jitter = math.Random();
+
+  bool _heardWithin(Duration duration) {
+    final heard = _lastHeard;
+    return heard != null && DateTime.now().difference(heard) < duration;
+  }
 
   void command(Object? message) {
     switch (message) {
@@ -345,27 +582,51 @@ class _ProxyWorker {
         final known = _reports.watch(ids);
         if (known.isNotEmpty) _out.send(known);
       case 'pause':
+        if (_paused) return;
         _paused = true;
-        _drop(retry: false);
+        _retryTimer?.cancel();
+        // Kept a little while: a glance at another app finds the socket
+        // still open, and the trains live, on coming back.
+        _pauseTimer?.cancel();
+        _pauseTimer = Timer(_keepWhilePaused, () {
+          _drop(retry: false);
+          _out.send(LinkState.connecting.index);
+        });
       case 'resume':
         if (!_paused) return;
         _paused = false;
+        _pauseTimer?.cancel();
+        _pauseTimer = null;
+        if (_socket != null) return;
         final rest = _restUntil.difference(DateTime.now());
         if (rest > Duration.zero) {
+          _retryTimer?.cancel();
           _retryTimer = Timer(rest, connect);
         } else {
           _failures = 0;
           connect();
         }
+      case 'offline':
+        _offline = true;
+        // A socket still talking is kept; one gone quiet went with the
+        // network, and is tried again when it is back.
+        if (_socket != null && !_heardWithin(_stillAfter)) _drop(retry: true);
       case 'now':
         // The phone is back online: try at once rather than when the last
         // pause runs out, unless the server asked for a rest.
-        if (_paused || _closed || _socket != null) return;
+        _offline = false;
+        if (_paused || _closed) return;
         if (DateTime.now().isBefore(_restUntil)) return;
+        if (_socket != null) {
+          if (_heardWithin(_stillAfter)) return;
+          // Open on the old network, and dead with it.
+          _drop(retry: false);
+        }
         _failures = 0;
         unawaited(connect());
       case 'close':
         _closed = true;
+        _pauseTimer?.cancel();
         _drop(retry: false);
         Isolate.exit();
     }
@@ -390,13 +651,15 @@ class _ProxyWorker {
       unawaited(socket.close().catchError((_) {}));
       return;
     }
-    _socket = socket..pingInterval = const Duration(seconds: 20);
+    _socket = socket..pingInterval = _pingEvery;
+    _lastHeard = DateTime.now();
     _out.send(LinkState.open.index);
     _expectMore(attempt);
     _subscription = socket.listen(
       (message) {
         if (attempt != _attempt) return;
         _failures = 0;
+        _lastHeard = DateTime.now();
         _expectMore(attempt);
         if (message is! String) return;
         final fresh = _reports.read(message);
@@ -428,7 +691,8 @@ class _ProxyWorker {
 
   /// Lets the socket go and, with [retry], connects again after a pause
   /// that grows with each failure, spread out a little, and is longer when
-  /// the server answered the handshake with [status] trouble.
+  /// the server answered the handshake with [status] trouble or the phone
+  /// is offline.
   void _drop({required bool retry, int? status}) {
     _attempt++;
     _quietTimer?.cancel();
@@ -437,11 +701,13 @@ class _ProxyWorker {
     _subscription = null;
     final socket = _socket;
     _socket = null;
+    _lastHeard = null;
     if (socket != null) unawaited(socket.close().catchError((_) {}));
     if (!retry || _closed) return;
     final steps = switch (status) {
       401 || 403 || 429 => _refusedSeconds,
       final code? when code >= 500 => _serverSeconds,
+      _ when _offline => _offlineSeconds,
       _ => _retrySeconds,
     };
     final base = steps[math.min(_failures, steps.length - 1)];

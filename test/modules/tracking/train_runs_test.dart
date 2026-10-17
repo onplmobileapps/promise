@@ -41,7 +41,7 @@ class _Feed implements TrainFeed {
   _Feed({required this.onPosition, required this.onLinkChanged});
 
   final void Function(TrainPosition position) onPosition;
-  final void Function(int deviceId, LinkState? state) onLinkChanged;
+  final void Function(Iterable<int> deviceIds, LinkState? state) onLinkChanged;
   @override
   void watch(int deviceId) {}
   @override

@@ -40,7 +40,7 @@ class _FakeFeed implements TrainFeed {
   _FakeFeed({required this.onPosition, required this.onLinkChanged});
 
   final void Function(TrainPosition position) onPosition;
-  final void Function(int deviceId, LinkState? state) onLinkChanged;
+  final void Function(Iterable<int> deviceIds, LinkState? state) onLinkChanged;
 
   final Map<int, int> watchers = {};
 
@@ -155,25 +155,25 @@ void main() {
     await cubit.loadTrains();
     final train = cubit.state.trains.single;
 
-    feed.onLinkChanged(11, LinkState.connecting);
+    feed.onLinkChanged([11], LinkState.connecting);
     expect(cubit.state.listeningSinceOf(train), isNull);
-    feed.onLinkChanged(11, LinkState.open);
+    feed.onLinkChanged([11], LinkState.open);
     final opened = cubit.state.listeningSinceOf(train);
     expect(opened, isNotNull);
     expect(cubit.state.openedAtOf(train), opened);
 
     await Future<void>.delayed(const Duration(milliseconds: 5));
     feed
-      ..onLinkChanged(11, LinkState.retrying)
-      ..onLinkChanged(11, LinkState.connecting)
-      ..onLinkChanged(11, LinkState.open);
+      ..onLinkChanged([11], LinkState.retrying)
+      ..onLinkChanged([11], LinkState.connecting)
+      ..onLinkChanged([11], LinkState.open);
     expect(cubit.state.listeningSinceOf(train), opened);
     // But when it last came back is kept too: the server's old reports
     // come first then.
     expect(cubit.state.openedAtOf(train)!.isAfter(opened!), isTrue);
 
     // Dropped once nobody watches it; the next socket starts over.
-    feed.onLinkChanged(11, null);
+    feed.onLinkChanged([11], null);
     expect(cubit.state.listeningSinceOf(train), isNull);
     expect(cubit.state.openedAtOf(train), isNull);
     expect(cubit.state.linkOf(train), isNull);
@@ -275,7 +275,7 @@ void main() {
     final first = open(repository);
     await first.initialize();
     first.watchFleet();
-    feed.onLinkChanged(11, LinkState.open);
+    feed.onLinkChanged([11], LinkState.open);
     final report = TrainPosition(
       deviceId: 11,
       position: const LatLng(31.5, 74.3),
@@ -302,7 +302,7 @@ void main() {
 
     // The feed was open just now: in touch since then, not only now.
     second.watchFleet();
-    feed.onLinkChanged(11, LinkState.open);
+    feed.onLinkChanged([11], LinkState.open);
     expect(second.state.openedAt[11], openedAt);
     await second.close();
   });
@@ -317,6 +317,40 @@ void main() {
     expect(cubit.state.links, isEmpty);
     cubit.clearSelection();
     expect(cubit.state.selectedTrainId, isNull);
+    await cubit.close();
+  });
+
+  test('a map closing after another run took its place keeps the new '
+      'selection', () async {
+    late _FakeFeed feed;
+    final cubit = RealTimeTrackingCubit(
+      _FakeTrainRepository(
+        Right(
+          _response([
+            _trainWithDevice(1, 101, 11),
+            _trainWithDevice(2, 102, 12),
+          ]),
+        ),
+      ),
+      feed: ({required onPosition, required onLinkChanged}) => feed = _FakeFeed(
+        onPosition: onPosition,
+        onLinkChanged: onLinkChanged,
+      ),
+      route: (_) async => null,
+    );
+    await cubit.loadTrains();
+    // The run picker opens the other run's map in place of this one; the
+    // first map goes once the second is up.
+    cubit
+      ..selectTrain('1')
+      ..selectTrain('2')
+      ..clearSelection(trainId: '1');
+    expect(cubit.state.selectedTrainId, '2');
+    expect(feed.watchers, {12: 1});
+
+    cubit.clearSelection(trainId: '2');
+    expect(cubit.state.selectedTrainId, isNull);
+    expect(feed.watchers, isEmpty);
     await cubit.close();
   });
 }

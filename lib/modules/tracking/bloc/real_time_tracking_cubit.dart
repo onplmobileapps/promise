@@ -203,31 +203,39 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     }
   }
 
-  void _onLinkChanged(int deviceId, LinkState? link) {
+  /// The feed's connection changed for [deviceIds], all at once: one new
+  /// state for them all, however many trains the fleet has.
+  void _onLinkChanged(Iterable<int> deviceIds, LinkState? link) {
+    if (isClosed) return;
     final links = Map<int, LinkState>.of(state.links);
     final since = Map<int, DateTime>.of(state.listeningSince);
     final opened = Map<int, DateTime>.of(state.openedAt);
-    final was = links[deviceId];
-    if (link == null) {
-      links.remove(deviceId);
-      since.remove(deviceId);
-      opened.remove(deviceId);
-    } else {
+    var changed = false;
+    DateTime? inTouch;
+    for (final deviceId in deviceIds) {
+      final was = links[deviceId];
+      if (link == null) {
+        changed |= links.remove(deviceId) != null;
+        changed |= since.remove(deviceId) != null;
+        changed |= opened.remove(deviceId) != null;
+        continue;
+      }
+      if (was == link) continue;
+      changed = true;
       links[deviceId] = link;
       if (link == LinkState.open) {
-        final now = DateTime.now();
-        if (was != LinkState.open) {
+        if (inTouch == null) {
           _cache?.opened();
           // In touch since before this screen, if the feed was open just
           // now: a device silent all that while is known to be silent.
-          final inTouch = _cache?.inTouchSince ?? now;
-          since.putIfAbsent(deviceId, () => inTouch);
-          opened[deviceId] = inTouch;
+          inTouch = _cache?.inTouchSince ?? DateTime.now();
         }
-      } else if (link == LinkState.retrying) {
-        _cache?.lost();
+        since.putIfAbsent(deviceId, () => inTouch!);
+        opened[deviceId] = inTouch;
       }
     }
+    if (link == LinkState.retrying && changed) _cache?.lost();
+    if (!changed) return;
     emit(state.copyWith(links: links, listeningSince: since, openedAt: opened));
   }
 
@@ -236,6 +244,7 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
   /// screens once rather than once per train.
   final Map<int, TrainPosition> _pendingPositions = {};
   Timer? _flushTimer;
+  bool _flushSoon = false;
   static const Duration _batchWindow = Duration(milliseconds: 400);
 
   void _onPosition(TrainPosition position) {
@@ -249,15 +258,22 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
       return;
     }
     _pendingPositions[position.deviceId] = position;
-    // The train being followed on its map moves at once.
-    if (state.selectedTrain?.deviceId == position.deviceId) {
-      _flushPositions();
+    // The train being followed on its map moves at once: as soon as the
+    // burst it came in is read, the rest of the burst with it.
+    if (_selectedDevice == position.deviceId) {
+      if (_flushSoon) return;
+      _flushSoon = true;
+      scheduleMicrotask(_flushPositions);
     } else {
       _flushTimer ??= Timer(_batchWindow, _flushPositions);
     }
   }
 
+  /// The selected train's GPS device, if it has one.
+  int? _selectedDevice;
+
   void _flushPositions() {
+    _flushSoon = false;
     _flushTimer?.cancel();
     _flushTimer = null;
     if (_pendingPositions.isEmpty || isClosed) return;
@@ -317,6 +333,7 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     final train = state.trainById(trainId);
     if (train == null) return;
     _releaseSelection();
+    _selectedDevice = train.hasDevice ? train.deviceId : null;
     final path = state.pathOf(train.id);
     final position = state.positionOf(train);
     final stops = path == null
@@ -342,8 +359,13 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     }
   }
 
-  void clearSelection() {
+  /// Lets go of the selected train; with [trainId], only if it is still
+  /// that one: a map closing after another took its place leaves the new
+  /// one's train selected.
+  void clearSelection({String? trainId}) {
+    if (trainId != null && state.selectedTrainId != trainId) return;
     _releaseSelection();
+    _selectedDevice = null;
     emit(
       state.copyWith(
         selectedTrainId: null,

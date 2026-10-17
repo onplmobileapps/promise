@@ -89,4 +89,37 @@ void main() {
     expect(reports.read('not json'), isEmpty);
     expect(reports.read(jsonEncode({'events': []})), isEmpty);
   });
+
+  testWidgets('a whole fleet is watched and let go of in one change each', (
+    tester,
+  ) async {
+    final changes = <(List<int>, LinkState?)>[];
+    final feed = TrainProxyFeed(
+      onPosition: (_) {},
+      onLinkChanged: (ids, link) => changes.add((ids.toList(), link)),
+    );
+    for (var id = 1; id <= 300; id++) {
+      feed.watch(id);
+    }
+    await tester.pump();
+    expect(changes, hasLength(1));
+    expect(changes.single.$1, hasLength(300));
+    expect(changes.single.$2, LinkState.connecting);
+
+    // Let go of over a moment, as a list scrolling away does.
+    for (var id = 1; id <= 300; id++) {
+      feed.unwatch(id);
+      if (id == 150) await tester.pump(const Duration(milliseconds: 500));
+    }
+    // One comes back before its linger runs out.
+    feed.watch(42);
+    await tester.pump(const Duration(seconds: 19));
+    expect(changes, hasLength(1));
+    await tester.pump(const Duration(seconds: 2));
+    expect(changes, hasLength(2));
+    expect(changes.last.$2, isNull);
+    expect(changes.last.$1, hasLength(299));
+    expect(changes.last.$1, isNot(contains(42)));
+    feed.dispose();
+  });
 }
