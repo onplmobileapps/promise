@@ -65,40 +65,118 @@ class RoutePath {
     );
   }
 
+  /// Segments are searched [_chunk] at a time, each run of them with the
+  /// box around it: a search skips the runs whose box is further away than
+  /// the nearest point found, which on a long route is nearly all of them.
+  static const int _chunk = 32;
+
+  /// Per run of [_chunk] segments: its southmost and northmost latitude,
+  /// its westmost and eastmost longitude.
+  late final Float64List _boxes = _chunkBoxes(points);
+
+  static Float64List _chunkBoxes(List<LatLng> points) {
+    final segments = math.max(0, points.length - 1);
+    final chunks = (segments + _chunk - 1) ~/ _chunk;
+    final out = Float64List(chunks * 4);
+    for (var c = 0; c < chunks; c++) {
+      final from = c * _chunk;
+      final to = math.min(from + _chunk, points.length - 1);
+      var south = double.infinity, north = -double.infinity;
+      var west = double.infinity, east = -double.infinity;
+      for (var i = from; i <= to; i++) {
+        final q = points[i];
+        if (q.latitude < south) south = q.latitude;
+        if (q.latitude > north) north = q.latitude;
+        if (q.longitude < west) west = q.longitude;
+        if (q.longitude > east) east = q.longitude;
+      }
+      out
+        ..[c * 4] = south
+        ..[c * 4 + 1] = north
+        ..[c * 4 + 2] = west
+        ..[c * 4 + 3] = east;
+    }
+    return out;
+  }
+
   RouteFix? _locateIn(LatLng p, int first, int last) {
+    if (last < first) return null;
     // Local flat projection around p, in metres; accurate at these scales.
     const mPerDegLat = 110574.0;
     final mPerDegLng = 111320.0 * math.cos(p.latitude * math.pi / 180);
-    RouteFix? best;
-    for (var i = first; i <= last; i++) {
-      final a = points[i];
-      final b = points[i + 1];
-      final ax = (a.longitude - p.longitude) * mPerDegLng;
-      final ay = (a.latitude - p.latitude) * mPerDegLat;
-      final bx = (b.longitude - p.longitude) * mPerDegLng;
-      final by = (b.latitude - p.latitude) * mPerDegLat;
-      final dx = bx - ax;
-      final dy = by - ay;
-      final len2 = dx * dx + dy * dy;
-      final t = len2 == 0
-          ? 0.0
-          : (-(ax * dx + ay * dy) / len2).clamp(0.0, 1.0).toDouble();
-      final cx = ax + dx * t;
-      final cy = ay + dy * t;
-      final offset = math.sqrt(cx * cx + cy * cy);
-      if (best == null || offset < best.offsetM) {
-        best = RouteFix(
-          i,
-          LatLng(
-            a.latitude + (b.latitude - a.latitude) * t,
-            a.longitude + (b.longitude - a.longitude) * t,
-          ),
-          _cumulative[i] + (_cumulative[i + 1] - _cumulative[i]) * t,
-          offset,
-        );
+    final boxes = _boxes;
+    final firstChunk = first ~/ _chunk;
+    final lastChunk = last ~/ _chunk;
+    // How near each run of segments could come, squared; the nearest run
+    // is searched first, so the rest are mostly skipped.
+    final reach = Float64List(lastChunk - firstChunk + 1);
+    var nearest = 0;
+    for (var c = firstChunk; c <= lastChunk; c++) {
+      final south = boxes[c * 4], north = boxes[c * 4 + 1];
+      final west = boxes[c * 4 + 2], east = boxes[c * 4 + 3];
+      final dy =
+          (p.latitude < south
+              ? south - p.latitude
+              : (p.latitude > north ? p.latitude - north : 0.0)) *
+          mPerDegLat;
+      final dx =
+          (p.longitude < west
+              ? west - p.longitude
+              : (p.longitude > east ? p.longitude - east : 0.0)) *
+          mPerDegLng;
+      final r = reach[c - firstChunk] = dx * dx + dy * dy;
+      if (r < reach[nearest]) nearest = c - firstChunk;
+    }
+
+    var bestI = -1;
+    var bestT = 0.0;
+    var best2 = double.infinity;
+    void search(int c) {
+      final from = math.max(first, c * _chunk);
+      final to = math.min(last, c * _chunk + _chunk - 1);
+      for (var i = from; i <= to; i++) {
+        final a = points[i];
+        final b = points[i + 1];
+        final ax = (a.longitude - p.longitude) * mPerDegLng;
+        final ay = (a.latitude - p.latitude) * mPerDegLat;
+        final bx = (b.longitude - p.longitude) * mPerDegLng;
+        final by = (b.latitude - p.latitude) * mPerDegLat;
+        final dx = bx - ax;
+        final dy = by - ay;
+        final len2 = dx * dx + dy * dy;
+        final t = len2 == 0
+            ? 0.0
+            : (-(ax * dx + ay * dy) / len2).clamp(0.0, 1.0).toDouble();
+        final cx = ax + dx * t;
+        final cy = ay + dy * t;
+        final offset2 = cx * cx + cy * cy;
+        // The first of equally near segments, as a plain search finds.
+        if (offset2 < best2 || (offset2 == best2 && i < bestI)) {
+          best2 = offset2;
+          bestI = i;
+          bestT = t;
+        }
       }
     }
-    return best;
+
+    search(firstChunk + nearest);
+    for (var c = firstChunk; c <= lastChunk; c++) {
+      if (c == firstChunk + nearest || reach[c - firstChunk] > best2) continue;
+      search(c);
+    }
+    if (bestI < 0) return null;
+    final a = points[bestI];
+    final b = points[bestI + 1];
+    return RouteFix(
+      bestI,
+      LatLng(
+        a.latitude + (b.latitude - a.latitude) * bestT,
+        a.longitude + (b.longitude - a.longitude) * bestT,
+      ),
+      _cumulative[bestI] +
+          (_cumulative[bestI + 1] - _cumulative[bestI]) * bestT,
+      math.sqrt(best2),
+    );
   }
 
   /// The route up to [fix] and from [fix] on.
