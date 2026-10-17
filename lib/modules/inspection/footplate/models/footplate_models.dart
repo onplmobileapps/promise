@@ -14,78 +14,35 @@ class Person {
     required this.orgUnit,
   });
 
-  String get display => '$name, $designation, $department, $orgUnit';
+  /// A crew member named on the form, in the role they ride in.
+  const Person.named(this.name, {required this.designation})
+    : department = '',
+      orgUnit = '';
+
+  /// Who they are, as their name and whatever else is known of them.
+  String get display => [
+    name,
+    designation,
+    department,
+    orgUnit,
+  ].where((part) => part.isNotEmpty).join(', ');
+
+  /// A crew member as [display] wrote them.
+  static Person? fromDisplay(Object? display) {
+    if (display is! String || display.trim().isEmpty) return null;
+    final parts = display.split(',').map((part) => part.trim()).toList();
+    String at(int i) => i < parts.length ? parts[i] : '';
+    return Person(
+      name: at(0),
+      designation: at(1),
+      department: at(2),
+      orgUnit: at(3),
+    );
+  }
 
   @override
   String toString() => display;
 }
-
-/// Mock directory used for autocomplete (Org Unit -> Department -> Designation -> User).
-const List<Person> kStaffDirectory = [
-  Person(
-    name: 'Ahmad Khan',
-    designation: 'Running',
-    department: 'Track',
-    orgUnit: 'Lahore Division',
-  ),
-  Person(
-    name: 'Zia Ul Haq',
-    designation: 'Inspector',
-    department: 'Signal',
-    orgUnit: 'Lahore Division',
-  ),
-  Person(
-    name: 'Hamid Raza',
-    designation: 'Inspector',
-    department: 'Civil',
-    orgUnit: 'Lahore Division',
-  ),
-  Person(
-    name: 'Bilal Ahmed',
-    designation: 'Guard',
-    department: 'Operating',
-    orgUnit: 'Karachi Division',
-  ),
-  Person(
-    name: 'Usman Tariq',
-    designation: 'Assistant Driver',
-    department: 'Running',
-    orgUnit: 'Karachi Division',
-  ),
-  Person(
-    name: 'Faisal Mehmood',
-    designation: 'Driver',
-    department: 'Running',
-    orgUnit: 'Rawalpindi Division',
-  ),
-  Person(
-    name: 'Imran Sheikh',
-    designation: 'Guard Incharge',
-    department: 'Operating',
-    orgUnit: 'Multan Division',
-  ),
-];
-
-const List<String> kTrainNumbers = [
-  '1UP - Karachi Express',
-  '2DN - Karachi Express',
-  '7UP - Tezgam',
-  '8DN - Tezgam',
-  '9UP - Green Line',
-];
-const List<String> kEngineNumbers = [
-  'ENG-2201',
-  'ENG-2245',
-  'ENG-3390',
-  'ENG-4102',
-];
-const List<String> kStations = [
-  'Lahore Railway Station',
-  'Raiwind',
-  'Sahiwal',
-  'Multan Cantt',
-  'Khanewal',
-];
 
 const List<String> kCautionOrders = [
   'OP-354',

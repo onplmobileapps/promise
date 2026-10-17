@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:flutter/widgets.dart' show Matrix4;
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -186,6 +187,22 @@ class InspectionReportPdf {
     );
   }
 
+  /// [text] as the brand writes its own name, the leading "e" of
+  /// "e-Inspection" slanted, as the report's fonts have no italics.
+  static List<pw.Widget> _brand(String text, pw.TextStyle style) {
+    if (!RegExp(r'^e(?=[\s-]?[A-Z])').hasMatch(text)) {
+      return [pw.Text(text, style: style)];
+    }
+    return [
+      pw.Transform(
+        transform: Matrix4.skewX(0.21),
+        adjustLayout: true,
+        child: pw.Text('e', style: style),
+      ),
+      pw.Text(text.substring(1), style: style),
+    ];
+  }
+
   pw.Widget _footer(pw.Context context) => pw.Container(
     margin: const pw.EdgeInsets.only(top: 8),
     padding: const pw.EdgeInsets.only(top: 6),
@@ -196,9 +213,9 @@ class InspectionReportPdf {
     ),
     child: pw.Row(
       children: [
-        pw.Text(
+        ..._brand(
           l10n.inspPdfFooter,
-          style: _text(7.5, font: assets.semiBold, color: ReportInk.jade800),
+          _text(7.5, font: assets.semiBold, color: ReportInk.jade800),
         ),
         pw.Text(
           '  ·  ${_when(report.date)}',

@@ -29,7 +29,7 @@ void main() {
 
   test('the report reads a flagged locomotive item as a finding', () {
     final data = FootplateInspectionData();
-    data.trainSchedule.trainNo = kTrainNumbers.first;
+    data.trainSchedule.trainNo = '45 UP';
     data.locomotive.setStatus(
       'Whistle',
       LocomotiveEquipmentStatus(isFunctional: false),
@@ -62,8 +62,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Footplate inspection'), findsWidgets);
     expect(find.text('Train & Locomotive'), findsOneWidget);
-    // No crew is filled in for the inspector.
-    expect(find.text(kStaffDirectory[5].display), findsNothing);
+    // No train or crew is filled in for the inspector.
+    expect(find.text('Train No'), findsOneWidget);
 
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();

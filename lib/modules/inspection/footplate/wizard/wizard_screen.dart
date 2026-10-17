@@ -93,9 +93,10 @@ class _FootplateFormState extends State<_FootplateForm> {
       ..driver = screen.initialDriver
       ..assistantDriver = screen.initialAssistantDriver
       ..guardIncharge = screen.initialGuardIncharge;
-    // The stations on the run and their assets. There is no register to
-    // load them from yet, so these stand in.
-    data.stationAssets.addAll(StationAssetData.getMockStations());
+    // The station the run starts from; others are added on the way.
+    if (screen.initialStation case final station? when station.isNotEmpty) {
+      data.stationAssets.add(StationAssetData.forStation(station));
+    }
     _ready = true;
   }
 
@@ -113,9 +114,6 @@ class _FootplateFormState extends State<_FootplateForm> {
       } on Object {
         // An older draft that can't be read starts afresh.
       }
-    }
-    if (data.stationAssets.isEmpty) {
-      data.stationAssets.addAll(StationAssetData.getMockStations());
     }
     if (mounted) setState(() => _ready = true);
   }
@@ -247,13 +245,7 @@ class _FootplateFormState extends State<_FootplateForm> {
     );
   }
 
-  Person? _personFromDisplay(dynamic value) {
-    if (value is! String) return null;
-    for (final person in kStaffDirectory) {
-      if (person.display == value) return person;
-    }
-    return null;
-  }
+  Person? _personFromDisplay(dynamic value) => Person.fromDisplay(value);
 
   void _restorePayload(Map<String, dynamic> payload) {
     data.id = payload['id'] as String? ?? data.id;

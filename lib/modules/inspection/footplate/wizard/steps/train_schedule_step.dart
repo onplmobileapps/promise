@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/modules/inspection/footplate/models/footplate_models.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_station_input.dart';
 
 /// The train ridden: its number, load, engine and direction, the station
 /// and times, and its crew.
@@ -15,25 +16,17 @@ class TrainScheduleStep extends StatelessWidget {
   final TrainScheduleData data;
   final VoidCallback onChanged;
 
-  Person? _person(String display) {
-    for (final person in kStaffDirectory) {
-      if (person.display == display) return person;
-    }
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     final d = data;
-    final staff = [for (final person in kStaffDirectory) person.display];
     Widget crew(String label, Person? value, void Function(Person?) set) =>
-        InspectionSelectInput(
+        InspectionTextInput(
           label: label,
-          options: staff,
-          value: value?.display,
+          value: value?.name,
           glyph: AppGlyphs.user,
-          onChanged: (picked) {
-            set(_person(picked));
+          onChanged: (typed) {
+            final name = typed.trim();
+            set(name.isEmpty ? null : Person.named(name, designation: label));
             onChanged();
           },
         );
@@ -45,13 +38,13 @@ class TrainScheduleStep extends StatelessWidget {
           subtitle: 'Fills the train particulars of the report.',
           glyph: AppGlyphs.train,
           children: [
-            InspectionSelectInput(
+            InspectionTextInput(
               label: 'Train No',
-              options: kTrainNumbers,
+              hint: 'As 45 UP',
               value: d.trainNo,
               glyph: AppGlyphs.trainFilled,
               onChanged: (v) {
-                d.trainNo = v;
+                d.trainNo = v.trim().isEmpty ? null : v.trim();
                 onChanged();
               },
             ),
@@ -63,13 +56,12 @@ class TrainScheduleStep extends StatelessWidget {
                 onChanged();
               },
             ),
-            InspectionSelectInput(
+            InspectionTextInput(
               label: 'Engine No',
-              options: kEngineNumbers,
               value: d.engineNo,
               note: 'The locomotive number of the asset.',
               onChanged: (v) {
-                d.engineNo = v;
+                d.engineNo = v.trim().isEmpty ? null : v.trim();
                 onChanged();
               },
             ),
@@ -89,13 +81,11 @@ class TrainScheduleStep extends StatelessWidget {
           title: 'Station & Timing',
           glyph: AppGlyphs.clock,
           children: [
-            InspectionSelectInput(
+            InspectionStationInput(
               label: 'Station',
-              options: kStations,
               value: d.station,
-              glyph: AppGlyphs.station,
               onChanged: (v) {
-                d.station = v;
+                d.station = v.trim().isEmpty ? null : v.trim();
                 onChanged();
               },
             ),

@@ -3282,4 +3282,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get inspPlanNone =>
       'No monthly plan is set for your designation. The inspections you finish this month count here.';
+
+  @override
+  String get inspFootplateAddStation => 'Add a station';
+
+  @override
+  String get inspFootplateNoStations => 'No stations added yet';
+
+  @override
+  String get inspFootplateNoStationsAbout =>
+      'Add each station on the run to check its signals, tracks and platform.';
 }

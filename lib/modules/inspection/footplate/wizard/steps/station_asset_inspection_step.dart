@@ -3,6 +3,7 @@ import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/modules/inspection/footplate/models/station_asset_model.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_station_input.dart';
 
 /// A kind of asset's 3D mark.
 AppGlyph footplateAssetGlyph(String type) => switch (type) {
@@ -19,8 +20,9 @@ AppGlyph footplateAssetGlyph(String type) => switch (type) {
   _ => AppGlyphs.clipboardList,
 };
 
-/// The assets of each station on the run: a station picked from chips,
-/// its assets to search, and a sheet that checks each one.
+/// The assets of each station on the run: the stations added on the way,
+/// picked from chips, each station's assets to search, and a sheet that
+/// checks each one.
 class StationAssetInspectionStep extends StatefulWidget {
   const StationAssetInspectionStep({
     super.key,
@@ -56,14 +58,46 @@ class _StationAssetInspectionStepState
     widget.onChanged();
   }
 
+  /// Adds a station on the run, with the assets every station has.
+  Future<void> _addStation() async {
+    final l10n = context.l10n;
+    final station = await showAppSheet<String>(
+      context: context,
+      title: l10n.inspFootplateAddStation,
+      closeLabel: l10n.actionClose,
+      builder: (_) => const _AddStation(),
+    );
+    if (station == null || station.trim().isEmpty) return;
+    final added = StationAssetData.forStation(station.trim());
+    final stations = widget.stationAssets;
+    if (!stations.any((s) => s.id == added.id)) stations.add(added);
+    setState(() => _station = added.id);
+    widget.onChanged();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final colors = context.colors;
     final stations = widget.stationAssets;
+    final add = AppButton(
+      label: l10n.inspFootplateAddStation,
+      variant: AppButtonVariant.secondary,
+      leadingGlyph: AppGlyphs.plus,
+      onPressed: _addStation,
+    );
     if (stations.isEmpty) {
-      return const AppEmptyState(
-        glyph: AppGlyphs.station,
-        title: 'No stations on this run',
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppEmptyState(
+            glyph: AppGlyphs.station,
+            title: l10n.inspFootplateNoStations,
+            message: l10n.inspFootplateNoStationsAbout,
+          ),
+          AppSpacing.gapMd,
+          add,
+        ],
       );
     }
     final station = stations.firstWhere(
@@ -135,6 +169,8 @@ class _StationAssetInspectionStepState
             ],
           ),
         AppSpacing.gapMd,
+        add,
+        AppSpacing.gapMd,
         InspectionTextInput(
           label: 'Station remarks',
           kind: InspectionTextKind.multiline,
@@ -145,6 +181,46 @@ class _StationAssetInspectionStepState
           },
         ),
       ],
+    );
+  }
+}
+
+/// Asks which station to add: picked from the employee's, or typed.
+class _AddStation extends StatefulWidget {
+  const _AddStation();
+
+  @override
+  State<_AddStation> createState() => _AddStationState();
+}
+
+class _AddStationState extends State<_AddStation> {
+  String _station = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    // Scrolls, and rises over the keyboard, as a sheet's body must.
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InspectionStationInput(
+            label: l10n.inspFormStation,
+            value: _station,
+            onChanged: (picked) => setState(() => _station = picked),
+          ),
+          AppSpacing.gapLg,
+          AppButton(
+            label: l10n.inspFootplateAddStation,
+            leadingGlyph: AppGlyphs.plus,
+            onPressed: _station.trim().isEmpty
+                ? null
+                : () => Navigator.of(context).pop(_station.trim()),
+          ),
+        ],
+      ),
     );
   }
 }

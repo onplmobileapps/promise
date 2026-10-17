@@ -64,6 +64,7 @@ export 'package:railway_hrms/core/design_system/components/inset_shadow_painter.
 export 'package:railway_hrms/core/design_system/components/khatam_pattern.dart';
 export 'package:railway_hrms/core/design_system/components/liquid_glass.dart';
 export 'package:railway_hrms/core/design_system/components/outer_shadow_painter.dart';
+export 'package:railway_hrms/core/design_system/foundations/app_brand_text.dart';
 export 'package:railway_hrms/core/design_system/foundations/app_breakpoints.dart';
 export 'package:railway_hrms/core/design_system/foundations/app_fonts.dart';
 export 'package:railway_hrms/core/design_system/foundations/app_loop.dart';

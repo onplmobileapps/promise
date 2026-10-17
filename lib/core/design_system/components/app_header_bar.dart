@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/components/app_back_button.dart';
 import 'package:railway_hrms/core/design_system/components/app_tile_button.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_brand_text.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_spacing.dart';
 import 'package:railway_hrms/core/design_system/icons/app_glyph_icon.dart';
 import 'package:railway_hrms/core/design_system/icons/app_glyphs.dart';
@@ -62,14 +63,14 @@ class AppHeaderBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                brandText(
                   title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: large ? text.headlineMedium : text.titleLarge,
                 ),
                 if (subtitle != null && subtitle.isNotEmpty)
-                  Text(
+                  brandText(
                     subtitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

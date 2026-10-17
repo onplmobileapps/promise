@@ -5919,6 +5919,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No monthly plan is set for your designation. The inspections you finish this month count here.'**
   String get inspPlanNone;
+
+  /// Adds a station on the footplate run, to check its assets.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a station'**
+  String get inspFootplateAddStation;
+
+  /// When no station has been added to the footplate run.
+  ///
+  /// In en, this message translates to:
+  /// **'No stations added yet'**
+  String get inspFootplateNoStations;
+
+  /// Under the empty station list of a footplate run.
+  ///
+  /// In en, this message translates to:
+  /// **'Add each station on the run to check its signals, tracks and platform.'**
+  String get inspFootplateNoStationsAbout;
 }
 
 class _AppLocalizationsDelegate

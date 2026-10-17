@@ -182,7 +182,7 @@ class _HomeViewState extends State<HomeView> {
                                 shadow: context.elevations.iconDrop,
                               ),
                               title: module.title,
-                              titleSpan: _italicE(module.title),
+                              titleSpan: brandSpan(module.title),
                               subtitle: module.subtitle,
                               onTap: () => _open(context, module),
                             ),
@@ -199,19 +199,6 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 }
-
-/// "e Inspection" with its "e" in italics, as the brand writes it.
-InlineSpan? _italicE(String title) => title.startsWith('e ')
-    ? TextSpan(
-        children: [
-          const TextSpan(
-            text: 'e',
-            style: TextStyle(fontStyle: FontStyle.italic),
-          ),
-          TextSpan(text: title.substring(1)),
-        ],
-      )
-    : null;
 
 /// The brand on the left; alerts and the profile on the right.
 class _HomeHeader extends StatelessWidget {

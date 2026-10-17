@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
-import 'package:railway_hrms/modules/inspection/footplate/models/footplate_models.dart';
 import 'package:railway_hrms/modules/inspection/footplate/wizard/wizard_screen.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_station_input.dart';
 
 /// Asks the concerned officer's approval for a footplate inspection: the
 /// train, the day and times, and the route; once approved, the inspection
@@ -79,12 +79,14 @@ class _InspectionApprovalScreenState extends State<InspectionApprovalScreen> {
               title: l10n.inspApprovalTrain,
               glyph: AppGlyphs.train,
               children: [
-                InspectionSelectInput(
+                InspectionTextInput(
                   label: 'Train',
-                  options: kTrainNumbers,
+                  hint: 'As 45 UP',
                   value: _train,
                   glyph: AppGlyphs.trainFilled,
-                  onChanged: (v) => setState(() => _train = v),
+                  onChanged: (v) => setState(
+                    () => _train = v.trim().isEmpty ? null : v.trim(),
+                  ),
                 ),
                 InspectionTextInput(
                   label: l10n.inspApprovalOfficer,
@@ -131,19 +133,19 @@ class _InspectionApprovalScreenState extends State<InspectionApprovalScreen> {
               title: l10n.inspApprovalRoute,
               glyph: AppGlyphs.route,
               children: [
-                InspectionSelectInput(
+                InspectionStationInput(
                   label: l10n.inspApprovalFrom,
-                  options: kStations,
                   value: _origin,
-                  glyph: AppGlyphs.mapPin,
-                  onChanged: (v) => setState(() => _origin = v),
+                  onChanged: (v) => setState(
+                    () => _origin = v.trim().isEmpty ? null : v.trim(),
+                  ),
                 ),
-                InspectionSelectInput(
+                InspectionStationInput(
                   label: l10n.inspApprovalTo,
-                  options: kStations,
                   value: _destination,
-                  glyph: AppGlyphs.flag,
-                  onChanged: (v) => setState(() => _destination = v),
+                  onChanged: (v) => setState(
+                    () => _destination = v.trim().isEmpty ? null : v.trim(),
+                  ),
                 ),
               ],
             ),

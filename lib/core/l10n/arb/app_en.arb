@@ -4522,5 +4522,17 @@
   "inspPlanNone": "No monthly plan is set for your designation. The inspections you finish this month count here.",
   "@inspPlanNone": {
     "description": "On the plan card when the designation has no monthly inspection plan."
+  },
+  "inspFootplateAddStation": "Add a station",
+  "@inspFootplateAddStation": {
+    "description": "Adds a station on the footplate run, to check its assets."
+  },
+  "inspFootplateNoStations": "No stations added yet",
+  "@inspFootplateNoStations": {
+    "description": "When no station has been added to the footplate run."
+  },
+  "inspFootplateNoStationsAbout": "Add each station on the run to check its signals, tracks and platform.",
+  "@inspFootplateNoStationsAbout": {
+    "description": "Under the empty station list of a footplate run."
   }
 }

@@ -145,270 +145,42 @@ class StationAssetItem {
   }
 }
 
-/// Asset categories for organization
-/// Mock station data with predefined assets
+/// The assets every station on a run is checked for.
 class StationAssetData {
-  static List<StationAsset> getMockStations() {
-    return [
-      StationAsset(
-        id: 'stn_001',
-        stationName: 'Lahore Railway Station',
-        stationCode: 'LHR',
-        assets: _getLahoreAssets(),
-      ),
-      StationAsset(
-        id: 'stn_002',
-        stationName: 'Raiwind',
-        stationCode: 'RWD',
-        assets: _getRaiwindAssets(),
-      ),
-      StationAsset(
-        id: 'stn_003',
-        stationName: 'Sahiwal',
-        stationCode: 'SWL',
-        assets: _getSahiwalAssets(),
-      ),
-      StationAsset(
-        id: 'stn_004',
-        stationName: 'Multan Cantt',
-        stationCode: 'MCO',
-        assets: _getMultanAssets(),
-      ),
-      StationAsset(
-        id: 'stn_005',
-        stationName: 'Khanewal',
-        stationCode: 'KWL',
-        assets: _getKhanewalAssets(),
-      ),
-    ];
+  /// The assets a station is checked for: its signals, its tracks and its
+  /// platform.
+  static const List<(String, String)> _standard = [
+    ('Signal', 'Home Signal'),
+    ('Signal', 'Starting Signal'),
+    ('Track', 'Main Line Track'),
+    ('Track', 'Loop Line Track'),
+    ('Platform', 'Platform'),
+  ];
+
+  /// [station], as a station picker names it ("Lahore Junction (LHR)"),
+  /// with the assets every station is checked for.
+  static StationAsset forStation(String station) {
+    final code = RegExp(r'\(([^)]+)\)\s*$').firstMatch(station)?.group(1);
+    final name = station.replaceFirst(RegExp(r'\s*\([^)]+\)\s*$'), '');
+    final id =
+        'stn_${station.toLowerCase().replaceAll(RegExp('[^a-z0-9]+'), '_')}';
+    return StationAsset(
+      id: id,
+      stationName: name,
+      stationCode: code ?? '',
+      assets: [
+        for (final (type, asset) in _standard)
+          StationAssetItem(
+            id: '${id}_${asset.toLowerCase().replaceAll(' ', '_')}',
+            assetType: type,
+            assetName: asset,
+            category: type,
+            photos: [],
+          ),
+      ],
+    );
   }
 
-  static List<StationAssetItem> _getLahoreAssets() {
-    return [
-      StationAssetItem(
-        id: 'lhr_sig_001',
-        assetType: 'Signal',
-        assetName: 'Home Signal',
-        location: 'Platform 1',
-        category: 'Signal',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'lhr_sig_002',
-        assetType: 'Signal',
-        assetName: 'Starting Signal',
-        location: 'Platform 2',
-        category: 'Signal',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'lhr_trk_001',
-        assetType: 'Track',
-        assetName: 'Main Line Track',
-        location: 'Platform 1-2',
-        category: 'Track',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'lhr_trk_002',
-        assetType: 'Track',
-        assetName: 'Loop Line Track',
-        location: 'Platform 3-4',
-        category: 'Track',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'lhr_plt_001',
-        assetType: 'Platform',
-        assetName: 'Platform 1',
-        location: 'Main Building',
-        category: 'Platform',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'lhr_plt_002',
-        assetType: 'Platform',
-        assetName: 'Platform 2',
-        location: 'Main Building',
-        category: 'Platform',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'lhr_lc_001',
-        assetType: 'Level Crossing',
-        assetName: 'LC Gate 1',
-        location: 'Station Entrance',
-        category: 'Level Crossing',
-        photos: [],
-      ),
-    ];
-  }
-
-  static List<StationAssetItem> _getRaiwindAssets() {
-    return [
-      StationAssetItem(
-        id: 'rwd_sig_001',
-        assetType: 'Signal',
-        assetName: 'Home Signal',
-        location: 'Platform 1',
-        category: 'Signal',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'rwd_trk_001',
-        assetType: 'Track',
-        assetName: 'Main Line Track',
-        location: 'Station Area',
-        category: 'Track',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'rwd_lc_001',
-        assetType: 'Level Crossing',
-        assetName: 'LC Gate 1',
-        location: 'North End',
-        category: 'Level Crossing',
-        photos: [],
-      ),
-    ];
-  }
-
-  static List<StationAssetItem> _getSahiwalAssets() {
-    return [
-      StationAssetItem(
-        id: 'swl_sig_001',
-        assetType: 'Signal',
-        assetName: 'Home Signal',
-        location: 'Platform 1',
-        category: 'Signal',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'swl_trk_001',
-        assetType: 'Track',
-        assetName: 'Main Line Track',
-        location: 'Station Area',
-        category: 'Track',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'swl_plt_001',
-        assetType: 'Platform',
-        assetName: 'Platform 1',
-        location: 'Main Building',
-        category: 'Platform',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'swl_br_001',
-        assetType: 'Bridge',
-        assetName: 'Rail Bridge',
-        location: 'South End',
-        category: 'Bridge',
-        photos: [],
-      ),
-    ];
-  }
-
-  static List<StationAssetItem> _getMultanAssets() {
-    return [
-      StationAssetItem(
-        id: 'mco_sig_001',
-        assetType: 'Signal',
-        assetName: 'Home Signal',
-        location: 'Platform 1',
-        category: 'Signal',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'mco_sig_002',
-        assetType: 'Signal',
-        assetName: 'Starting Signal',
-        location: 'Platform 2',
-        category: 'Signal',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'mco_trk_001',
-        assetType: 'Track',
-        assetName: 'Main Line Track',
-        location: 'Platform 1-2',
-        category: 'Track',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'mco_plt_001',
-        assetType: 'Platform',
-        assetName: 'Platform 1',
-        location: 'Main Building',
-        category: 'Platform',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'mco_plt_002',
-        assetType: 'Platform',
-        assetName: 'Platform 2',
-        location: 'Main Building',
-        category: 'Platform',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'mco_lc_001',
-        assetType: 'Level Crossing',
-        assetName: 'LC Gate 1',
-        location: 'Station Entrance',
-        category: 'Level Crossing',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'mco_tun_001',
-        assetType: 'Tunnel',
-        assetName: 'Tunnel Section',
-        location: 'North Approach',
-        category: 'Tunnel',
-        photos: [],
-      ),
-    ];
-  }
-
-  static List<StationAssetItem> _getKhanewalAssets() {
-    return [
-      StationAssetItem(
-        id: 'kwl_sig_001',
-        assetType: 'Signal',
-        assetName: 'Home Signal',
-        location: 'Platform 1',
-        category: 'Signal',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'kwl_trk_001',
-        assetType: 'Track',
-        assetName: 'Main Line Track',
-        location: 'Station Area',
-        category: 'Track',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'kwl_lc_001',
-        assetType: 'Level Crossing',
-        assetName: 'LC Gate 1',
-        location: 'East End',
-        category: 'Level Crossing',
-        photos: [],
-      ),
-      StationAssetItem(
-        id: 'kwl_cv_001',
-        assetType: 'Curve',
-        assetName: 'Sharp Curve',
-        location: 'South Approach',
-        category: 'Curve',
-        photos: [],
-      ),
-    ];
-  }
-
-  /// Get status options for each asset type
   static List<String> getStatusOptions(String assetType) {
     switch (assetType) {
       case 'Signal':

@@ -3,6 +3,7 @@ import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/modules/inspection/footplate/models/footplate_models.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_station_input.dart';
 
 /// How the train kept time at each station, and the caution orders it was
 /// given on the way.
@@ -44,7 +45,7 @@ class PunctualityStep extends StatelessWidget {
               variant: AppButtonVariant.secondary,
               leadingGlyph: AppGlyphs.plus,
               onPressed: () {
-                punctuality.add(PunctualityEntry(station: kStations.first));
+                punctuality.add(PunctualityEntry(station: ''));
                 onChanged();
               },
             ),
@@ -158,13 +159,11 @@ class _Stop extends StatelessWidget {
               ],
             ),
             AppSpacing.gapMd,
-            InspectionSelectInput(
+            InspectionStationInput(
               label: 'Station',
-              options: kStations,
               value: entry.station,
-              glyph: AppGlyphs.station,
               onChanged: (v) {
-                entry.station = v;
+                entry.station = v.trim();
                 onChanged();
               },
             ),
