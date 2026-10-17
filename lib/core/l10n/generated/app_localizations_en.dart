@@ -3292,4 +3292,70 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get inspFootplateNoStationsAbout =>
       'Add each station on the run to check its signals, tracks and platform.';
+
+  @override
+  String get cameraFaultDeniedTitle => 'Camera not allowed';
+
+  @override
+  String get cameraFaultDeniedMessage =>
+      'This app isn\'t allowed to use the camera. Allow it in the phone\'s settings, then try again.';
+
+  @override
+  String get cameraFaultMissingTitle => 'No camera found';
+
+  @override
+  String get cameraFaultMissingMessage =>
+      'This phone isn\'t reporting a camera, so its camera may be damaged or disconnected. Check it in the phone\'s own Camera app. If it doesn\'t work there either, the phone needs repair.';
+
+  @override
+  String get cameraFaultBusyTitle => 'Camera in use';
+
+  @override
+  String get cameraFaultBusyMessage =>
+      'Another app is using the camera. Close apps that use it, such as video calls or scanners, then try again.';
+
+  @override
+  String get cameraFaultDisabledTitle => 'Camera turned off';
+
+  @override
+  String get cameraFaultDisabledMessage =>
+      'The camera is turned off on this phone, by its settings or by your organisation. Turn it on, then try again.';
+
+  @override
+  String get cameraFaultDoNotDisturbTitle => 'Do Not Disturb is on';
+
+  @override
+  String get cameraFaultDoNotDisturbMessage =>
+      'This phone keeps the camera shut while Do Not Disturb is on. Turn it off, then try again.';
+
+  @override
+  String get cameraFaultBrokenTitle => 'Camera not working';
+
+  @override
+  String get cameraFaultBrokenMessage =>
+      'The phone\'s camera didn\'t start. This points to a fault in the phone\'s camera, not in the app. Restart the phone and try again. If the phone\'s own Camera app doesn\'t work either, the camera needs repair.';
+
+  @override
+  String get cameraFaultNoPictureTitle => 'Camera shows no picture';
+
+  @override
+  String get cameraFaultNoPictureMessage =>
+      'The camera opened but sends no picture. This points to a fault in the phone\'s camera, not in the app. Restart the phone and try again. If the phone\'s own Camera app shows nothing either, the camera needs repair.';
+
+  @override
+  String get cameraFaultBlackTitle => 'Camera shows only black';
+
+  @override
+  String get cameraFaultBlackMessage =>
+      'Every picture from the camera is black. Clean the lens and make sure nothing covers it. If it stays black, the phone\'s camera is faulty and needs repair.';
+
+  @override
+  String get cameraFaultFrozenTitle => 'Camera picture is stuck';
+
+  @override
+  String get cameraFaultFrozenMessage =>
+      'The camera\'s picture isn\'t changing. This points to a fault in the phone\'s camera, not in the app. Restart the phone and try again. If the phone\'s own Camera app freezes too, the camera needs repair.';
+
+  @override
+  String get cameraFaultOpenSettings => 'Open settings';
 }

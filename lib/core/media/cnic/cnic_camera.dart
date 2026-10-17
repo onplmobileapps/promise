@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:camera/camera.dart';
+import 'package:face_kit/face_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
+import 'package:railway_hrms/core/media/camera/camera_fault_notice.dart';
 import 'package:railway_hrms/core/media/camera/camera_flash_switch.dart';
 import 'package:railway_hrms/core/media/camera/card_camera_window.dart';
 import 'package:railway_hrms/core/media/camera/card_frame.dart';
@@ -120,9 +122,28 @@ class _CnicCameraState extends State<CnicCamera> {
     if (!await _camera.open(context) && mounted) widget.onClose();
   }
 
+  /// The camera's fault, once it has been told in a dialog.
+  CameraFault? _faultTold;
+
   /// The camera opened, closed or switched its light.
   void _redraw() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    final fault = _camera.status == LiveCameraStatus.failed
+        ? _camera.fault
+        : null;
+    if (fault == null) {
+      _faultTold = null;
+    } else if (_faultTold == null) {
+      _faultTold = fault;
+      unawaited(_tellFault(fault));
+    }
+  }
+
+  /// Tells the user the phone's camera isn't working, and why, so it isn't
+  /// taken for the app; opens it again if they ask.
+  Future<void> _tellFault(CameraFault fault) async {
+    if (await showCameraFault(context, fault) && mounted) _camera.retry();
   }
 
   Future<void> _glance(CameraImage image) async {
@@ -398,7 +419,11 @@ class _CnicCameraState extends State<CnicCamera> {
   /// What the pill under the camera says, its tint, and its dot.
   (String, AppTone, Color) _hint(AppLocalizations l10n, AppColors colors) {
     if (_camera.status == LiveCameraStatus.failed) {
-      return (l10n.cnicCameraFailed, AppTone.danger, colors.danger);
+      return (
+        _camera.fault?.title(l10n) ?? l10n.cnicCameraFailed,
+        AppTone.danger,
+        colors.danger,
+      );
     }
     if (!_camera.isReady && _stage == _Stage.scanning) {
       return (l10n.cnicHintStarting, AppTone.neutral, colors.warningMark);

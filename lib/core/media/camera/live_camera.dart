@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:face_kit/face_kit.dart';
 import 'package:flutter/widgets.dart';
 import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/core/permissions/app_permission.dart';
@@ -15,7 +16,8 @@ enum LiveCameraStatus {
   /// Open, its preview showing.
   ready,
 
-  /// It couldn't be opened; [LiveCamera.retry] tries again.
+  /// It couldn't be opened, or stopped working; [LiveCamera.fault] says
+  /// why and [LiveCamera.retry] tries again.
   failed,
 
   /// The user didn't allow the camera.
@@ -57,6 +59,8 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
 
   CameraController? _controller;
   LiveCameraStatus _status = LiveCameraStatus.starting;
+  CameraFault? _fault;
+  late final CameraWatchdog _watchdog = CameraWatchdog(onFault: _failWith);
   int _session = 0;
   bool _torch = false;
   bool _hasTorch = true;
@@ -81,6 +85,9 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
   /// The camera while it is open; its preview, for [CameraPreview].
   CameraController? get controller => _controller;
   LiveCameraStatus get status => _status;
+
+  /// What is wrong with the phone's camera while [status] is failed.
+  CameraFault? get fault => _fault;
   bool get isReady =>
       _status == LiveCameraStatus.ready &&
       (_controller?.value.isInitialized ?? false);
@@ -134,6 +141,7 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> pauseFrames() async {
     _framesWanted = false;
     final camera = _controller;
+    _watchdog.stop();
     if (camera == null || !camera.value.isStreamingImages) return;
     try {
       await camera.stopImageStream();
@@ -154,9 +162,10 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
     if (!camera.value.isInitialized || camera.value.isStreamingImages) return;
     try {
       await camera.startImageStream(_frame);
+      _watchdog.start();
     } catch (error) {
       debugPrint('The camera failed to resume: $error');
-      _setStatus(LiveCameraStatus.failed);
+      _failWith(CameraHealth.faultOf(error) ?? CameraFault.broken);
     }
   }
 
@@ -168,6 +177,7 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
       throw CameraException('closed', 'The camera is closed');
     }
     _framesWanted = false;
+    _watchdog.stop();
     if (camera.value.isStreamingImages) await camera.stopImageStream();
     return camera.takePicture();
   }
@@ -209,6 +219,7 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     _awake = false;
+    _watchdog.stop();
     // An opening under way sees the app is away once the camera opens.
     if (_controller == null) return;
     _session++;
@@ -220,6 +231,7 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     _disposed = true;
+    _watchdog.stop();
     WidgetsBinding.instance.removeObserver(this);
     _session++;
     _release();
@@ -236,11 +248,12 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
     // A camera left from an opening that failed halfway.
     _release();
     _torch = false;
+    _fault = null;
     _setStatus(LiveCameraStatus.starting);
     CameraController? camera;
     try {
       await _releasing;
-      final cameras = await availableCameras();
+      final cameras = await availableCameras().timeout(CameraHealth.openWithin);
       if (cameras.isEmpty) throw CameraException('none', 'No camera');
       final back = cameras.firstWhere(
         (camera) => camera.lensDirection == CameraLensDirection.back,
@@ -254,26 +267,57 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
             ? ImageFormatGroup.bgra8888
             : ImageFormatGroup.nv21,
       );
-      await camera.initialize();
+      // A broken camera can hang here for good; it is given a while.
+      await camera.initialize().timeout(CameraHealth.openWithin);
       if (_disposed || session != _session || !_awake) {
         await camera.dispose();
         return;
       }
       _controller = camera;
+      camera.addListener(_onCameraValue);
       _minZoom = _maxZoom = _zoom = 1;
-      if (_framesWanted) await camera.startImageStream(_frame);
+      if (_framesWanted) {
+        await camera.startImageStream(_frame);
+        _watchdog.start();
+      }
       if (_disposed || session != _session) return;
       _setStatus(LiveCameraStatus.ready);
       // Set up while the camera already looks, so it opens without wait.
       unawaited(_aim(camera));
     } catch (error) {
       debugPrint('The camera failed to open: $error');
-      if (identical(_controller, camera)) _controller = null;
-      unawaited(camera?.dispose());
+      if (identical(_controller, camera)) {
+        _controller = null;
+        camera?.removeListener(_onCameraValue);
+      }
+      unawaited(camera?.dispose().catchError((Object _) {}));
       if (!_disposed && session == _session) {
+        _fault = CameraHealth.faultOf(error) ?? CameraFault.broken;
         _setStatus(LiveCameraStatus.failed);
       }
     }
+  }
+
+  /// A camera that reports an error while running, as one that fails or
+  /// is taken by another app does.
+  void _onCameraValue() {
+    final error = _controller?.value.errorDescription;
+    if (error == null) return;
+    final fault = CameraHealth.faultOfText(error);
+    if (fault != null) _failWith(fault);
+  }
+
+  /// The camera stopped working with [fault]: it is let go, to be opened
+  /// again by [retry].
+  void _failWith(CameraFault fault) {
+    if (_disposed || _status == LiveCameraStatus.failed) return;
+    debugPrint('The camera is at fault: ${fault.name}');
+    _watchdog.stop();
+    _session++;
+    _release();
+    _torch = false;
+    _fault = fault;
+    _setStatus(LiveCameraStatus.failed);
   }
 
   /// How far the camera can zoom; no flash, which would glare; focus and
@@ -304,6 +348,7 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _frame(CameraImage image) {
+    _watchdog.look(image);
     if (_reading || !_framesWanted || _disposed) return;
     final now = DateTime.now();
     if (now.difference(_lastFrame) < frameEvery) return;
@@ -322,6 +367,7 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
     final camera = _controller;
     _controller = null;
     if (camera == null) return;
+    camera.removeListener(_onCameraValue);
     _releasing = _releasing
         .then((_) async {
           try {

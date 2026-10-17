@@ -5937,6 +5937,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add each station on the run to check its signals, tracks and platform.'**
   String get inspFootplateNoStationsAbout;
+
+  /// Title when the app isn't allowed to use the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera not allowed'**
+  String get cameraFaultDeniedTitle;
+
+  /// Explains a camera permission that was refused.
+  ///
+  /// In en, this message translates to:
+  /// **'This app isn\'t allowed to use the camera. Allow it in the phone\'s settings, then try again.'**
+  String get cameraFaultDeniedMessage;
+
+  /// Title when the phone reports no camera.
+  ///
+  /// In en, this message translates to:
+  /// **'No camera found'**
+  String get cameraFaultMissingTitle;
+
+  /// Explains that the phone reports no camera, a hardware fault.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone isn\'t reporting a camera, so its camera may be damaged or disconnected. Check it in the phone\'s own Camera app. If it doesn\'t work there either, the phone needs repair.'**
+  String get cameraFaultMissingMessage;
+
+  /// Title when another app holds the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera in use'**
+  String get cameraFaultBusyTitle;
+
+  /// Explains that another app holds the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Another app is using the camera. Close apps that use it, such as video calls or scanners, then try again.'**
+  String get cameraFaultBusyMessage;
+
+  /// Title when the camera is disabled on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera turned off'**
+  String get cameraFaultDisabledTitle;
+
+  /// Explains that the camera is disabled by settings or policy.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera is turned off on this phone, by its settings or by your organisation. Turn it on, then try again.'**
+  String get cameraFaultDisabledMessage;
+
+  /// Title when Do Not Disturb keeps the camera shut.
+  ///
+  /// In en, this message translates to:
+  /// **'Do Not Disturb is on'**
+  String get cameraFaultDoNotDisturbTitle;
+
+  /// Explains that Do Not Disturb blocks the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone keeps the camera shut while Do Not Disturb is on. Turn it off, then try again.'**
+  String get cameraFaultDoNotDisturbMessage;
+
+  /// Title when the phone's camera fails to start, a hardware fault.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera not working'**
+  String get cameraFaultBrokenTitle;
+
+  /// Explains a camera that fails to start, most likely faulty hardware.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone\'s camera didn\'t start. This points to a fault in the phone\'s camera, not in the app. Restart the phone and try again. If the phone\'s own Camera app doesn\'t work either, the camera needs repair.'**
+  String get cameraFaultBrokenMessage;
+
+  /// Title when the camera opens but sends no picture.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera shows no picture'**
+  String get cameraFaultNoPictureTitle;
+
+  /// Explains a camera that sends no frames, most likely faulty hardware.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera opened but sends no picture. This points to a fault in the phone\'s camera, not in the app. Restart the phone and try again. If the phone\'s own Camera app shows nothing either, the camera needs repair.'**
+  String get cameraFaultNoPictureMessage;
+
+  /// Title when every picture from the camera is black.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera shows only black'**
+  String get cameraFaultBlackTitle;
+
+  /// Explains a camera whose pictures are all black.
+  ///
+  /// In en, this message translates to:
+  /// **'Every picture from the camera is black. Clean the lens and make sure nothing covers it. If it stays black, the phone\'s camera is faulty and needs repair.'**
+  String get cameraFaultBlackMessage;
+
+  /// Title when the camera's picture never changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera picture is stuck'**
+  String get cameraFaultFrozenTitle;
+
+  /// Explains a camera whose picture is frozen, most likely faulty hardware.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera\'s picture isn\'t changing. This points to a fault in the phone\'s camera, not in the app. Restart the phone and try again. If the phone\'s own Camera app freezes too, the camera needs repair.'**
+  String get cameraFaultFrozenMessage;
+
+  /// Opens the phone's settings for the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get cameraFaultOpenSettings;
 }
 
 class _AppLocalizationsDelegate

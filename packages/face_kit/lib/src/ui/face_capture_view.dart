@@ -10,6 +10,7 @@ import 'package:screen_brightness/screen_brightness.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../capture/camera_health.dart';
 import '../capture/face_capture_session.dart';
 import '../capture/phone_attitude.dart';
 import '../engine/face_engine.dart';
@@ -261,6 +262,11 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
   /// Fatal error (no camera) shown instead of the preview.
   String? _errorMessage;
 
+  /// What is wrong with the camera, once something is; the app tells the
+  /// person, so the phone's camera isn't mistaken for the app.
+  CameraFault? _fault;
+  late final CameraWatchdog _watchdog = CameraWatchdog(onFault: _fail);
+
   final ValueNotifier<_Status> _status = ValueNotifier(
     _Status(_Hint.none.message),
   );
@@ -301,6 +307,7 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
   @override
   void dispose() {
     _done = true;
+    _watchdog.stop();
     _coveredTimer?.cancel();
     _gyroSub?.cancel();
     _accelSub?.cancel();
@@ -309,15 +316,7 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
         (Object e) => debugPrint('⚠️ Brightness reset: $e'),
       ),
     );
-    final controller = _controller;
-    _controller = null;
-    if (controller != null) {
-      if (controller.value.isStreamingImages) {
-        controller.stopImageStream().whenComplete(controller.dispose);
-      } else {
-        controller.dispose();
-      }
-    }
+    _releaseCamera();
     _engine.release();
     _status.dispose();
     _scene.dispose();
@@ -328,18 +327,19 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
   // ─── Camera ───────────────────────────────────────────────────────────────
   Future<void> _initCamera() async {
     final sw = Stopwatch()..start();
+    CameraController? controller;
     try {
       final configured = FaceKit.config.cameras;
       final available = configured != null && configured.isNotEmpty
           ? configured
-          : await availableCameras();
-      if (available.isEmpty) return _fail('No camera available');
+          : await availableCameras().timeout(CameraHealth.openWithin);
+      if (available.isEmpty) return _fail(CameraFault.missing);
 
       final front = available.firstWhere(
         (c) => c.lensDirection == CameraLensDirection.front,
         orElse: () => available.first,
       );
-      final controller = CameraController(
+      controller = CameraController(
         front,
         // 720p: the face covers ~250+ px, so the 224 px upload image is a
         // downscale with real detail instead of a blurry upscale.
@@ -350,23 +350,65 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
             ? ImageFormatGroup.nv21
             : ImageFormatGroup.bgra8888,
       );
-      await controller.initialize();
-      if (!mounted) {
+      // A broken camera can hang here for good; it is given a while.
+      await controller.initialize().timeout(CameraHealth.openWithin);
+      if (!mounted || _fault != null) {
         await controller.dispose();
         return;
       }
       _controller = controller;
+      controller.addListener(_onCameraValue);
       await _meterOnFace(controller);
       await controller.startImageStream(_onFrame);
+      _watchdog.start();
       debugPrint(
         '📷 Camera streaming after ${sw.elapsedMilliseconds} ms '
         '(engine ready: ${_engine.isReady})',
       );
-      setState(() {});
+      if (mounted) setState(() {});
     } catch (e) {
       debugPrint('❌ Camera init error: $e');
-      _fail('Could not open the camera');
+      if (controller != null && !identical(controller, _controller)) {
+        unawaited(controller.dispose().catchError((Object _) {}));
+      }
+      _fail(CameraHealth.faultOf(e) ?? CameraFault.broken);
     }
+  }
+
+  /// A camera that reports an error while running, as a phone's camera
+  /// that fails or is taken by another app does.
+  void _onCameraValue() {
+    final controller = _controller;
+    final error = controller?.value.errorDescription;
+    if (error == null) return;
+    final fault = CameraHealth.faultOfText(error);
+    if (fault != null) _fail(fault);
+  }
+
+  /// Lets the camera go, its stream stopped first.
+  void _releaseCamera() {
+    final controller = _controller;
+    _controller = null;
+    if (controller == null) return;
+    controller.removeListener(_onCameraValue);
+    final stopped = controller.value.isStreamingImages
+        ? controller.stopImageStream().catchError((Object _) {})
+        : Future<void>.value();
+    unawaited(
+      stopped
+          .then((_) => controller.dispose())
+          .catchError((Object e) => debugPrint('⚠️ Camera close: $e')),
+    );
+  }
+
+  /// Opens the camera again after a fault.
+  void _retry() {
+    if (_fault == null || !mounted) return;
+    setState(() {
+      _fault = null;
+      _errorMessage = null;
+    });
+    _initCamera();
   }
 
   /// Points auto-exposure and autofocus at the middle of the frame, where
@@ -400,6 +442,7 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
 
   // ─── Frame loop ───────────────────────────────────────────────────────────
   Future<void> _onFrame(CameraImage image) async {
+    _watchdog.look(image);
     if (_detecting || _done || _controller == null) return;
     final now = DateTime.now();
     if (now.difference(_lastDetectAt) < _engine.config.detectInterval) return;
@@ -618,9 +661,25 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
     _refresh();
   }
 
-  void _fail(String message) {
-    if (!mounted) return;
-    setState(() => _errorMessage = message);
+  void _fail(CameraFault fault) {
+    if (!mounted || _fault != null) return;
+    debugPrint('❌ Camera fault: ${fault.name}');
+    _watchdog.stop();
+    _releaseCamera();
+    setState(() {
+      _fault = fault;
+      _errorMessage = switch (fault) {
+        CameraFault.denied => 'The camera is not allowed for this app',
+        CameraFault.missing => 'No camera found on this phone',
+        CameraFault.busy => 'Another app is using the camera',
+        CameraFault.disabled => 'The camera is turned off on this phone',
+        CameraFault.doNotDisturb => 'Turn off Do Not Disturb to use the camera',
+        CameraFault.broken ||
+        CameraFault.noPicture ||
+        CameraFault.black ||
+        CameraFault.frozen => "The phone's camera isn't working",
+      };
+    });
   }
 
   /// Shows a hint only after the same condition has persisted for
@@ -744,7 +803,17 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
           color: Colors.transparent,
           child: Center(
             child: _errorMessage != null
-                ? Text(_errorMessage!, textAlign: TextAlign.center)
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_errorMessage!, textAlign: TextAlign.center),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: _retry,
+                        child: const Text('Try again'),
+                      ),
+                    ],
+                  )
                 : const CircularProgressIndicator(),
           ),
         ),
@@ -841,7 +910,8 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
     final previewSize = controller?.value.previewSize;
     return FaceCaptureScene(
       mode: _session.mode,
-      failed: _errorMessage != null,
+      fault: _fault,
+      retry: _retry,
       status: _scene,
       close: () => Navigator.of(context).pop(),
       camera: !ready

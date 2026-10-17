@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
+import 'package:railway_hrms/core/media/camera/camera_fault_notice.dart';
 
 /// A check shown under the face camera: what was checked, and whether it
 /// has passed or is still running.
@@ -99,17 +100,22 @@ class FaceCaptureScreen extends StatelessWidget {
                           valueListenable: scene.status,
                           builder: (context, status, _) => Semantics(
                             liveRegion: true,
-                            child: AppPill(
-                              scene.failed
-                                  ? l10n.faceCameraFailed
-                                  : _hintText(l10n, status.hint),
-                              tone: status.capturing
-                                  ? AppTone.brand
-                                  : AppTone.neutral,
-                              dot: status.capturing
-                                  ? colors.success
-                                  : colors.warningMark,
-                            ),
+                            child: switch (scene.fault) {
+                              final fault? => AppPill(
+                                fault.title(l10n),
+                                tone: AppTone.danger,
+                                dot: colors.danger,
+                              ),
+                              null => AppPill(
+                                _hintText(l10n, status.hint),
+                                tone: status.capturing
+                                    ? AppTone.brand
+                                    : AppTone.neutral,
+                                dot: status.capturing
+                                    ? colors.success
+                                    : colors.warningMark,
+                              ),
+                            },
                           ),
                         ),
                       ),
@@ -165,6 +171,7 @@ class _Viewport extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final fault = scene.fault;
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: AppRadius.borderViewport,
@@ -181,31 +188,41 @@ class _Viewport extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: AppRadius.borderViewport,
-        child: ExcludeSemantics(
-          child: ValueListenableBuilder<FaceCaptureStatus>(
-            valueListenable: scene.status,
-            // Only the face shows: the camera is cut to the oval, and the
-            // window around it stays the design's quiet stone.
-            child: ClipPath(
-              clipper: const _OvalClip(),
-              child: SizedBox.expand(child: scene.camera),
-            ),
-            builder: (context, status, camera) => CustomPaint(
-              painter: _BackdropPainter(
-                lines: colors.pattern,
-                glow: colors.surfaceRaised.withValues(alpha: 0.5),
+        // A camera that doesn't work says so where its picture would be,
+        // so the phone's camera isn't taken for the app.
+        child: fault != null
+            ? Center(
+                child: CameraFaultNotice(fault: fault, onRetry: scene.retry),
+              )
+            : ExcludeSemantics(
+                child: ValueListenableBuilder<FaceCaptureStatus>(
+                  valueListenable: scene.status,
+                  // Only the face shows: the camera is cut to the oval, and the
+                  // window around it stays the design's quiet stone.
+                  child: ClipPath(
+                    clipper: const _OvalClip(),
+                    child: SizedBox.expand(child: scene.camera),
+                  ),
+                  builder: (context, status, camera) => CustomPaint(
+                    painter: _BackdropPainter(
+                      lines: colors.pattern,
+                      glow: colors.surfaceRaised.withValues(alpha: 0.5),
+                    ),
+                    foregroundPainter: _FaceGuidePainter(
+                      progress: status.progress,
+                      ring: [
+                        colors.iconFillActive,
+                        colors.success,
+                        colors.gold,
+                      ],
+                      done: colors.success,
+                      corners: colors.success,
+                      rim: colors.surfaceRaised,
+                    ),
+                    child: camera,
+                  ),
+                ),
               ),
-              foregroundPainter: _FaceGuidePainter(
-                progress: status.progress,
-                ring: [colors.iconFillActive, colors.success, colors.gold],
-                done: colors.success,
-                corners: colors.success,
-                rim: colors.surfaceRaised,
-              ),
-              child: camera,
-            ),
-          ),
-        ),
       ),
     );
   }

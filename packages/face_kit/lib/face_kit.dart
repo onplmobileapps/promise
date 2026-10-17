@@ -7,6 +7,8 @@
 /// ```
 library;
 
+export 'src/capture/camera_health.dart'
+    show CameraFault, CameraHealth, CameraWatchdog;
 export 'src/capture/face_capture_session.dart'
     show
         FaceCaptureFailedResult,

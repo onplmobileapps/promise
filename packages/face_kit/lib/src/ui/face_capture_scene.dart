@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import '../capture/camera_health.dart';
 import '../face_kit.dart';
 
 /// What the camera needs from the person right now. The app words it.
@@ -56,7 +57,8 @@ class FaceCaptureScene {
     required this.camera,
     required this.status,
     required this.close,
-    this.failed = false,
+    this.fault,
+    this.retry,
   });
 
   final CaptureMode mode;
@@ -67,8 +69,15 @@ class FaceCaptureScene {
   final ValueListenable<FaceCaptureStatus> status;
   final VoidCallback close;
 
-  /// The camera couldn't be opened.
-  final bool failed;
+  /// What is wrong with the phone's camera, when it couldn't be opened or
+  /// stopped working; null while it works.
+  final CameraFault? fault;
+
+  /// Opens the camera again after a [fault].
+  final VoidCallback? retry;
+
+  /// The camera couldn't be opened, or stopped working.
+  bool get failed => fault != null;
 }
 
 /// Builds the capture screen around a [FaceCaptureScene].

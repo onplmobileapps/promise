@@ -1,9 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
+import 'package:face_kit/face_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
-import 'package:railway_hrms/core/l10n/l10n.dart';
+import 'package:railway_hrms/core/media/camera/camera_fault_notice.dart';
 import 'package:railway_hrms/core/media/camera/card_frame.dart';
 import 'package:railway_hrms/core/media/camera/live_camera.dart';
 
@@ -70,7 +71,6 @@ class _CardCameraWindowState extends State<CardCameraWindow>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final colors = context.colors;
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -125,15 +125,16 @@ class _CardCameraWindowState extends State<CardCameraWindow>
                       Positioned.fromRect(
                         rect: frame,
                         child: Center(
-                          child: camera.status == LiveCameraStatus.failed
-                              ? AppButton(
-                                  label: l10n.actionRetry,
-                                  variant: AppButtonVariant.secondary,
-                                  size: AppButtonSize.small,
-                                  expand: false,
-                                  onPressed: camera.retry,
-                                )
-                              : const CircularProgressIndicator(),
+                          child: switch (camera.status) {
+                            // Says what is wrong with the phone's camera,
+                            // so it isn't taken for the app.
+                            LiveCameraStatus.failed => CameraFaultNotice(
+                              fault: camera.fault ?? CameraFault.broken,
+                              onRetry: camera.retry,
+                              compact: true,
+                            ),
+                            _ => const CircularProgressIndicator(),
+                          },
                         ),
                       ),
                     IgnorePointer(
