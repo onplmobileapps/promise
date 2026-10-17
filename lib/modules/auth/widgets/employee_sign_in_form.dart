@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/di/service_locator.dart';
@@ -159,7 +158,6 @@ class _EmployeeSignInFormState extends State<EmployeeSignInForm>
       widget.onSignedIn();
     } else if (state is AuthError) {
       final l10n = context.l10n;
-      HapticFeedback.heavyImpact();
       if (!MediaQuery.disableAnimationsOf(context)) _shake.forward(from: 0);
       showAppDialog(
         context: context,

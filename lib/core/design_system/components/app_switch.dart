@@ -3,6 +3,7 @@ import 'package:railway_hrms/core/design_system/components/app_button.dart';
 import 'package:railway_hrms/core/design_system/components/app_liquid_glass.dart';
 import 'package:railway_hrms/core/design_system/components/inset_shadow_painter.dart';
 import 'package:railway_hrms/core/design_system/components/liquid_glass.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
@@ -182,7 +183,12 @@ class _AppSwitchState extends State<AppSwitch> with TickerProviderStateMixin {
       child: Material(
         type: MaterialType.transparency,
         child: InkResponse(
-          onTap: enabled ? () => onChanged(!value) : null,
+          onTap: enabled
+              ? () {
+                  AppHaptics.select();
+                  onChanged(!value);
+                }
+              : null,
           radius: AppSizes.minTapTarget / 2,
           borderRadius: AppRadius.borderPill,
           child: ConstrainedBox(

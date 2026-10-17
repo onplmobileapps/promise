@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/components/app_pressable.dart';
 import 'package:railway_hrms/core/design_system/components/liquid_glass.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_fonts.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
@@ -94,6 +95,7 @@ class _StatTile<T> extends StatelessWidget {
         child: AppPressable(
           label: '${option.label} ${option.count}',
           onPressed: onTap,
+          haptic: AppHaptic.select,
           builder: (context, pressed, focused) => AnimatedOpacity(
             duration: AppMotion.short,
             opacity: dimmed ? 0.5 : 1,

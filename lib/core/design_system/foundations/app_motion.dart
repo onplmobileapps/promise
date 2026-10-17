@@ -85,6 +85,14 @@ abstract final class AppMotion {
   /// Quick to start, gentle to land: for things coming on screen.
   static const Curve enter = Curves.easeOutCubic;
 
+  /// How far behind the one above it each of a page's first cards starts
+  /// to rise, and how many are held back so; the rest rise with the last.
+  static const Duration entranceStep = Duration(milliseconds: 45);
+  static const int entranceStaggered = 6;
+
+  /// How long a dialog's badge takes to swell into place.
+  static const Duration badge = Duration(milliseconds: 420);
+
   /// The sign-in screen's pieces rising into place, one after another.
   static const Duration loginEntrance = Duration(milliseconds: 900);
 

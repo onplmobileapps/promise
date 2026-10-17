@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/modules/inspection/shared/proforma/proforma.dart';
@@ -49,7 +48,6 @@ class _ProformaSectionBodyState extends State<ProformaSectionBody> {
 
   void _markRest() {
     final rest = _unanswered;
-    HapticFeedback.mediumImpact();
     for (final item in rest) {
       widget.answers.set(_section.key, item, 'status', item.options.first.code);
     }
@@ -233,10 +231,7 @@ class _ProformaItemTileState extends State<ProformaItemTile> {
               ),
           ],
           selected: status,
-          onSelected: (code) {
-            HapticFeedback.selectionClick();
-            set('status', code);
-          },
+          onSelected: (code) => set('status', code),
         ),
       for (final check in item.checks)
         InspectionChoiceInput(

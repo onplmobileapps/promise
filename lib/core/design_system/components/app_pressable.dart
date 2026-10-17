@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 
 /// Builds a face for its state: whether it is held down, and whether it has
 /// the keyboard's focus.
@@ -18,11 +19,15 @@ class AppPressable extends StatefulWidget {
     required this.label,
     required this.onPressed,
     required this.builder,
+    this.haptic = AppHaptic.press,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final PressableBuilder builder;
+
+  /// The tap of the phone a press gives.
+  final AppHaptic haptic;
 
   @override
   State<AppPressable> createState() => _AppPressableState();
@@ -33,6 +38,11 @@ class _AppPressableState extends State<AppPressable> {
   bool _focused = false;
 
   bool get _enabled => widget.onPressed != null;
+
+  void _press() {
+    AppHaptics.of(widget.haptic);
+    widget.onPressed?.call();
+  }
 
   void _setPressed(bool value) {
     if (_pressed != value && mounted) setState(() => _pressed = value);
@@ -58,7 +68,7 @@ class _AppPressableState extends State<AppPressable> {
         onTapDown: _enabled ? (_) => _setPressed(true) : null,
         onTapUp: _enabled ? (_) => _setPressed(false) : null,
         onTapCancel: () => _setPressed(false),
-        onTap: widget.onPressed,
+        onTap: _enabled ? _press : null,
         child: Semantics(
           button: true,
           enabled: _enabled,

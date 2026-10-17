@@ -278,6 +278,9 @@ abstract final class AppSizes {
 
   // HRMS.
   static const double pageWash = 320;
+
+  /// How far a page's cards rise as they come on screen.
+  static const double entranceRise = 14;
   static const double pagePattern = 300;
   static const double ringGauge = 76;
   static const double ringGaugeStroke = 8;

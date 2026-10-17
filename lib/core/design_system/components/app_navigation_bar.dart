@@ -11,6 +11,7 @@ import 'package:railway_hrms/core/design_system/components/app_pressable.dart';
 import 'package:railway_hrms/core/design_system/components/liquid_glass.dart';
 import 'package:railway_hrms/core/design_system/components/outer_shadow_painter.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_fonts.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_performance.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
@@ -709,6 +710,7 @@ class _NavButton extends StatelessWidget {
       child: AppPressable(
         label: item.label,
         onPressed: onTap,
+        haptic: AppHaptic.select,
         builder: (context, pressed, focused) => Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_fonts.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
@@ -97,7 +98,12 @@ class AppListRow extends StatelessWidget {
             child: Ink(color: tint, child: child),
           ),
           child: InkWell(
-            onTap: onTap,
+            onTap: onTap == null
+                ? null
+                : () {
+                    AppHaptics.select();
+                    onTap!();
+                  },
             child: ConstrainedBox(
               constraints: const BoxConstraints(
                 minHeight: AppSizes.listRowMinHeight,

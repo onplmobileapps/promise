@@ -31,6 +31,7 @@ export 'package:railway_hrms/core/design_system/components/app_liquid_glass.dart
 export 'package:railway_hrms/core/design_system/components/app_list.dart';
 export 'package:railway_hrms/core/design_system/components/app_loader.dart';
 export 'package:railway_hrms/core/design_system/components/app_logo.dart';
+export 'package:railway_hrms/core/design_system/components/app_lottie_mark.dart';
 export 'package:railway_hrms/core/design_system/components/app_medallion.dart';
 export 'package:railway_hrms/core/design_system/components/app_module_card.dart';
 export 'package:railway_hrms/core/design_system/components/app_month_calendar.dart';
@@ -67,6 +68,7 @@ export 'package:railway_hrms/core/design_system/components/outer_shadow_painter.
 export 'package:railway_hrms/core/design_system/foundations/app_brand_text.dart';
 export 'package:railway_hrms/core/design_system/foundations/app_breakpoints.dart';
 export 'package:railway_hrms/core/design_system/foundations/app_fonts.dart';
+export 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 export 'package:railway_hrms/core/design_system/foundations/app_loop.dart';
 export 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 export 'package:railway_hrms/core/design_system/foundations/app_performance.dart';

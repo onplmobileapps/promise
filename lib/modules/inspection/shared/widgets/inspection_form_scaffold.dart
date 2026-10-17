@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/modules/inspection/shared/report/inspection_report.dart';
@@ -143,7 +142,6 @@ class _InspectionFormScaffoldState extends State<InspectionFormScaffold> {
   void _go(int to) {
     if (to == _step || to < 0 || to >= widget.steps.length) return;
     FocusScope.of(context).unfocus();
-    HapticFeedback.lightImpact();
     setState(() {
       _forward = to > _step;
       _step = to;

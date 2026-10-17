@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/components/app_button.dart';
+import 'package:railway_hrms/core/design_system/components/app_lottie_mark.dart';
 import 'package:railway_hrms/core/design_system/components/inset_shadow_painter.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_palette.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
@@ -44,7 +47,9 @@ Future<void> showAppMessage(
 /// Shows the app's one dialog for every message, error and confirmation.
 ///
 /// Resolves to true when the primary action was chosen, false for the
-/// secondary one, and null when dismissed.
+/// secondary one, and null when dismissed. The phone answers its [tone]
+/// with a tap: a firm one for an error, a light one for a warning or a
+/// question, none for a note.
 Future<bool?> showAppDialog({
   required BuildContext context,
   required AppDialogTone tone,
@@ -56,6 +61,16 @@ Future<bool?> showAppDialog({
   AppGlyph? glyph,
   bool barrierDismissible = true,
 }) {
+  switch (tone) {
+    case AppDialogTone.success:
+      AppHaptics.success();
+    case AppDialogTone.error:
+      AppHaptics.error();
+    case AppDialogTone.warning || AppDialogTone.confirm:
+      AppHaptics.warning();
+    case AppDialogTone.info:
+      break;
+  }
   return showDialog<bool>(
     context: context,
     barrierDismissible: barrierDismissible,
@@ -108,6 +123,14 @@ class AppDialog extends StatelessWidget {
       AppDialogTone.info => (spheres.sky, AppGlyphs.info),
       AppDialogTone.confirm => (spheres.coral, AppGlyphs.circleHelp),
     };
+    // A tone's own check or cross is drawn on; any other mark stands.
+    final drawn = glyph != null
+        ? null
+        : switch (tone) {
+            AppDialogTone.success => AppLottie.check,
+            AppDialogTone.error => AppLottie.cross,
+            _ => null,
+          };
     return Dialog(
       backgroundColor: AppPalette.transparent,
       elevation: 0,
@@ -152,6 +175,7 @@ class AppDialog extends StatelessWidget {
                           child: _SphereBadge(
                             sphere: sphere,
                             mark: glyph ?? mark,
+                            drawn: drawn,
                           ),
                         ),
                       ),
@@ -214,43 +238,106 @@ class AppDialog extends StatelessWidget {
 }
 
 /// A 3D sphere lit from the upper left, ringed by a soft halo, with [mark]
-/// on it.
-class _SphereBadge extends StatelessWidget {
-  const _SphereBadge({required this.sphere, required this.mark});
+/// on it. It swells into place as the dialog opens, its halo spreading
+/// after it, and [drawn], when given, draws the mark on stroke by stroke.
+class _SphereBadge extends StatefulWidget {
+  const _SphereBadge({required this.sphere, required this.mark, this.drawn});
 
   final SphereColors sphere;
   final AppGlyph mark;
+  final AppLottie? drawn;
 
+  @override
+  State<_SphereBadge> createState() => _SphereBadgeState();
+}
+
+class _SphereBadgeState extends State<_SphereBadge>
+    with SingleTickerProviderStateMixin {
   /// Where the light comes from, and where it fades.
   static const Alignment _light = Alignment(-0.3, -0.44);
   static const List<double> _stops = [0, 0.5, 1];
 
+  /// How small the badge starts, and the shares of its arrival the sphere
+  /// swells, the halo spreads and a standing mark fades in over.
+  static const double _from = 0.72;
+  static const Interval _swell = Interval(0, 0.8, curve: AppMotion.spring);
+  static const Interval _spread = Interval(0.25, 1, curve: AppMotion.enter);
+  static const Interval _show = Interval(0.35, 0.85, curve: AppMotion.enter);
+
+  late final AnimationController _arrival = AnimationController(
+    vsync: this,
+    duration: AppMotion.badge,
+  );
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _arrival.value = 1;
+    } else {
+      _arrival.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _arrival.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          center: _light,
-          colors: [sphere.highlight, sphere.body, sphere.shade],
-          stops: _stops,
-        ),
-        boxShadow: [
-          BoxShadow(color: sphere.halo, spreadRadius: AppSizes.dialogHalo),
-          ...context.elevations.sphere,
-        ],
-      ),
-      child: CustomPaint(
-        painter: InsetShadowPainter(shadows: context.elevations.sphereInset),
-        child: SizedBox.square(
-          dimension: AppSizes.dialogBadge,
-          child: Center(
+    final sphere = widget.sphere;
+    final drawn = widget.drawn;
+    final elevations = context.elevations;
+    final mark = drawn != null
+        ? AppLottieMark(drawn, color: sphere.mark, size: AppSizes.dialogMark)
+        : FadeTransition(
+            opacity: _arrival.drive(CurveTween(curve: _show)),
             child: AppGlyphIcon(
-              mark,
+              widget.mark,
               size: AppSizes.dialogMark,
               color: sphere.mark,
             ),
+          );
+    return AnimatedBuilder(
+      animation: _arrival,
+      builder: (context, child) {
+        final t = _arrival.value;
+        final swell = _swell.transform(t);
+        return Opacity(
+          opacity: Curves.easeOut.transform(t.clamp(0, 0.4) / 0.4),
+          child: Transform.scale(
+            scale: _from + (1 - _from) * swell,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  center: _light,
+                  colors: [sphere.highlight, sphere.body, sphere.shade],
+                  stops: _stops,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: sphere.halo,
+                    spreadRadius: AppSizes.dialogHalo * _spread.transform(t),
+                  ),
+                  ...elevations.sphere,
+                ],
+              ),
+              child: child,
+            ),
           ),
+        );
+      },
+      child: CustomPaint(
+        painter: InsetShadowPainter(shadows: elevations.sphereInset),
+        child: SizedBox.square(
+          dimension: AppSizes.dialogBadge,
+          child: Center(child: mark),
         ),
       ),
     );

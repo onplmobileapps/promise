@@ -55,15 +55,23 @@ class _AppSearchFieldState extends State<AppSearchField> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [colors.surfaceSunken, colors.surfaceSunkenEnd],
+          colors: [
+            colors.surfaceSunken,
+            Color.lerp(colors.surfaceSunken, colors.surfaceSunkenEnd, 0.35)!,
+          ],
         ),
         borderRadius: AppRadius.borderLg,
-        border: Border.all(color: colors.outline),
+        // The same whole edge as a text field's, clear on a white card.
+        border: Border.all(
+          color: Color.lerp(colors.outline, colors.outlineStrong, 0.6)!,
+        ),
       ),
       child: CustomPaint(
+        // Only the shade under the top edge; a light along the bottom
+        // would rub the bottom edge out.
         foregroundPainter: InsetShadowPainter(
           shape: _shape,
-          shadows: context.elevations.recessInset,
+          shadows: [context.elevations.recessInset.first],
         ),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: AppSizes.searchField),

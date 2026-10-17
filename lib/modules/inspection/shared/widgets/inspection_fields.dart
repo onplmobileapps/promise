@@ -122,7 +122,6 @@ class InspectionChoiceInput extends StatelessWidget {
       selected: value,
       onSelected: (picked) {
         if (picked == value) return;
-        HapticFeedback.selectionClick();
         onChanged(picked);
       },
     ),
@@ -494,10 +493,7 @@ class InspectionCountInput extends StatelessWidget {
       max: max,
       decreaseLabel: context.l10n.inspFormDecrease,
       increaseLabel: context.l10n.inspFormIncrease,
-      onChanged: (count) {
-        HapticFeedback.selectionClick();
-        onChanged(count);
-      },
+      onChanged: onChanged,
     ),
   );
 }
@@ -840,7 +836,6 @@ class InspectionMultiChoiceInput extends StatelessWidget {
       ],
       selected: values.toSet(),
       onToggled: (option) {
-        HapticFeedback.selectionClick();
         onChanged(
           values.contains(option)
               ? [...values.where((v) => v != option)]

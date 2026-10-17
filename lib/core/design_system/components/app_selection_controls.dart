@@ -3,6 +3,7 @@ import 'package:railway_hrms/core/design_system/components/app_button.dart';
 import 'package:railway_hrms/core/design_system/components/inset_shadow_painter.dart';
 import 'package:railway_hrms/core/design_system/components/liquid_glass.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_fonts.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
@@ -139,7 +140,10 @@ class AppCheckbox extends StatelessWidget {
       checked: value,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => onChanged(!value),
+        onTap: () {
+          AppHaptics.select();
+          onChanged(!value);
+        },
         child: SizedBox.square(
           dimension: AppSizes.minTouch,
           child: Center(child: box),
@@ -225,7 +229,12 @@ class AppCountStepper extends StatelessWidget {
       label: label,
       enabled: to != null,
       child: InkResponse(
-        onTap: to == null ? null : () => onChanged(to),
+        onTap: to == null
+            ? null
+            : () {
+                AppHaptics.select();
+                onChanged(to);
+              },
         radius: AppSizes.stepperKey / 2,
         child: SizedBox.square(
           dimension: AppSizes.stepperKey,
@@ -313,7 +322,10 @@ class AppChoiceChips<T> extends StatelessWidget {
             label: choice.label,
             tone: choice.tone,
             selected: choice.value == selected,
-            onTap: () => onSelected(choice.value),
+            onTap: () {
+              AppHaptics.select();
+              onSelected(choice.value);
+            },
           ),
       ],
     );
@@ -349,7 +361,10 @@ class AppMultiChoiceChips<T> extends StatelessWidget {
               label: choice.label,
               tone: choice.tone,
               selected: selected.contains(choice.value),
-              onTap: () => onToggled(choice.value),
+              onTap: () {
+                AppHaptics.select();
+                onToggled(choice.value);
+              },
             ),
           ),
       ],

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/components/app_liquid_glass.dart';
 import 'package:railway_hrms/core/design_system/components/liquid_glass.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_spacing.dart';
@@ -83,6 +84,7 @@ class AppSegmentedTabs extends StatelessWidget {
             );
           },
           child: TabBar(
+            onTap: (_) => AppHaptics.select(),
             controller: controller,
             // Icons alone share the width without the labels' padding.
             labelPadding: segments.every((segment) => segment.iconOnly)

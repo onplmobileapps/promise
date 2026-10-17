@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/components/app_ink_surface.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
 import 'package:railway_hrms/core/design_system/theme/theme_context.dart';
@@ -31,7 +32,12 @@ class AppTileButton extends StatelessWidget {
     final button = Tooltip(
       message: tooltip,
       child: AppInkSurface(
-        onTap: onPressed,
+        onTap: onPressed == null
+            ? null
+            : () {
+                AppHaptics.press();
+                onPressed!();
+              },
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,

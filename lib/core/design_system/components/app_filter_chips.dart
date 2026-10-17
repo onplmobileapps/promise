@@ -3,6 +3,7 @@ import 'package:railway_hrms/core/design_system/components/app_pressable.dart';
 import 'package:railway_hrms/core/design_system/components/inset_shadow_painter.dart';
 import 'package:railway_hrms/core/design_system/components/liquid_glass.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_fonts.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
@@ -145,6 +146,7 @@ class _FilterChip extends StatelessWidget {
         child: AppPressable(
           label: label,
           onPressed: onTap,
+          haptic: AppHaptic.select,
           builder: (context, pressed, focused) => Padding(
             // A full tap target around the chip's face.
             padding: const EdgeInsets.symmetric(

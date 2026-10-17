@@ -4,6 +4,7 @@ import 'package:railway_hrms/core/design_system/components/app_field_frame.dart'
 import 'package:railway_hrms/core/design_system/components/app_grid.dart';
 import 'package:railway_hrms/core/design_system/components/app_sheet.dart';
 import 'package:railway_hrms/core/design_system/components/liquid_glass.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
@@ -256,7 +257,10 @@ class AppOptionsGrid<T> extends StatelessWidget {
                 AppSizes.optionCardMark,
               ),
               selected: option == selected,
-              onTap: () => onSelected(option),
+              onTap: () {
+                AppHaptics.select();
+                onSelected(option);
+              },
             ),
         ],
       ),
@@ -418,7 +422,10 @@ class AppOptionsList<T> extends StatelessWidget {
                   color: colors.iconAccent,
                 )
               : null,
-          onTap: () => onSelected(option),
+          onTap: () {
+            AppHaptics.select();
+            onSelected(option);
+          },
         );
       },
     );
