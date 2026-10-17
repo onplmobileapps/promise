@@ -133,21 +133,6 @@ FieldTone classifyValue(String value) {
   return FieldTone.neutral;
 }
 
-const List<String> kStations = [
-  'Lahore Junction',
-  'Rawalpindi',
-  'Multan Cantt',
-  'Faisalabad',
-  'Sahiwal',
-  'Sheikhupura',
-  'Gujranwala',
-  'Wazirabad',
-  'Sialkot',
-  'Kot Radha Kishan',
-  'Raiwind Junction',
-  'Other',
-];
-
 const List<String> kSignalNames = [
   'Up OHS',
   'UP HS',

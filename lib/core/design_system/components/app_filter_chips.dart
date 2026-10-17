@@ -3,6 +3,7 @@ import 'package:railway_hrms/core/design_system/components/app_pressable.dart';
 import 'package:railway_hrms/core/design_system/components/inset_shadow_painter.dart';
 import 'package:railway_hrms/core/design_system/components/liquid_glass.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_fonts.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_radius.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_spacing.dart';
@@ -59,16 +60,58 @@ class AppFilterChips<T> extends StatelessWidget {
         children: [
           for (var i = 0; i < options.length; i++) ...[
             if (i > 0) AppSpacing.gapSm,
-            _FilterChip(
-              option: options[i],
-              selected: options[i].value == selected,
-              onTap: () => onSelected(options[i].value),
+            _KeepInView(
+              shown: options[i].value == selected,
+              child: _FilterChip(
+                option: options[i],
+                selected: options[i].value == selected,
+                onTap: () => onSelected(options[i].value),
+              ),
             ),
           ],
         ],
       ),
     );
   }
+}
+
+/// Scrolls the chosen chip into view when it is chosen, as when a step is
+/// moved on to from elsewhere.
+class _KeepInView extends StatefulWidget {
+  const _KeepInView({required this.shown, required this.child});
+
+  final bool shown;
+  final Widget child;
+
+  @override
+  State<_KeepInView> createState() => _KeepInViewState();
+}
+
+class _KeepInViewState extends State<_KeepInView> {
+  @override
+  void didUpdateWidget(_KeepInView old) {
+    super.didUpdateWidget(old);
+    if (widget.shown && !old.shown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final chip = context.findRenderObject();
+        if (chip == null) return;
+        // Only the row slides; the page around it stays where it is.
+        Scrollable.maybeOf(
+          context,
+          axis: Axis.horizontal,
+        )?.position.ensureVisible(
+          chip,
+          alignment: 0.5,
+          duration: AppMotion.medium,
+          curve: AppMotion.enter,
+        );
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _FilterChip extends StatelessWidget {

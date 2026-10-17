@@ -2523,4 +2523,163 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inspPdfFindings => 'Findings';
+
+  @override
+  String get inspFormNext => 'Next';
+
+  @override
+  String get inspFormReview => 'Review and submit';
+
+  @override
+  String get inspFormSelect => 'Select';
+
+  @override
+  String get inspFormSelectDate => 'Select date';
+
+  @override
+  String get inspFormPickDate => 'Pick a date';
+
+  @override
+  String get inspFormDone => 'Done';
+
+  @override
+  String get inspFormRemarkLabel => 'Remarks';
+
+  @override
+  String get inspFormRemarkHint => 'Describe what is wrong';
+
+  @override
+  String inspFormOutOfRange(String hint) {
+    return 'Outside the expected range: $hint';
+  }
+
+  @override
+  String inspFormLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count questions left',
+      one: '1 question left',
+      zero: 'All answered',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inspFormProgress(int answered, int total) {
+    return '$answered of $total answered';
+  }
+
+  @override
+  String inspFormStepOf(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get inspFormLeaveTitle => 'Leave this inspection?';
+
+  @override
+  String get inspFormLeaveDraft =>
+      'Your answers are kept as a draft on this phone, to finish later.';
+
+  @override
+  String get inspFormLeaveLost => 'What you\'ve filled in will be lost.';
+
+  @override
+  String get inspFormLeave => 'Leave';
+
+  @override
+  String get inspFormStay => 'Keep going';
+
+  @override
+  String get inspFormBlankTitle => 'Some questions are blank';
+
+  @override
+  String inspFormBlankMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count questions are still blank.',
+      one: '1 question is still blank.',
+    );
+    return '$_temp0 Answer them first, or review the report with them left blank.';
+  }
+
+  @override
+  String get inspFormShowBlank => 'Show me';
+
+  @override
+  String get inspFormReviewAnyway => 'Review anyway';
+
+  @override
+  String get inspFormRequiredTitle => 'Fill these in first';
+
+  @override
+  String get inspFormDecrease => 'Fewer';
+
+  @override
+  String get inspFormIncrease => 'More';
+
+  @override
+  String inspFormAddRow(String item) {
+    return 'Add $item';
+  }
+
+  @override
+  String get inspFormRemoveRow => 'Remove';
+
+  @override
+  String get inspFormRemoveRowTitle => 'Remove this entry?';
+
+  @override
+  String get inspFormTotal => 'Total';
+
+  @override
+  String get inspFormDetails => 'Details';
+
+  @override
+  String get inspFormStation => 'Station';
+
+  @override
+  String get inspFormStationHint => 'Choose the station';
+
+  @override
+  String get inspFormDate => 'Date of inspection';
+
+  @override
+  String get inspFormStationsFailed => 'Your stations couldn\'t be loaded.';
+
+  @override
+  String get inspFormNoStations => 'No stations are assigned to you yet.';
+
+  @override
+  String get inspFormSaved => 'Saved on this phone';
+
+  @override
+  String get inspFormPhotos => 'Photos';
+
+  @override
+  String get inspFormAddPhoto => 'Add photo';
+
+  @override
+  String get inspFormNote => 'Note';
+
+  @override
+  String get inspFormNoteHint => 'Anything else to record';
+
+  @override
+  String get inspFormAllGood => 'All satisfactory';
+
+  @override
+  String get inspFormNoExtinguishers =>
+      'Set how many extinguishers there are to add a filling date for each.';
+
+  @override
+  String get inspFormRowEmpty => 'Nothing filled in yet';
+
+  @override
+  String get inspStationTitle => 'Station inspection';
+
+  @override
+  String get inspStationSubtitle => 'Signal and telecom';
 }

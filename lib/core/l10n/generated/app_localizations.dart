@@ -4599,6 +4599,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Findings'**
   String get inspPdfFindings;
+
+  /// Moves an inspection form on to its next step.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get inspFormNext;
+
+  /// On an inspection form's last step: opens the report to check and submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and submit'**
+  String get inspFormReview;
+
+  /// What an inspection form's choice field says before anything is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get inspFormSelect;
+
+  /// What an inspection form's date field says before a day is picked.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get inspFormSelectDate;
+
+  /// Title of the sheet that picks a date on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get inspFormPickDate;
+
+  /// Takes the date picked on an inspection form's date sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get inspFormDone;
+
+  /// Label of the note asked for when an inspection answer reports a fault.
+  ///
+  /// In en, this message translates to:
+  /// **'Remarks'**
+  String get inspFormRemarkLabel;
+
+  /// Hint in the note asked for when an inspection answer reports a fault.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe what is wrong'**
+  String get inspFormRemarkHint;
+
+  /// Warns that a reading on an inspection form is out of its normal range.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside the expected range: {hint}'**
+  String inspFormOutOfRange(String hint);
+
+  /// How many questions on a step of an inspection are still blank.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{All answered} =1{1 question left} other{{count} questions left}}'**
+  String inspFormLeft(int count);
+
+  /// How much of an inspection form is filled in.
+  ///
+  /// In en, this message translates to:
+  /// **'{answered} of {total} answered'**
+  String inspFormProgress(int answered, int total);
+
+  /// Which step of an inspection form is open.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String inspFormStepOf(int current, int total);
+
+  /// Title of the dialog shown when leaving an inspection form part-way.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this inspection?'**
+  String get inspFormLeaveTitle;
+
+  /// Says leaving an inspection form keeps its answers as a draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Your answers are kept as a draft on this phone, to finish later.'**
+  String get inspFormLeaveDraft;
+
+  /// Says leaving an inspection form loses its answers.
+  ///
+  /// In en, this message translates to:
+  /// **'What you\'ve filled in will be lost.'**
+  String get inspFormLeaveLost;
+
+  /// Leaves an inspection form part-way.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get inspFormLeave;
+
+  /// Stays on an inspection form instead of leaving it.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going'**
+  String get inspFormStay;
+
+  /// Title of the dialog shown when reviewing an inspection with questions unanswered.
+  ///
+  /// In en, this message translates to:
+  /// **'Some questions are blank'**
+  String get inspFormBlankTitle;
+
+  /// Explains that an inspection is being reviewed with blank questions.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 question is still blank.} other{{count} questions are still blank.}} Answer them first, or review the report with them left blank.'**
+  String inspFormBlankMessage(int count);
+
+  /// Takes the inspector to the first blank question of a form.
+  ///
+  /// In en, this message translates to:
+  /// **'Show me'**
+  String get inspFormShowBlank;
+
+  /// Opens an inspection's report although questions are blank.
+  ///
+  /// In en, this message translates to:
+  /// **'Review anyway'**
+  String get inspFormReviewAnyway;
+
+  /// Title of the dialog listing what an inspection needs before its report can be reviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill these in first'**
+  String get inspFormRequiredTitle;
+
+  /// Screen reader name of the key that lowers a count on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer'**
+  String get inspFormDecrease;
+
+  /// Screen reader name of the key that raises a count on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get inspFormIncrease;
+
+  /// Adds one more entry, as a point or a level crossing, to an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {item}'**
+  String inspFormAddRow(String item);
+
+  /// Removes an entry from a list on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get inspFormRemoveRow;
+
+  /// Title of the dialog confirming an entry is removed from an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this entry?'**
+  String get inspFormRemoveRowTitle;
+
+  /// Label of the sum of a list's figures on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get inspFormTotal;
+
+  /// First step of an inspection form: what is inspected and when.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get inspFormDetails;
+
+  /// Label of the station field on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Station'**
+  String get inspFormStation;
+
+  /// Hint of the station field on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the station'**
+  String get inspFormStationHint;
+
+  /// Label of the date an inspection is made on.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of inspection'**
+  String get inspFormDate;
+
+  /// Shown when the stations an inspector covers couldn't be fetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stations couldn\'t be loaded.'**
+  String get inspFormStationsFailed;
+
+  /// Shown when an inspector has no stations to inspect.
+  ///
+  /// In en, this message translates to:
+  /// **'No stations are assigned to you yet.'**
+  String get inspFormNoStations;
+
+  /// Says an inspection that has no server yet was saved on the device.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this phone'**
+  String get inspFormSaved;
+
+  /// Label of the photos taken for part of an inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get inspFormPhotos;
+
+  /// Takes a photo for part of an inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get inspFormAddPhoto;
+
+  /// Label of a free note on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get inspFormNote;
+
+  /// Hint of a free note on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything else to record'**
+  String get inspFormNoteHint;
+
+  /// Marks every check of one item, as a signal, satisfactory at once.
+  ///
+  /// In en, this message translates to:
+  /// **'All satisfactory'**
+  String get inspFormAllGood;
+
+  /// Shown under the fire extinguisher count while it is zero.
+  ///
+  /// In en, this message translates to:
+  /// **'Set how many extinguishers there are to add a filling date for each.'**
+  String get inspFormNoExtinguishers;
+
+  /// Says an entry in a list on an inspection form is still blank.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing filled in yet'**
+  String get inspFormRowEmpty;
+
+  /// Title of the station inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Station inspection'**
+  String get inspStationTitle;
+
+  /// What a station inspection covers, under its title.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal and telecom'**
+  String get inspStationSubtitle;
 }
 
 class _AppLocalizationsDelegate

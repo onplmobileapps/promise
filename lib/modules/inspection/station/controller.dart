@@ -12,19 +12,22 @@ class OverdueInfo {
   const OverdueInfo(this.status, this.text);
 }
 
+/// The answers of a station inspection, kept as it is filled in and as a
+/// draft on the phone between visits.
 class StationInspectionController extends ChangeNotifier {
-  static const String _draftStorageKey = 'station_inspection_draft_v1';
+  /// Where the draft is kept; also its entry among the dashboard's drafts.
+  static const String draftId = 'station_inspection_draft_v1';
 
   final Map<String, dynamic> fields = {};
   final Map<String, List<int>> repeatRows = {};
   int _rowSeq = 1;
 
+  /// The station inspected, as its name and its number on the server.
   String? station;
-  String stationOther = '';
+  int? stationId;
   DateTime inspDate = DateTime.now();
-  bool isStarted = false;
-  bool isFaceVerified = false;
-  String? faceImagePath;
+
+  /// The step the draft was left on.
   int currentStep = 0;
 
   StationInspectionController() {
@@ -33,128 +36,98 @@ class StationInspectionController extends ChangeNotifier {
     }
   }
 
-  // ---------------------------------------------------------------------
-  // Preparation Flow
-  // ---------------------------------------------------------------------
+  /// Something has been filled in.
+  bool get hasAnswers => fields.values.any(
+    (value) => value != null && value.toString().trim().isNotEmpty,
+  );
 
-  void startInspection() {
-    isStarted = true;
+  void setStation(String? name, {int? id}) {
+    station = name;
+    stationId = id;
     notifyListeners();
   }
 
-  void setStation(String? v) {
-    station = v;
+  void setDate(DateTime day) {
+    inspDate = day;
     notifyListeners();
   }
 
-  void setFaceVerified(bool verified, String? path) {
-    isFaceVerified = verified;
-    faceImagePath = path;
-    notifyListeners();
-  }
-
-  void resetInspection() {
-    isStarted = false;
-    isFaceVerified = false;
-    faceImagePath = null;
-    station = null;
-    stationOther = '';
-    inspDate = DateTime.now();
-    currentStep = 0;
-    fields.clear();
-    notifyListeners();
-  }
-
-  Map<String, dynamic> toDraftJson() {
-    final serializableFields = <String, dynamic>{};
-    fields.forEach((key, val) {
-      if (val is DateTime) {
-        serializableFields[key] = val.toIso8601String();
-      } else {
-        serializableFields[key] = val;
-      }
-    });
-
-    return {
-      'currentStep': currentStep,
-      'station': station,
-      'stationOther': stationOther,
-      'inspDate': inspDate.toIso8601String(),
-      'isFaceVerified': isFaceVerified,
-      'faceImagePath': faceImagePath,
-      'fields': serializableFields,
-      'repeatRows': repeatRows,
-    };
-  }
+  Map<String, dynamic> toDraftJson() => {
+    'currentStep': currentStep,
+    'station': station,
+    'stationId': stationId,
+    'inspDate': inspDate.toIso8601String(),
+    'fields': {
+      for (final MapEntry(:key, :value) in fields.entries)
+        key: value is DateTime ? value.toIso8601String() : value,
+    },
+    'repeatRows': repeatRows,
+  };
 
   void fromDraftJson(Map<String, dynamic> json) {
     currentStep = json['currentStep'] is int ? json['currentStep'] as int : 0;
     station = json['station'] as String?;
-    stationOther = json['stationOther'] as String? ?? '';
-    if (json['inspDate'] != null) {
-      inspDate =
-          DateTime.tryParse(json['inspDate'].toString()) ?? DateTime.now();
-    }
-    // Face verification must be completed fresh for every session
-    isFaceVerified = false;
-    faceImagePath = null;
+    stationId = switch (json['stationId']) {
+      final int id => id,
+      final Object id => int.tryParse('$id'),
+      null => null,
+    };
+    inspDate =
+        DateTime.tryParse(json['inspDate']?.toString() ?? '') ?? DateTime.now();
 
-    if (json['fields'] is Map) {
+    if (json['fields'] case final Map<dynamic, dynamic> saved) {
       fields.clear();
-      (json['fields'] as Map).forEach((key, val) {
-        final strKey = key.toString();
-        final strVal = val?.toString();
-        if (strVal != null &&
-            (strKey.toLowerCase().contains('date') ||
-                strKey.toLowerCase().contains('time'))) {
-          final dt = DateTime.tryParse(strVal);
-          if (dt != null) {
-            fields[strKey] = dt;
-          } else {
-            fields[strKey] = val;
-          }
-        } else {
-          fields[strKey] = val;
-        }
+      saved.forEach((key, val) {
+        final id = key.toString();
+        final lower = id.toLowerCase();
+        // Dates are kept as text; fields named for one read back as one.
+        final day = val is String && lower.contains('date')
+            ? DateTime.tryParse(val)
+            : null;
+        fields[id] = day ?? val;
       });
     }
 
-    if (json['repeatRows'] is Map) {
+    if (json['repeatRows'] case final Map<dynamic, dynamic> rows) {
       repeatRows.clear();
-      (json['repeatRows'] as Map).forEach((key, val) {
+      rows.forEach((key, val) {
         if (val is List) {
-          repeatRows[key.toString()] = List<int>.from(
-            val.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0),
-          );
+          repeatRows[key.toString()] = [
+            for (final e in val) e is int ? e : int.tryParse('$e') ?? 0,
+          ];
         }
       });
+      // New rows are numbered past the ones kept.
+      final highest = repeatRows.values
+          .expand((rows) => rows)
+          .fold(0, (a, b) => a > b ? a : b);
+      _rowSeq = highest + 1;
+      for (final type in kRepeatDefs.keys) {
+        _ensureRepeat(type);
+      }
     }
 
     notifyListeners();
   }
 
-  Future<void> saveDraftToDisk() async {
-    final payload = jsonEncode(toDraftJson());
-    await StorageService.saveInspectionDraft(_draftStorageKey, payload);
-  }
+  Future<void> saveDraftToDisk() =>
+      StorageService.saveInspectionDraft(draftId, jsonEncode(toDraftJson()));
 
   Future<bool> loadDraftFromDisk() async {
-    final raw = await StorageService.getInspectionDraft(_draftStorageKey);
-    if (raw != null && raw.trim().isNotEmpty) {
-      try {
-        final decoded = jsonDecode(raw) as Map<String, dynamic>;
-        fromDraftJson(decoded);
-        return true;
-      } catch (e) {
-        debugPrint('Error loading station draft from disk: $e');
-      }
+    final raw = await StorageService.getInspectionDraft(draftId);
+    if (raw == null || raw.trim().isEmpty) return false;
+    try {
+      fromDraftJson(jsonDecode(raw) as Map<String, dynamic>);
+      return true;
+    } on Object catch (e) {
+      debugPrint('Station draft could not be read: $e');
+      return false;
     }
-    return false;
   }
 
-  Future<void> clearDraftFromDisk() async {
-    await StorageService.clearInspectionDraft(_draftStorageKey);
-  }
+  /// Forgets the draft, and its entry among the dashboard's drafts.
+  Future<void> clearDraftFromDisk() =>
+      StorageService.deleteInspectionRecord(draftId);
 
   // ---------------------------------------------------------------------
   // Field access
@@ -164,6 +137,14 @@ class StationInspectionController extends ChangeNotifier {
 
   void setField(String id, dynamic value) {
     fields[id] = value;
+    notifyListeners();
+  }
+
+  /// Answers each of [ids] still blank with [value], at once.
+  void fillBlank(Iterable<String> ids, Object value) {
+    for (final id in ids) {
+      if (!isFilled(id)) fields[id] = value;
+    }
     notifyListeners();
   }
 
@@ -327,6 +308,13 @@ class StationInspectionController extends ChangeNotifier {
       if (item is FieldFormItem) {
         total++;
         if (isFilled(item.spec.id)) filled++;
+        // Each extinguisher counted asks for its filling date.
+        if (item.spec.id == 'fireExtCount') {
+          for (var n = 1; n <= fireExtCount; n++) {
+            total++;
+            if (isFilled(fireExtDateId(n))) filled++;
+          }
+        }
       }
     }
     return (filled, total);
@@ -341,111 +329,5 @@ class StationInspectionController extends ChangeNotifier {
     }
     if (total == 0) return 0;
     return filled / total;
-  }
-
-  // ---------------------------------------------------------------------
-  // Summary text (for review + copy/print)
-  // ---------------------------------------------------------------------
-
-  String buildSummaryText(List<InspectionSection> sections) {
-    final lines = <String>[];
-    lines.add('STATION INSPECTION — SIGNAL & TELECOM SYSTEM');
-    final stationName = station == 'Other' ? stationOther : (station ?? '');
-    lines.add('Station: ${stationName.isEmpty ? '—' : stationName}');
-    lines.add('Date: ${_formatDate(inspDate)}');
-    lines.add('');
-
-    for (final section in sections) {
-      if (section.isReview) continue;
-      final entries = <String>[];
-
-      if (section.isSignals) {
-        for (var i = 0; i < kSignalNames.length; i++) {
-          for (final part in kSignalParts) {
-            final fid = 'sig_${i}_${part[0]}';
-            final v = fields[fid];
-            if (v != null) {
-              entries.add('  • ${kSignalNames[i]} — ${part[1]}: $v');
-              if (v == 'Unsatisfactory') {
-                final r = fields['${fid}_remark'];
-                if (r != null && r.toString().trim().isNotEmpty) {
-                  entries.add('    - Remarks: $r');
-                }
-              }
-            }
-          }
-        }
-      } else if (section.isRepeatSection) {
-        final type = section.repeatType!;
-        final def = kRepeatDefs[type]!;
-        final rows = rowsFor(type);
-        for (var i = 0; i < rows.length; i++) {
-          final rowId = rows[i];
-          final rowHasData = def.cols.any(
-            (c) => isFilled('${rowPrefix(type, rowId)}_${c.key}'),
-          );
-          if (!rowHasData) continue;
-          entries.add('  ${def.label} ${i + 1}:');
-          for (final col in def.cols) {
-            final fid = '${rowPrefix(type, rowId)}_${col.key}';
-            final v = fields[fid];
-            if (v != null && v.toString().trim().isNotEmpty) {
-              entries.add(
-                '    - ${col.label.isEmpty ? col.key : col.label}: $v',
-              );
-              final spec = col.build(fid);
-              if (spec.kind == FieldKind.toggleRemark &&
-                  classifyValue(v.toString()) == FieldTone.negative) {
-                final r = fields[spec.remarkId];
-                if (r != null && r.toString().trim().isNotEmpty) {
-                  entries.add('      - Remarks: $r');
-                }
-              }
-            }
-          }
-          if (def.hasTotal) {
-            entries.add('    - Total: ${rowTotal(type, rowId)}');
-          }
-        }
-      } else {
-        for (final item in section.items) {
-          if (item is! FieldFormItem) continue;
-          final spec = item.spec;
-          final v = fields[spec.id];
-          if (v == null || v.toString().trim().isEmpty) continue;
-          entries.add('  • ${spec.label}: ${_displayValue(v)}');
-          if (spec.kind == FieldKind.toggleRemark) {
-            final r = fields[spec.remarkId];
-            if (r != null && r.toString().trim().isNotEmpty) {
-              entries.add('    - Remarks: $r');
-            }
-          }
-        }
-      }
-
-      if (entries.isNotEmpty) {
-        lines.add(section.title.toUpperCase());
-        lines.addAll(entries);
-        lines.add('');
-      }
-    }
-
-    lines.add('SUBMITTED BY');
-    lines.add('  • Name: ${fields['submittedName'] ?? '—'}');
-    lines.add('  • Designation: ${fields['submittedDesignation'] ?? '—'}');
-    final submittedDate = fields['submittedDate'] as DateTime?;
-    lines.add(
-      '  • Date: ${submittedDate != null ? _formatDate(submittedDate) : '—'}',
-    );
-    final remarks = fields['remarks'];
-    if (remarks != null && remarks.toString().trim().isNotEmpty) {
-      lines.add('  • Remarks: $remarks');
-    }
-    return lines.join('\n');
-  }
-
-  static String _displayValue(dynamic v) {
-    if (v is DateTime) return _formatDate(v);
-    return v.toString();
   }
 }

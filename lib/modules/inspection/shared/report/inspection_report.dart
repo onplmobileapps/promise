@@ -17,6 +17,7 @@ enum ReportTone {
 
   static final RegExp _bad = RegExp(
     r'\b(no|not|non|unsatisfactory|faulty|defective|poor|bad|broken|damaged|'
+    r'incomplete|overdue|'
     r'missing|out of (limit|order)|fail(ed)?|leak(ing)?|worn|nil|absent|'
     r'unavailable|not available|not working|non-functional|inoperative)\b',
     caseSensitive: false,
@@ -24,7 +25,7 @@ enum ReportTone {
   static final RegExp _good = RegExp(
     r'^(yes|ok|okay|good|satisfactory|functional|working|available|fine|'
     r'normal|clean|intact|present|done|pass(ed)?|within limit|in order|'
-    r'excellent|prime)$',
+    r'excellent|prime|complete)$',
     caseSensitive: false,
   );
 

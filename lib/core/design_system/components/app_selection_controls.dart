@@ -9,24 +9,47 @@ import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_spacing.dart';
 import 'package:railway_hrms/core/design_system/icons/app_glyph_icon.dart';
 import 'package:railway_hrms/core/design_system/icons/app_glyphs.dart';
+import 'package:railway_hrms/core/design_system/theme/app_tone.dart';
 import 'package:railway_hrms/core/design_system/theme/theme_context.dart';
 
-/// The jade key a ticked control shows: a raised, lit face on its edge.
-BoxDecoration _keyFace(BuildContext context, BoxShape shape, double radius) {
+/// The key a ticked control shows: a raised, lit face on its edge, jade
+/// unless its [tone] says trouble (coral) or caution (gold).
+BoxDecoration _keyFace(
+  BuildContext context,
+  BoxShape shape,
+  double radius, {
+  AppTone tone = AppTone.brand,
+}) {
   final colors = context.colors;
+  final (Color highlight, Color face, Color shade, Color edge) = switch (tone) {
+    AppTone.danger => (
+      colors.dangerHighlight,
+      colors.danger,
+      colors.dangerShade,
+      colors.dangerEdge,
+    ),
+    AppTone.warning => (
+      Color.lerp(colors.gold, colors.surface, 0.3)!,
+      colors.gold,
+      Color.lerp(colors.gold, colors.shadow, 0.2)!,
+      colors.dayLateEdge,
+    ),
+    _ => (
+      colors.primaryHighlight,
+      colors.primary,
+      colors.primaryShade,
+      colors.primaryEdge,
+    ),
+  };
   return BoxDecoration(
     shape: shape,
     borderRadius: shape == BoxShape.circle
         ? null
         : BorderRadius.circular(radius),
-    gradient: AppButton.keyGradient(
-      colors.primaryHighlight,
-      colors.primary,
-      colors.primaryShade,
-    ),
+    gradient: AppButton.keyGradient(highlight, face, shade),
     boxShadow: [
       BoxShadow(
-        color: colors.primaryEdge,
+        color: edge,
         offset: const Offset(0, AppSizes.keyEdgePressed * 2),
       ),
     ],
@@ -255,14 +278,18 @@ class AppCountStepper extends StatelessWidget {
 /// One choice of [AppChoiceChips].
 @immutable
 class AppChoice<T> {
-  const AppChoice(this.value, this.label);
+  const AppChoice(this.value, this.label, {this.tone = AppTone.brand});
 
   final T value;
   final String label;
+
+  /// What picking it says: jade by default; coral for an answer that
+  /// reports trouble, as "Faulty", and gold for one that asks for care.
+  final AppTone tone;
 }
 
 /// One of several short choices, as chips that wrap: the picked one sinks
-/// into a jade tint with a small check key, the rest stand raised.
+/// into a tint of its tone with a small check key, the rest stand raised.
 class AppChoiceChips<T> extends StatelessWidget {
   const AppChoiceChips({
     super.key,
@@ -284,6 +311,7 @@ class AppChoiceChips<T> extends StatelessWidget {
         for (final choice in choices)
           _Chip(
             label: choice.label,
+            tone: choice.tone,
             selected: choice.value == selected,
             onTap: () => onSelected(choice.value),
           ),
@@ -295,11 +323,13 @@ class AppChoiceChips<T> extends StatelessWidget {
 class _Chip extends StatelessWidget {
   const _Chip({
     required this.label,
+    required this.tone,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
+  final AppTone tone;
   final bool selected;
   final VoidCallback onTap;
 
@@ -307,10 +337,15 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final text = context.textTheme;
+    final (Color tint, Color edge) = switch (tone) {
+      AppTone.danger => (colors.dangerContainer, colors.dangerEdge),
+      AppTone.warning => (colors.dayLate, colors.dayLateEdge),
+      _ => (colors.dayPresent, colors.dayPresentEdge),
+    };
     final shape = RoundedRectangleBorder(
       borderRadius: AppRadius.borderMd,
       side: selected
-          ? BorderSide(color: colors.dayPresentEdge, width: 1.5)
+          ? BorderSide(color: edge, width: 1.5)
           : BorderSide(color: colors.outline),
     );
     return LiquidPop(
@@ -324,7 +359,7 @@ class _Chip extends StatelessWidget {
           duration: AppMotion.short,
           decoration: ShapeDecoration(
             shape: shape,
-            color: selected ? colors.dayPresent : null,
+            color: selected ? tint : null,
             gradient: selected
                 ? null
                 : LinearGradient(
@@ -351,7 +386,12 @@ class _Chip extends StatelessWidget {
                     children: [
                       if (selected) ...[
                         DecoratedBox(
-                          decoration: _keyFace(context, BoxShape.circle, 0),
+                          decoration: _keyFace(
+                            context,
+                            BoxShape.circle,
+                            0,
+                            tone: tone,
+                          ),
                           child: SizedBox.square(
                             dimension: AppSizes.chipCheck,
                             child: Center(

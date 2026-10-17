@@ -3547,5 +3547,219 @@
   "inspPdfFindings": "Findings",
   "@inspPdfFindings": {
     "description": "Count on the report of answers that read as something wrong."
+  },
+  "inspFormNext": "Next",
+  "@inspFormNext": {
+    "description": "Moves an inspection form on to its next step."
+  },
+  "inspFormReview": "Review and submit",
+  "@inspFormReview": {
+    "description": "On an inspection form's last step: opens the report to check and submit."
+  },
+  "inspFormSelect": "Select",
+  "@inspFormSelect": {
+    "description": "What an inspection form's choice field says before anything is chosen."
+  },
+  "inspFormSelectDate": "Select date",
+  "@inspFormSelectDate": {
+    "description": "What an inspection form's date field says before a day is picked."
+  },
+  "inspFormPickDate": "Pick a date",
+  "@inspFormPickDate": {
+    "description": "Title of the sheet that picks a date on an inspection form."
+  },
+  "inspFormDone": "Done",
+  "@inspFormDone": {
+    "description": "Takes the date picked on an inspection form's date sheet."
+  },
+  "inspFormRemarkLabel": "Remarks",
+  "@inspFormRemarkLabel": {
+    "description": "Label of the note asked for when an inspection answer reports a fault."
+  },
+  "inspFormRemarkHint": "Describe what is wrong",
+  "@inspFormRemarkHint": {
+    "description": "Hint in the note asked for when an inspection answer reports a fault."
+  },
+  "inspFormOutOfRange": "Outside the expected range: {hint}",
+  "@inspFormOutOfRange": {
+    "description": "Warns that a reading on an inspection form is out of its normal range.",
+    "placeholders": {
+      "hint": {
+        "type": "String",
+        "example": "Normal 1.2 to 1.5 V"
+      }
+    }
+  },
+  "inspFormLeft": "{count, plural, =0{All answered} =1{1 question left} other{{count} questions left}}",
+  "@inspFormLeft": {
+    "description": "How many questions on a step of an inspection are still blank.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inspFormProgress": "{answered} of {total} answered",
+  "@inspFormProgress": {
+    "description": "How much of an inspection form is filled in.",
+    "placeholders": {
+      "answered": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inspFormStepOf": "Step {current} of {total}",
+  "@inspFormStepOf": {
+    "description": "Which step of an inspection form is open.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "inspFormLeaveTitle": "Leave this inspection?",
+  "@inspFormLeaveTitle": {
+    "description": "Title of the dialog shown when leaving an inspection form part-way."
+  },
+  "inspFormLeaveDraft": "Your answers are kept as a draft on this phone, to finish later.",
+  "@inspFormLeaveDraft": {
+    "description": "Says leaving an inspection form keeps its answers as a draft."
+  },
+  "inspFormLeaveLost": "What you've filled in will be lost.",
+  "@inspFormLeaveLost": {
+    "description": "Says leaving an inspection form loses its answers."
+  },
+  "inspFormLeave": "Leave",
+  "@inspFormLeave": {
+    "description": "Leaves an inspection form part-way."
+  },
+  "inspFormStay": "Keep going",
+  "@inspFormStay": {
+    "description": "Stays on an inspection form instead of leaving it."
+  },
+  "inspFormBlankTitle": "Some questions are blank",
+  "@inspFormBlankTitle": {
+    "description": "Title of the dialog shown when reviewing an inspection with questions unanswered."
+  },
+  "inspFormBlankMessage": "{count, plural, =1{1 question is still blank.} other{{count} questions are still blank.}} Answer them first, or review the report with them left blank.",
+  "@inspFormBlankMessage": {
+    "description": "Explains that an inspection is being reviewed with blank questions.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inspFormShowBlank": "Show me",
+  "@inspFormShowBlank": {
+    "description": "Takes the inspector to the first blank question of a form."
+  },
+  "inspFormReviewAnyway": "Review anyway",
+  "@inspFormReviewAnyway": {
+    "description": "Opens an inspection's report although questions are blank."
+  },
+  "inspFormRequiredTitle": "Fill these in first",
+  "@inspFormRequiredTitle": {
+    "description": "Title of the dialog listing what an inspection needs before its report can be reviewed."
+  },
+  "inspFormDecrease": "Fewer",
+  "@inspFormDecrease": {
+    "description": "Screen reader name of the key that lowers a count on an inspection form."
+  },
+  "inspFormIncrease": "More",
+  "@inspFormIncrease": {
+    "description": "Screen reader name of the key that raises a count on an inspection form."
+  },
+  "inspFormAddRow": "Add {item}",
+  "@inspFormAddRow": {
+    "description": "Adds one more entry, as a point or a level crossing, to an inspection form.",
+    "placeholders": {
+      "item": {
+        "type": "String",
+        "example": "point"
+      }
+    }
+  },
+  "inspFormRemoveRow": "Remove",
+  "@inspFormRemoveRow": {
+    "description": "Removes an entry from a list on an inspection form."
+  },
+  "inspFormRemoveRowTitle": "Remove this entry?",
+  "@inspFormRemoveRowTitle": {
+    "description": "Title of the dialog confirming an entry is removed from an inspection form."
+  },
+  "inspFormTotal": "Total",
+  "@inspFormTotal": {
+    "description": "Label of the sum of a list's figures on an inspection form."
+  },
+  "inspFormDetails": "Details",
+  "@inspFormDetails": {
+    "description": "First step of an inspection form: what is inspected and when."
+  },
+  "inspFormStation": "Station",
+  "@inspFormStation": {
+    "description": "Label of the station field on an inspection form."
+  },
+  "inspFormStationHint": "Choose the station",
+  "@inspFormStationHint": {
+    "description": "Hint of the station field on an inspection form."
+  },
+  "inspFormDate": "Date of inspection",
+  "@inspFormDate": {
+    "description": "Label of the date an inspection is made on."
+  },
+  "inspFormStationsFailed": "Your stations couldn't be loaded.",
+  "@inspFormStationsFailed": {
+    "description": "Shown when the stations an inspector covers couldn't be fetched."
+  },
+  "inspFormNoStations": "No stations are assigned to you yet.",
+  "@inspFormNoStations": {
+    "description": "Shown when an inspector has no stations to inspect."
+  },
+  "inspFormSaved": "Saved on this phone",
+  "@inspFormSaved": {
+    "description": "Says an inspection that has no server yet was saved on the device."
+  },
+  "inspFormPhotos": "Photos",
+  "@inspFormPhotos": {
+    "description": "Label of the photos taken for part of an inspection."
+  },
+  "inspFormAddPhoto": "Add photo",
+  "@inspFormAddPhoto": {
+    "description": "Takes a photo for part of an inspection."
+  },
+  "inspFormNote": "Note",
+  "@inspFormNote": {
+    "description": "Label of a free note on an inspection form."
+  },
+  "inspFormNoteHint": "Anything else to record",
+  "@inspFormNoteHint": {
+    "description": "Hint of a free note on an inspection form."
+  },
+  "inspFormAllGood": "All satisfactory",
+  "@inspFormAllGood": {
+    "description": "Marks every check of one item, as a signal, satisfactory at once."
+  },
+  "inspFormNoExtinguishers": "Set how many extinguishers there are to add a filling date for each.",
+  "@inspFormNoExtinguishers": {
+    "description": "Shown under the fire extinguisher count while it is zero."
+  },
+  "inspFormRowEmpty": "Nothing filled in yet",
+  "@inspFormRowEmpty": {
+    "description": "Says an entry in a list on an inspection form is still blank."
+  },
+  "inspStationTitle": "Station inspection",
+  "@inspStationTitle": {
+    "description": "Title of the station inspection form."
+  },
+  "inspStationSubtitle": "Signal and telecom",
+  "@inspStationSubtitle": {
+    "description": "What a station inspection covers, under its title."
   }
 }

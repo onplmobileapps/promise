@@ -131,3 +131,102 @@ class _AppDateTimePickerState extends State<AppDateTimePicker> {
     );
   }
 }
+
+/// Picks a day on a sheet with wheels for the day, month and year, so a
+/// day years back, as an overhaul date, is a flick away. Gives the day
+/// picked, or null if the sheet is closed.
+Future<DateTime?> showAppDateSheet({
+  required BuildContext context,
+  required String title,
+  required String closeLabel,
+  required String doneLabel,
+  required DateTime initial,
+  required DateTime firstDate,
+  required DateTime lastDate,
+  String? subtitle,
+}) => showAppSheet<DateTime>(
+  context: context,
+  title: title,
+  subtitle: subtitle,
+  closeLabel: closeLabel,
+  builder: (sheetContext) => AppDatePicker(
+    initial: initial,
+    firstDate: firstDate,
+    lastDate: lastDate,
+    doneLabel: doneLabel,
+    onDone: (picked) => Navigator.of(sheetContext).pop(picked),
+  ),
+);
+
+/// The body of [showAppDateSheet]: wheels for the day and [doneLabel]'s key
+/// that hands it to [onDone].
+class AppDatePicker extends StatefulWidget {
+  const AppDatePicker({
+    super.key,
+    required this.initial,
+    required this.firstDate,
+    required this.lastDate,
+    required this.doneLabel,
+    required this.onDone,
+  });
+
+  final DateTime initial;
+  final DateTime firstDate;
+  final DateTime lastDate;
+  final String doneLabel;
+  final ValueChanged<DateTime> onDone;
+
+  @override
+  State<AppDatePicker> createState() => _AppDatePickerState();
+}
+
+class _AppDatePickerState extends State<AppDatePicker> {
+  late final DateTime _first = DateUtils.dateOnly(widget.firstDate);
+  late final DateTime _last = DateUtils.dateOnly(widget.lastDate);
+  late DateTime _day = _clamp(DateUtils.dateOnly(widget.initial));
+
+  DateTime _clamp(DateTime day) => day.isBefore(_first)
+      ? _first
+      : day.isAfter(_last)
+      ? _last
+      : day;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: AppSizes.timeWheelHeight + AppSpacing.xxl,
+          child: CupertinoTheme(
+            data: CupertinoThemeData(
+              brightness: Theme.of(context).brightness,
+              textTheme: CupertinoTextThemeData(
+                dateTimePickerTextStyle: context.textTheme.titleLarge?.copyWith(
+                  color: colors.textPrimary,
+                ),
+              ),
+            ),
+            child: CupertinoDatePicker(
+              mode: CupertinoDatePickerMode.date,
+              dateOrder: DatePickerDateOrder.dmy,
+              initialDateTime: _day,
+              minimumDate: _first,
+              maximumDate: _last,
+              onDateTimeChanged: (picked) =>
+                  _day = _clamp(DateUtils.dateOnly(picked)),
+            ),
+          ),
+        ),
+        AppSpacing.gapLg,
+        AppButton(
+          label: widget.doneLabel,
+          variant: AppButtonVariant.primary,
+          onPressed: () => widget.onDone(_day),
+        ),
+      ],
+    );
+  }
+}
