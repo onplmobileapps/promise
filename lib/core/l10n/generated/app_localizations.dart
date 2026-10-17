@@ -4863,6 +4863,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signal and telecom'**
   String get inspStationSubtitle;
+
+  /// Title of the motor trolley inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Motor trolley inspection'**
+  String get inspTrolleyTitle;
+
+  /// What a motor trolley inspection covers, under its title.
+  ///
+  /// In en, this message translates to:
+  /// **'Track, bridges and works'**
+  String get inspTrolleySubtitle;
+
+  /// Label of the remedy picked for a fault on an inspection form.
+  ///
+  /// In en, this message translates to:
+  /// **'Remedy'**
+  String get inspFormRemedy;
+
+  /// The standard remedy for a fault, under its question.
+  ///
+  /// In en, this message translates to:
+  /// **'Remedy: {remedy}'**
+  String inspFormRemedyNote(String remedy);
+
+  /// Label of the railway section an inspection covers.
+  ///
+  /// In en, this message translates to:
+  /// **'Section'**
+  String get inspFormSection;
 }
 
 class _AppLocalizationsDelegate

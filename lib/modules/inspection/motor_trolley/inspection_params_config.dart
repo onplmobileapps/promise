@@ -22,6 +22,13 @@ class ParamField {
   final String? remedyStatic; // static remedy text instead of a dropdown
   final String? hint;
 
+  /// What a reading is measured in, as "mm".
+  final String? unit;
+
+  /// Asked only once another answer is this, as a reason once a reading
+  /// is out of limit: the other's key and the answer.
+  final (String, String)? showWhen;
+
   const ParamField({
     required this.key,
     required this.label,
@@ -31,18 +38,12 @@ class ParamField {
     this.remedyOptions,
     this.remedyStatic,
     this.hint,
+    this.unit,
+    this.showWhen,
   });
-}
 
-class ParamSection {
-  final String title;
-  final List<ParamField> fields;
-  final bool initiallyExpanded;
-  const ParamSection({
-    required this.title,
-    required this.fields,
-    this.initiallyExpanded = false,
-  });
+  /// The key its remedy is kept under.
+  String get remedyKey => '${key}_remedy';
 }
 
 // ── I. Track Geometry — remaining sub-parts (v–ix, IIX) ────────────────

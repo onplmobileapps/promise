@@ -1,206 +1,68 @@
-import 'package:dio/dio.dart';
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:railway_hrms/core/network/api_endpoints.dart';
-import 'package:railway_hrms/core/network/dio_client.dart';
+import 'package:railway_hrms/core/bloc/safe_bloc.dart';
 import 'package:railway_hrms/core/storage/storage_service.dart';
-import 'package:railway_hrms/modules/inspection/motor_trolley/models/motor_trolley_inspection_model.dart';
+import 'package:railway_hrms/modules/inspection/motor_trolley/models/trolley_form.dart';
 import 'package:railway_hrms/modules/inspection/motor_trolley/motor_trolley_state.dart';
 
-class MotorTrolleyInspectionCubit extends Cubit<MotorTrolleyInspectionState> {
-  final DioClient _dioClient;
+/// Keeps a motor trolley inspection's answers, and its draft on the phone.
+class MotorTrolleyInspectionCubit
+    extends SafeCubit<MotorTrolleyInspectionState> {
+  MotorTrolleyInspectionCubit()
+    : super(MotorTrolleyInspectionState(inspectionDate: DateTime.now()));
 
-  MotorTrolleyInspectionCubit({DioClient? dioClient})
-    : _dioClient = dioClient ?? DioClient(),
-      super(const MotorTrolleyInspectionState());
+  /// Where the draft is kept; also its entry among the dashboard's drafts.
+  static const draftId = 'motor_trolley_draft_v1';
 
-  /// Updates any of the explicitly-typed fields. Pass only the
-  /// parameter(s) that changed.
-  void updateField({
-    String? inspectingOfficer,
-    DateTime? inspectionDate,
-    String? betweenStation,
-    String? sectionFrom,
-    String? sectionTo,
-    String? kmFrom,
-    String? kmTo,
-    String? alignmentReading,
-    String? alignmentOutOfLimit,
-    String? alignmentReason,
-    String? gaugeSpeedCategory,
-    String? gaugeReading,
-    String? gaugeOutOfLimit,
-    String? gaugeReason,
-    String? crossLevelReading,
-    String? crossLevelOutOfLimit,
-    String? crossLevelReason,
-    String? railType,
-    String? railRemarks,
-    String? curveNo,
-    String? degreeOfCurve,
-    String? curveSpeed,
-    String? curveGaugeReading,
-    String? curveGaugeOutOfLimit,
-    String? curveGaugeAction,
-    String? curveGaugeReason,
-    String? superElevationReading,
-    String? superElevationAction,
-    String? curvePostAvailable,
-    String? checkRailClearanceCurveReading,
-    String? checkRailClearanceCurveStatus,
-    String? pcGauge,
-    String? pcCrossLevel,
-    String? pcFittingsPercentage,
-    String? pcSwitchWearAction,
-    String? pcSwitchWearReason,
-    String? pcCrossingWearAction,
-    String? pcCrossingWearReason,
-    String? pcCheckRailsClearance,
-    String? pcWingRailClearance,
-    String? pcCrossingTimbersPercentage,
-    String? pcCrossingTimbersAction,
-    String? pcCrossingTimbersReason,
-    String? lcMannedKmFrom,
-    String? lcMannedKmTo,
-    String? lcUnmannedKmFrom,
-    String? lcUnmannedKmTo,
-    String? sbName,
-    String? sbKm,
-    String? sbSection,
-    String? inspectedBy,
-    String? designation,
-    String? pwiIncharge,
-    String? verifiedBy,
-  }) {
-    emit(
-      state.copyWith(
-        inspectingOfficer: inspectingOfficer,
-        inspectionDate: inspectionDate,
-        betweenStation: betweenStation,
-        sectionFrom: sectionFrom,
-        sectionTo: sectionTo,
-        kmFrom: kmFrom,
-        kmTo: kmTo,
-        alignmentReading: alignmentReading,
-        alignmentOutOfLimit: alignmentOutOfLimit,
-        alignmentReason: alignmentReason,
-        gaugeSpeedCategory: gaugeSpeedCategory,
-        gaugeReading: gaugeReading,
-        gaugeOutOfLimit: gaugeOutOfLimit,
-        gaugeReason: gaugeReason,
-        crossLevelReading: crossLevelReading,
-        crossLevelOutOfLimit: crossLevelOutOfLimit,
-        crossLevelReason: crossLevelReason,
-        railType: railType,
-        railRemarks: railRemarks,
-        curveNo: curveNo,
-        degreeOfCurve: degreeOfCurve,
-        curveSpeed: curveSpeed,
-        curveGaugeReading: curveGaugeReading,
-        curveGaugeOutOfLimit: curveGaugeOutOfLimit,
-        curveGaugeAction: curveGaugeAction,
-        curveGaugeReason: curveGaugeReason,
-        superElevationReading: superElevationReading,
-        superElevationAction: superElevationAction,
-        curvePostAvailable: curvePostAvailable,
-        checkRailClearanceCurveReading: checkRailClearanceCurveReading,
-        checkRailClearanceCurveStatus: checkRailClearanceCurveStatus,
-        pcGauge: pcGauge,
-        pcCrossLevel: pcCrossLevel,
-        pcFittingsPercentage: pcFittingsPercentage,
-        pcSwitchWearAction: pcSwitchWearAction,
-        pcSwitchWearReason: pcSwitchWearReason,
-        pcCrossingWearAction: pcCrossingWearAction,
-        pcCrossingWearReason: pcCrossingWearReason,
-        pcCheckRailsClearance: pcCheckRailsClearance,
-        pcWingRailClearance: pcWingRailClearance,
-        pcCrossingTimbersPercentage: pcCrossingTimbersPercentage,
-        pcCrossingTimbersAction: pcCrossingTimbersAction,
-        pcCrossingTimbersReason: pcCrossingTimbersReason,
-        lcMannedKmFrom: lcMannedKmFrom,
-        lcMannedKmTo: lcMannedKmTo,
-        lcUnmannedKmFrom: lcUnmannedKmFrom,
-        lcUnmannedKmTo: lcUnmannedKmTo,
-        sbName: sbName,
-        sbKm: sbKm,
-        sbSection: sbSection,
-        inspectedBy: inspectedBy,
-        designation: designation,
-        pwiIncharge: pwiIncharge,
-        verifiedBy: verifiedBy,
-        clearError: true,
-      ),
-    );
-  }
+  void set(String key, String value) =>
+      emit(state.copyWith(values: {...state.values, key: value}));
 
-  /// Updates a single config-driven field by its ParamField.key.
-  void updateValue(String key, String value) {
-    final updated = Map<String, String>.from(state.values);
-    updated[key] = value;
-    emit(state.copyWith(values: updated, clearError: true));
-  }
+  void setDate(DateTime day) => emit(state.copyWith(inspectionDate: day));
 
-  void reset() {
-    emit(const MotorTrolleyInspectionState());
-  }
+  void setStep(int step) => emit(state.copyWith(step: step));
 
-  Future<void> submit() async {
-    emit(
-      state.copyWith(isSubmitting: true, clearError: true, isSuccess: false),
-    );
+  Future<void> loadDraft() async {
+    final raw = await StorageService.getInspectionDraft(draftId);
+    if (raw == null || raw.trim().isEmpty) return;
     try {
-      final token = await StorageService.getAccessToken();
-      final submitModel = MotorTrolleyInspectionSubmitModel.fromState(state);
-      final payload = submitModel.toJson();
-
-      final response = await _dioClient.post(
-        ApiEndpoints.submitMotorTrolleyComplete,
-        data: payload,
-        options: Options(
-          headers: {
-            if (token != null && token.isNotEmpty)
-              'Authorization': 'Bearer $token',
-          },
-        ),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        emit(state.copyWith(isSubmitting: false, isSuccess: true));
-      } else {
-        emit(
-          state.copyWith(
-            isSubmitting: false,
-            isSuccess: false,
-            errorMessage:
-                'Failed to submit inspection report. Status: ${response.statusCode}',
-          ),
-        );
-      }
-    } on NetworkException catch (e) {
       emit(
-        state.copyWith(
-          isSubmitting: false,
-          isSuccess: false,
-          errorMessage: e.message,
+        MotorTrolleyInspectionState.fromJson(
+          jsonDecode(raw) as Map<String, dynamic>,
         ),
       );
-    } on ApiException catch (e) {
-      emit(
-        state.copyWith(
-          isSubmitting: false,
-          isSuccess: false,
-          errorMessage: e.message,
-        ),
-      );
-    } catch (e) {
-      debugPrint('Motor Trolley Submission Exception: $e');
-      emit(
-        state.copyWith(
-          isSubmitting: false,
-          isSuccess: false,
-          errorMessage: 'Failed to save inspection report: $e',
-        ),
-      );
+    } on Object catch (e) {
+      debugPrint('Motor trolley draft could not be read: $e');
     }
   }
+
+  Future<void> saveDraft() async {
+    if (!state.hasAnswers) return;
+    await StorageService.saveInspectionDraft(
+      draftId,
+      jsonEncode(state.toJson()),
+    );
+    var answered = 0;
+    var total = 0;
+    for (final step in kTrolleySteps) {
+      final (a, t) = state.progressOf(step);
+      answered += a;
+      total += t;
+    }
+    final from = state.value('sectionFrom')?.trim() ?? '';
+    final to = state.value('sectionTo')?.trim() ?? '';
+    await StorageService.saveInspectionRecord({
+      'id': draftId,
+      'train': from.isEmpty && to.isEmpty
+          ? 'Motor trolley inspection'
+          : 'Motor trolley · $from – $to',
+      'date': DateTime.now().toIso8601String(),
+      'status': 'in_progress',
+      'progress': total == 0 ? 0 : answered / total,
+      'payload': {'type': 'motor_trolley'},
+    });
+  }
+
+  /// Forgets the draft, and its entry among the dashboard's drafts.
+  Future<void> clearDraft() => StorageService.deleteInspectionRecord(draftId);
 }

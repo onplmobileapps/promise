@@ -244,7 +244,7 @@ class _InspectionFormScaffoldState extends State<InspectionFormScaffold> {
                   for (final (i, s) in steps.indexed)
                     AppFilterOption(
                       value: i,
-                      label: '${i + 1}. ${s.title}',
+                      label: s.title,
                       count: s.left,
                       urgent: false,
                       mark: s.complete

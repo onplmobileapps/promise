@@ -2682,4 +2682,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inspStationSubtitle => 'Signal and telecom';
+
+  @override
+  String get inspTrolleyTitle => 'Motor trolley inspection';
+
+  @override
+  String get inspTrolleySubtitle => 'Track, bridges and works';
+
+  @override
+  String get inspFormRemedy => 'Remedy';
+
+  @override
+  String inspFormRemedyNote(String remedy) {
+    return 'Remedy: $remedy';
+  }
+
+  @override
+  String get inspFormSection => 'Section';
 }

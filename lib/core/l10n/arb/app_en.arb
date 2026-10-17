@@ -3761,5 +3761,31 @@
   "inspStationSubtitle": "Signal and telecom",
   "@inspStationSubtitle": {
     "description": "What a station inspection covers, under its title."
+  },
+  "inspTrolleyTitle": "Motor trolley inspection",
+  "@inspTrolleyTitle": {
+    "description": "Title of the motor trolley inspection form."
+  },
+  "inspTrolleySubtitle": "Track, bridges and works",
+  "@inspTrolleySubtitle": {
+    "description": "What a motor trolley inspection covers, under its title."
+  },
+  "inspFormRemedy": "Remedy",
+  "@inspFormRemedy": {
+    "description": "Label of the remedy picked for a fault on an inspection form."
+  },
+  "inspFormRemedyNote": "Remedy: {remedy}",
+  "@inspFormRemedyNote": {
+    "description": "The standard remedy for a fault, under its question.",
+    "placeholders": {
+      "remedy": {
+        "type": "String",
+        "example": "Replace"
+      }
+    }
+  },
+  "inspFormSection": "Section",
+  "@inspFormSection": {
+    "description": "Label of the railway section an inspection covers."
   }
 }
