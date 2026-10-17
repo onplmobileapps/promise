@@ -55,6 +55,24 @@ abstract final class AppMotion {
   /// How far, in radians, the light swings round as the drop travels.
   static const double glintSwing = 0.9;
 
+  /// The spring the selection chases a dragging finger on: tight enough to
+  /// keep up, with a weight of its own, so it leans and stretches; just
+  /// short of critical on iOS, so it settles with the faintest give.
+  static const double chaseStiffness = 900;
+  static const double chaseDamping = 48;
+
+  /// Android's gliding pill: critically damped springs, so it arrives
+  /// without overshooting, after a finger or to the item picked.
+  static const double glideStiffness = 360;
+  static const double glideDamping = 38;
+  static const double glideChaseDamping = 60;
+
+  /// How much the gliding pill stretches on its way, and the spring that
+  /// eases it back without a wobble.
+  static const double glideMotionGain = 0.5;
+  static const double glideStretchStiffness = 500;
+  static const double glideStretchDamping = 45;
+
   /// One turn of the loader's arc.
   static const Duration loaderTurn = Duration(milliseconds: 1400);
 

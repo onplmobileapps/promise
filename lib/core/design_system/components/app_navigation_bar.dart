@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/scheduler.dart';
@@ -17,6 +18,22 @@ import 'package:railway_hrms/core/design_system/foundations/app_spacing.dart';
 import 'package:railway_hrms/core/design_system/icons/app_glyph_icon.dart';
 import 'package:railway_hrms/core/design_system/icons/app_glyphs.dart';
 import 'package:railway_hrms/core/design_system/theme/theme_context.dart';
+
+/// How an [AppNavigationBar]'s selection moves.
+enum AppNavFeel {
+  /// iOS's tab bar, as WhatsApp and the system's own apps have it: the
+  /// selection is liquid glass, lifting into a clear, magnifying drop under
+  /// the finger, stretching as it runs and wobbling as it lands.
+  liquid,
+
+  /// A pill that glides from item to item and settles without a wobble,
+  /// stretching a little on its way: how a tab bar moves on Android.
+  glide;
+
+  /// The feel of the platform the app runs on.
+  static AppNavFeel get platform =>
+      defaultTargetPlatform == TargetPlatform.iOS ? liquid : glide;
+}
 
 /// One item of an [AppNavigationBar]: a line [glyph], whose tint deepens
 /// when selected, and its [label]. An item that isn't [visible] folds away,
@@ -50,6 +67,11 @@ class AppNavItem {
 /// and pulled past either end the drop gives like rubber. Picking an item
 /// any other way runs the same.
 ///
+/// That is its [AppNavFeel.liquid] feel, iOS's. On Android, where tab bars
+/// don't turn to glass, it has the [AppNavFeel.glide] feel instead: the
+/// pill glides to the item picked on a spring that never overshoots,
+/// stretching a little on its way, and follows a drag the same way.
+///
 /// The bar's own height includes the room the action stands up into, so
 /// all of the action can be tapped; only the capsule below that is drawn.
 class AppNavigationBar extends StatefulWidget {
@@ -59,6 +81,7 @@ class AppNavigationBar extends StatefulWidget {
     required this.selectedIndex,
     required this.onSelected,
     this.action,
+    this.feel,
   });
 
   final List<AppNavItem> items;
@@ -67,6 +90,9 @@ class AppNavigationBar extends StatefulWidget {
   final int? selectedIndex;
   final ValueChanged<int> onSelected;
   final Widget? action;
+
+  /// How the selection moves; the platform's own when null.
+  final AppNavFeel? feel;
 
   @override
   State<AppNavigationBar> createState() => _AppNavigationBarState();
@@ -90,6 +116,10 @@ class _AppNavigationBarState extends State<AppNavigationBar>
   Offset? _down;
   bool _dragging = false;
 
+  /// Where the finger is along the bar, as a share of its width, while it
+  /// drags: the selection chases it, and lands on the item under it.
+  double? _finger;
+
   /// The slot a drag is over, to tick as it crosses into another.
   int? _dragSlot;
 
@@ -97,6 +127,9 @@ class _AppNavigationBarState extends State<AppNavigationBar>
   /// underdamped spring chasing how fast it moves, so it wobbles as it
   /// stops; and its speed, signed, smoothed, which swings the light.
   late final Ticker _jellyTicker = createTicker(_tickJelly);
+
+  /// The longest step the jelly's spring is moved on by at once.
+  static const double _jellyStep = 0.004;
   double _jelly = 0;
   double _jellySpeed = 0;
   double _drift = 0;
@@ -116,7 +149,30 @@ class _AppNavigationBarState extends State<AppNavigationBar>
     damping: AppMotion.liftDamping,
   );
 
+  /// The drop chases a dragging finger on this: tight, so it keeps up, but
+  /// with a weight of its own, so it leans and stretches as it goes.
+  static const _chase = SpringDescription(
+    mass: 1,
+    stiffness: AppMotion.chaseStiffness,
+    damping: AppMotion.chaseDamping,
+  );
+
+  /// The gliding pill's springs: critically damped, so it arrives without
+  /// overshooting, quick under a finger.
+  static const _glide = SpringDescription(
+    mass: 1,
+    stiffness: AppMotion.glideStiffness,
+    damping: AppMotion.glideDamping,
+  );
+  static const _glideChase = SpringDescription(
+    mass: 1,
+    stiffness: AppMotion.chaseStiffness,
+    damping: AppMotion.glideChaseDamping,
+  );
+
   bool get _still => MediaQuery.disableAnimationsOf(context);
+
+  bool get _liquid => (widget.feel ?? AppNavFeel.platform) == AppNavFeel.liquid;
 
   @override
   void initState() {
@@ -140,12 +196,28 @@ class _AppNavigationBarState extends State<AppNavigationBar>
     // In bar widths a second, whether a spring or a finger moves it.
     final speed = lens < 0 || _lastLens < 0 ? 0.0 : (lens - _lastLens) / dt;
     _lastLens = lens;
-    final target = (speed.abs() * AppMotion.lensMotionGain).clamp(0.0, 1.2);
-    final pull =
-        AppMotion.jellyStiffness * (target - _jelly) -
-        AppMotion.jellyDamping * _jellySpeed;
-    _jellySpeed += pull * dt;
-    _jelly = (_jelly + _jellySpeed * dt).clamp(-0.4, 1.2);
+    final liquid = _liquid;
+    // Jelly on iOS, stretched on its way and wobbling as it stops; on
+    // Android it only stretches a little, and eases back without a wobble.
+    final target = liquid
+        ? (speed.abs() * AppMotion.lensMotionGain).clamp(0.0, 1.2)
+        : (speed.abs() * AppMotion.glideMotionGain).clamp(0.0, 0.6);
+    final stiffness = liquid
+        ? AppMotion.jellyStiffness
+        : AppMotion.glideStretchStiffness;
+    final damping = liquid
+        ? AppMotion.jellyDamping
+        : AppMotion.glideStretchDamping;
+    // In steps of a few milliseconds, however long the frame was, so the
+    // spring stays steady through a dropped frame rather than blowing up.
+    final steps = (dt / _jellyStep).ceil();
+    final h = dt / steps;
+    for (var i = 0; i < steps; i++) {
+      _jellySpeed +=
+          (stiffness * (target - _jelly) - damping * _jellySpeed) * h;
+      _jelly = (_jelly + _jellySpeed * h).clamp(liquid ? -0.4 : 0.0, 1.2);
+    }
+    if (!_jelly.isFinite || !_jellySpeed.isFinite) _jelly = _jellySpeed = 0;
     final swing = (speed * AppMotion.lensMotionGain).clamp(-1.0, 1.0);
     _drift += (swing - _drift) * math.min(1, dt * 14);
     final settled =
@@ -201,17 +273,20 @@ class _AppNavigationBarState extends State<AppNavigationBar>
     if (_dragging) return;
     final moved = old.selectedIndex != widget.selectedIndex;
     _runTo(_target);
-    // Picked some other way than a touch on the bar: the drop still
-    // swells on its way and settles.
-    if (moved && _down == null && !_still && _lens.value >= 0) {
-      _lift
-        ..value = 0
-        ..animateTo(
-          AppMotion.liftPeek,
-          duration: AppMotion.short,
-          curve: Curves.easeOut,
-        ).whenComplete(_land);
+    if (!moved || _down != null || _still || !_liquid || _lens.value < 0) {
+      return;
     }
+    // Lifted by the touch that picked it, the drop runs there as it is;
+    // picked some other way, it swells on its way. Either way it lands as
+    // it arrives.
+    if (_lift.value < 0.05 && !_lift.isAnimating) {
+      _lift.animateTo(
+        AppMotion.liftPeek,
+        duration: AppMotion.short,
+        curve: Curves.easeOut,
+      );
+    }
+    _landOnArrival();
   }
 
   void _runTo(double target) {
@@ -220,13 +295,77 @@ class _AppNavigationBarState extends State<AppNavigationBar>
       return;
     }
     _lens.animateWith(
-      SpringSimulation(_run, _lens.value, target, _lens.velocity),
+      SpringSimulation(
+        _liquid ? _run : _glide,
+        _lens.value,
+        target,
+        _lens.velocity,
+      ),
     );
+  }
+
+  /// Runs the selection after a dragging finger at [target].
+  void _chaseTo(double target) {
+    if (_still) {
+      _lens.value = target;
+      return;
+    }
+    _lens.animateWith(
+      SpringSimulation(
+        _liquid ? _chase : _glideChase,
+        _lens.value,
+        target,
+        _lens.velocity,
+      ),
+    );
+  }
+
+  /// The slot under [share] of the bar's width.
+  int _slotAt(double share) {
+    final count = _slots.length;
+    return (share * count - 0.5).round().clamp(0, count - 1);
+  }
+
+  /// Waiting for the drop to arrive before it lands.
+  VoidCallback? _arrival;
+
+  /// Lands the drop once it is nearly over its item: a drop sent to another
+  /// item runs there lifted and drops into the pill as it arrives, as iOS's
+  /// does, rather than turning back into a pill on its way.
+  void _landOnArrival() {
+    _stopWaiting();
+    final target = _target;
+    final near = 0.25 / math.max(1, _slots.length);
+    if (!mounted || !_liquid || target < 0 || !_lens.isAnimating) {
+      _land();
+      return;
+    }
+    void check() {
+      if (!mounted || _down != null) {
+        _stopWaiting();
+        return;
+      }
+      if ((_lens.value - target).abs() < near || !_lens.isAnimating) {
+        _stopWaiting();
+        _land();
+      }
+    }
+
+    _arrival = check;
+    _lens.addListener(check);
+    check();
+  }
+
+  void _stopWaiting() {
+    final arrival = _arrival;
+    if (arrival == null) return;
+    _lens.removeListener(arrival);
+    _arrival = null;
   }
 
   void _land() {
     if (!mounted || _down != null) return;
-    if (_still) {
+    if (_still || !_liquid) {
       _lift.value = 0;
       return;
     }
@@ -252,13 +391,19 @@ class _AppNavigationBarState extends State<AppNavigationBar>
 
   void _onDown(PointerDownEvent event, double width) {
     if (_lens.value < 0 || width <= 0) return;
+    _stopWaiting();
     _down = event.localPosition;
-    if (_still) return;
+    _finger = null;
+    // On Android the pill waits for the item to be picked.
+    if (_still || !_liquid) return;
     _lift.animateWith(
       SpringSimulation(_settle, _lift.value, 1, _lift.velocity),
     );
-    // The drop gathers under the finger.
-    _runTo(_clamp(event.localPosition.dx / width));
+    // The drop lifts and gathers over the item under the finger, as iOS's
+    // does; over the action it gathers under the finger itself.
+    final share = event.localPosition.dx / width;
+    final slot = _slotAt(share);
+    _runTo(_slots[slot] == null ? _clamp(share) : _centreOf(slot));
   }
 
   void _onMove(PointerMoveEvent event, double width) {
@@ -269,11 +414,14 @@ class _AppNavigationBarState extends State<AppNavigationBar>
       setState(() => _dragging = true);
     }
     if (_dragging) {
-      _lens.stop();
-      _lens.value = _rubber(event.localPosition.dx / width);
+      final share = event.localPosition.dx / width;
+      _finger = share;
+      // Pulled past either end, the drop gives like rubber; the pill just
+      // stops there.
+      _chaseTo(_liquid ? _rubber(share) : _clamp(share));
       _wakeJelly();
       // A tick for each item crossed, as iOS's controls give.
-      final slot = (_clamp(_lens.value) * _slots.length - 0.5).round();
+      final slot = _slotAt(share);
       if (slot != _dragSlot) {
         if (_dragSlot != null) HapticFeedback.selectionClick();
         _dragSlot = slot;
@@ -285,14 +433,12 @@ class _AppNavigationBarState extends State<AppNavigationBar>
     final dragged = _dragging;
     _down = null;
     _dragSlot = null;
+    final finger = _finger;
+    _finger = null;
     if (dragged) {
       setState(() => _dragging = false);
-      final slots = _slots;
-      final nearest = (_lens.value * slots.length - 0.5).round().clamp(
-        0,
-        slots.length - 1,
-      );
-      final index = slots[nearest];
+      // The item under the finger, wherever the drop chasing it has got to.
+      final index = _slots[_slotAt(finger ?? _lens.value)];
       if (index != null && index != widget.selectedIndex) {
         widget.onSelected(index);
       }
@@ -302,12 +448,13 @@ class _AppNavigationBarState extends State<AppNavigationBar>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _runTo(_target);
-      _land();
+      _landOnArrival();
     });
   }
 
   @override
   void dispose() {
+    _stopWaiting();
     _jellyTicker.dispose();
     _lens
       ..removeListener(_wakeJelly)
@@ -327,6 +474,7 @@ class _AppNavigationBarState extends State<AppNavigationBar>
     final slots = _slots;
     final actionSlot = action == null ? -1 : slots.indexOf(null);
     final look = LiquidLook.of(context);
+    final liquid = _liquid;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -348,7 +496,8 @@ class _AppNavigationBarState extends State<AppNavigationBar>
               animation: Listenable.merge([_lens, _lift]),
               builder: (context, _) {
                 final lens = _lens.value;
-                final held = _lift.value.clamp(0.0, 1.2);
+                // Only iOS's selection lifts into a drop of glass.
+                final held = liquid ? _lift.value.clamp(0.0, 1.2) : 0.0;
                 // Jelly: stretched on the move, squashed and wobbling as it
                 // stops.
                 final motion = _jelly;
@@ -369,7 +518,10 @@ class _AppNavigationBarState extends State<AppNavigationBar>
                       item: items[index],
                       selected: index == widget.selectedIndex,
                       near: near(index),
-                      magnify: near(index) * math.max(held, moving),
+                      magnify: liquid
+                          ? near(index) * math.max(held, moving)
+                          : 0,
+                      sink: !liquid,
                       onTap: () => widget.onSelected(index),
                     ),
                   ),
@@ -423,6 +575,7 @@ class _AppNavigationBarState extends State<AppNavigationBar>
                   share: 1 / math.max(1, slots.length),
                   motion: motion,
                   lift: held,
+                  lean: _drift,
                 );
 
                 // The drop of glass rises over the items and out of the bar,
@@ -437,7 +590,10 @@ class _AppNavigationBarState extends State<AppNavigationBar>
                     children: [
                       Positioned.fill(
                         child: AppLiquidGlass(
-                          amount: math.max(held, moving * 0.6).clamp(0.0, 1.0),
+                          // Android's pill stays a pill: no glass at all.
+                          amount: liquid
+                              ? math.max(held, moving * 0.6).clamp(0.0, 1.0)
+                              : 0,
                           lens: selection.shapeIn,
                           light: _light,
                           child: CustomPaint(
@@ -525,6 +681,7 @@ class _NavButton extends StatelessWidget {
     required this.selected,
     required this.near,
     required this.magnify,
+    required this.sink,
     required this.onTap,
   });
 
@@ -537,6 +694,10 @@ class _NavButton extends StatelessWidget {
 
   /// How much the drop passing over enlarges the icon, from 0 to 1.
   final double magnify;
+
+  /// Whether the icon sinks a little while held, where no drop of glass
+  /// rises over it.
+  final bool sink;
   final VoidCallback onTap;
 
   @override
@@ -551,17 +712,22 @@ class _NavButton extends StatelessWidget {
         builder: (context, pressed, focused) => Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Transform.scale(
-              scale: 1 + AppSizes.navLensMagnify * magnify,
-              child: AppGlyphIcon(
-                item.glyph,
-                depth: true,
-                size: AppSizes.glyphNav,
-                color: ink,
-                tint: Color.lerp(
-                  colors.iconFill,
-                  colors.iconFillActive,
-                  focused ? 1 : near,
+            AnimatedScale(
+              scale: sink && pressed ? AppSizes.navGlideSink : 1,
+              duration: AppMotion.short,
+              curve: Curves.easeOutCubic,
+              child: Transform.scale(
+                scale: 1 + AppSizes.navLensMagnify * magnify,
+                child: AppGlyphIcon(
+                  item.glyph,
+                  depth: true,
+                  size: AppSizes.glyphNav,
+                  color: ink,
+                  tint: Color.lerp(
+                    colors.iconFill,
+                    colors.iconFillActive,
+                    focused ? 1 : near,
+                  ),
                 ),
               ),
             ),
@@ -593,6 +759,7 @@ class _SelectionGeometry {
     required this.share,
     required this.motion,
     required this.lift,
+    this.lean = 0,
   });
 
   final double top;
@@ -605,6 +772,11 @@ class _SelectionGeometry {
   final double motion;
   final double lift;
 
+  /// Which way it travels, from -1 (left, fast) to 1 (right): its leading
+  /// edge keeps up while its trailing edge drags behind, as a drop of
+  /// liquid drawn along does.
+  final double lean;
+
   RRect? shapeIn(Size size) {
     if (centre < 0) return null;
     const inset = AppSpacing.xs;
@@ -614,7 +786,11 @@ class _SelectionGeometry {
       width: size.width * share - inset * 2,
       height: barHeight - inset * 2,
     );
-    final shape = liquidShape(rest, motion: motion, lift: lift);
+    // How much longer it is drawn out on its way.
+    final drawnOut = rest.width * AppSizes.navLensStretch * math.max(0, motion);
+    final shape = liquidShape(rest, motion: motion, lift: lift).shift(
+      Offset(-lean.clamp(-1.0, 1.0) * drawnOut * AppSizes.navLensLean, 0),
+    );
     // Against either end of the bar the drop squashes, as jelly against a
     // wall, rather than spilling past it.
     const room = AppSpacing.xxs;
@@ -637,10 +813,11 @@ class _SelectionGeometry {
       other.centre == centre &&
       other.share == share &&
       other.motion == motion &&
-      other.lift == lift;
+      other.lift == lift &&
+      other.lean == lean;
 
   @override
-  int get hashCode => Object.hash(top, centre, share, motion, lift);
+  int get hashCode => Object.hash(top, centre, share, motion, lift, lean);
 }
 
 /// The bar's glass: a tinted fill, a lit rim along its top, a hairline

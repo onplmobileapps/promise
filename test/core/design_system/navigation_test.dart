@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
@@ -22,6 +23,7 @@ void main() {
       VoidCallback? onAction,
       Size size = const Size(393, 852),
       double textScale = 1,
+      AppNavFeel? feel,
     }) => pumpScreen(
       tester,
       Scaffold(
@@ -31,6 +33,7 @@ void main() {
           items: items,
           selectedIndex: selected,
           onSelected: onSelected,
+          feel: feel,
           action: AppActionKey(
             icon: const Icon(Icons.face_rounded),
             label: 'Check in',
@@ -135,6 +138,108 @@ void main() {
         textScale: 2,
       );
       expect(tester.takeException(), isNull);
+    });
+
+    double glass(WidgetTester tester) => tester
+        .widget<AppLiquidGlass>(
+          find.descendant(
+            of: find.byType(AppNavigationBar),
+            matching: find.byType(AppLiquidGlass),
+          ),
+        )
+        .amount;
+
+    Future<void> frames(WidgetTester tester, int count) async {
+      for (var i = 0; i < count; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+    }
+
+    testWidgets('on iOS the selection lifts into glass under the finger and '
+        'lands back into a pill', (tester) async {
+      await pumpBar(
+        tester,
+        selected: 0,
+        onSelected: (_) {},
+        feel: AppNavFeel.liquid,
+      );
+      expect(glass(tester), 0);
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Trains')),
+      );
+      await frames(tester, 10);
+      expect(glass(tester), greaterThan(0.5));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      // Settled: too faint to draw.
+      expect(glass(tester), lessThan(0.004));
+    });
+
+    testWidgets('on iOS a tapped item\'s drop runs there lifted, and lands '
+        'as it arrives', (tester) async {
+      var selected = 0;
+      await pumpScreen(
+        tester,
+        StatefulBuilder(
+          builder: (context, setState) => Scaffold(
+            extendBody: true,
+            body: const SizedBox.expand(),
+            bottomNavigationBar: AppNavigationBar(
+              items: items,
+              selectedIndex: selected,
+              onSelected: (i) => setState(() => selected = i),
+              feel: AppNavFeel.liquid,
+            ),
+          ),
+        ),
+      );
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Profile')),
+      );
+      // A tap's length.
+      await frames(tester, 6);
+      expect(glass(tester), greaterThan(0.2));
+      await gesture.up();
+      // Let go, it doesn't vanish: it is still on its way.
+      await frames(tester, 2);
+      expect(selected, 3);
+      expect(glass(tester), greaterThan(0.2));
+      await tester.pumpAndSettle();
+      expect(glass(tester), lessThan(0.004));
+    });
+
+    testWidgets('on Android the pill glides, and never turns to glass', (
+      tester,
+    ) async {
+      final picked = <int>[];
+      await pumpBar(
+        tester,
+        selected: 0,
+        onSelected: picked.add,
+        feel: AppNavFeel.glide,
+      );
+      final home = tester.getCenter(find.text('Home'));
+      final alerts = tester.getCenter(find.text('Alerts'));
+      final gesture = await tester.startGesture(home);
+      await frames(tester, 4);
+      expect(glass(tester), 0);
+      for (var i = 1; i <= 10; i++) {
+        await gesture.moveTo(Offset.lerp(home, alerts, i / 10)!);
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(glass(tester), 0);
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(picked, [2]);
+      expect(glass(tester), 0);
+    });
+
+    test('the bar feels like the platform it runs on', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      expect(AppNavFeel.platform, AppNavFeel.liquid);
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      expect(AppNavFeel.platform, AppNavFeel.glide);
+      debugDefaultTargetPlatformOverride = null;
     });
 
     testWidgets('stays clear of the system navigation', (tester) async {

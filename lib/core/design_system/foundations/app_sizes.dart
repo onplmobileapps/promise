@@ -207,6 +207,14 @@ abstract final class AppSizes {
   static const double navLensSwell = 0.10;
   static const double navLensMagnify = 0.18;
 
+  /// How far the drawn-out lens trails behind its middle, as a share of
+  /// how much longer it is: its leading edge keeps up with the finger.
+  static const double navLensLean = 0.35;
+
+  /// How far an icon sinks while held where no drop of glass rises over
+  /// it, as on Android.
+  static const double navGlideSink = 0.9;
+
   /// How much the whole bar swells while it is held.
   static const double navHeldSwell = 0.03;
 
