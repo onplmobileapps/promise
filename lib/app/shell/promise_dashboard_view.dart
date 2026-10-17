@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +19,7 @@ import 'package:railway_hrms/modules/hrms/bloc/face/face_register_states.dart';
 import 'package:railway_hrms/modules/hrms/bloc/face/face_verification_cubit.dart';
 import 'package:railway_hrms/modules/hrms/utils/attendance_helpers.dart';
 import 'package:railway_hrms/modules/hrms/widgets/attendance_gate.dart';
+import 'package:railway_hrms/modules/inspection/shared/outbox/inspection_outbox.dart';
 
 /// The app once signed in: the home tab with its modules, the alerts and
 /// the profile, under one navigation bar with check-in in its middle.
@@ -47,6 +50,11 @@ class _PromiseDashboardViewState extends State<PromiseDashboardView> {
   void initState() {
     super.initState();
     ShellRequests.alerts.addListener(_openRequestedAlerts);
+    // Inspections submitted with no connection go out from here on, as
+    // soon as there is one.
+    if (sl.isRegistered<InspectionOutbox>()) {
+      unawaited(sl<InspectionOutbox>().start());
+    }
     // Notifications are asked for once the user is in, once only, and with
     // the reason before the system's prompt.
     WidgetsBinding.instance.addPostFrameCallback((_) async {

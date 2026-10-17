@@ -66,6 +66,9 @@ class _InspectionStartGateState extends State<InspectionStartGate> {
     switch (result) {
       case FaceCheckPassed(:final identity):
         setState(() => _start = identity);
+        if (!identity.matched) {
+          await showAppMessage(context, context.l10n.inspFaceKeptOffline);
+        }
       case FaceCheckFailed(:final message):
         await showAppDialog(
           context: context,

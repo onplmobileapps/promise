@@ -20,6 +20,7 @@ import 'package:railway_hrms/modules/inspection/data/inspection_remote_datasourc
 import 'package:railway_hrms/modules/inspection/data/inspection_repository.dart';
 import 'package:railway_hrms/modules/inspection/data/inspection_repository_impl.dart';
 import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
+import 'package:railway_hrms/modules/inspection/shared/outbox/inspection_outbox.dart';
 import 'package:railway_hrms/modules/prams/bloc/accident_cubit.dart';
 import 'package:railway_hrms/modules/prams/bloc/incident_photo_cubit.dart';
 import 'package:railway_hrms/modules/prams/data/accident_remote_datasource.dart';
@@ -79,8 +80,17 @@ Future<void> init() async {
   sl.registerLazySingleton<InspectionRepository>(
     () => InspectionRepositoryImpl(sl()),
   );
-  sl.registerLazySingleton<InspectionFaceVerifier>(
+  sl.registerLazySingleton<ServerInspectionFaceVerifier>(
     () => ServerInspectionFaceVerifier(sl<FaceRepository>()),
+  );
+  sl.registerLazySingleton<InspectionFaceVerifier>(
+    () => sl<ServerInspectionFaceVerifier>(),
+  );
+  sl.registerLazySingleton<InspectionFaceMatcher>(
+    () => sl<ServerInspectionFaceVerifier>(),
+  );
+  sl.registerLazySingleton<InspectionOutbox>(
+    () => InspectionOutbox(repository: sl(), matcher: sl()),
   );
 
   // Tracking

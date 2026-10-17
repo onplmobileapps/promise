@@ -14,15 +14,24 @@ import 'package:railway_hrms/modules/inspection/shared/spec/spec_form.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_form_scaffold.dart';
 
-/// A draft of a form described as data: its answers, and when it began.
-typedef SpecDraft = ({Map<String, dynamic> answers, DateTime startedAt});
+/// A draft of a form described as data: its answers, when it began, and
+/// the step it was left on.
+typedef SpecDraft = ({
+  Map<String, dynamic> answers,
+  DateTime startedAt,
+  int step,
+});
 
 /// Where a form described as data keeps its answers: its draft while it is
 /// filled in, and the finished inspection, signed.
 abstract interface class SpecFormStore {
   Future<SpecDraft?> load();
 
-  Future<void> saveDraft(Map<String, dynamic> answers, DateTime startedAt);
+  Future<void> saveDraft(
+    Map<String, dynamic> answers,
+    DateTime startedAt, {
+    int step = 0,
+  });
 
   Future<void> complete(
     Map<String, dynamic> answers,
@@ -104,6 +113,7 @@ class _SpecFormState extends State<_SpecForm> {
     if (draft != null) {
       _answers.values.addAll(draft.answers);
       _startedAt = draft.startedAt;
+      _step = draft.step;
     }
     if (mounted) setState(() => _ready = true);
   }
@@ -121,7 +131,11 @@ class _SpecFormState extends State<_SpecForm> {
   Future<void> _saveDraft() async {
     _autosave?.cancel();
     if (!_dirty) return;
-    await widget.screen.store.saveDraft(_answers.values, _startedAt);
+    await widget.screen.store.saveDraft(
+      _answers.values,
+      _startedAt,
+      step: _step,
+    );
   }
 
   InspectionReport _report() => InspectionReport(
@@ -133,8 +147,12 @@ class _SpecFormState extends State<_SpecForm> {
         ReportRow(label, value, tone: ReportTone.plain),
     ],
     sections: [
-      for (final part in _parts)
-        ReportSection(title: part.title, rows: _answers.rows(part.specs)),
+      for (final (i, part) in _parts.indexed)
+        ReportSection(
+          title: part.title,
+          step: i,
+          rows: _answers.rows(part.specs),
+        ),
     ],
   );
 

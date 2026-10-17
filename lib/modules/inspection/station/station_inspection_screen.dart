@@ -6,11 +6,12 @@ import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/core/models/login_response.dart';
 import 'package:railway_hrms/core/storage/storage_service.dart';
-import 'package:railway_hrms/core/utils/either.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_api.dart';
 import 'package:railway_hrms/modules/inspection/data/inspection_repository.dart';
 import 'package:railway_hrms/modules/inspection/shared/flow/inspection_review_screen.dart';
 import 'package:railway_hrms/modules/inspection/shared/flow/inspection_session.dart';
 import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
+import 'package:railway_hrms/modules/inspection/shared/outbox/inspection_outbox.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_form_scaffold.dart';
 import 'package:railway_hrms/modules/inspection/station/controller.dart';
@@ -147,7 +148,7 @@ class _StationFormState extends State<_StationForm> {
     _autosave?.cancel();
     await _saveDraft();
     if (!mounted) return;
-    final repository = sl<InspectionRepository>();
+    final id = 'station-${DateTime.now().millisecondsSinceEpoch}';
     final sent = await reviewAndSubmit(
       context,
       verifier: widget.verifier,
@@ -157,17 +158,19 @@ class _StationFormState extends State<_StationForm> {
         stationLabel: l10n.inspFormStation,
         dateLabel: l10n.inspFormDate,
       ),
-      submit: (signatures) async {
-        final result = await repository.submitStationInspection({
-          ...StationInspectionPayload.build(
-            _form,
-            stationId: _form.stationId,
-            user: _user,
-          ),
-          ...signatures.toJson(),
-        });
-        return result.fold(Left.new, (done) => Right(done.message));
-      },
+      send: (signatures) => OutboxItem(
+        id: id,
+        api: InspectionApi.station,
+        title: l10n.inspStationTitle,
+        subtitle: _form.station,
+        queuedAt: DateTime.now(),
+        signatures: signatures,
+        payload: StationInspectionPayload.build(
+          _form,
+          stationId: _form.stationId,
+          user: _user,
+        ),
+      ),
     );
     if (!sent || !mounted) return;
     await _form.clearDraftFromDisk();

@@ -2894,4 +2894,106 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get inspApprovalMissing =>
       'Fill in the train, officer, date, times and route first.';
+
+  @override
+  String get inspReviewLeadEdit =>
+      'Check every answer before you confirm. Tap one to change it on the form.';
+
+  @override
+  String get inspReviewAnswers => 'Answers';
+
+  @override
+  String get inspReviewPdf => 'PDF';
+
+  @override
+  String get inspReviewAll => 'All';
+
+  @override
+  String get inspReviewFindings => 'Findings';
+
+  @override
+  String get inspReviewBlank => 'Blank';
+
+  @override
+  String get inspReviewNoFindings => 'Nothing reported wrong';
+
+  @override
+  String get inspReviewNoBlank => 'Every question is answered';
+
+  @override
+  String get inspReviewChange => 'Change';
+
+  @override
+  String get inspReviewNoPreview =>
+      'The PDF can\'t be shown on this phone. The answers are the report as it will be sent.';
+
+  @override
+  String get inspQueuedTitle => 'Saved to send';
+
+  @override
+  String get inspQueuedMessage =>
+      'There\'s no connection right now. The inspection is kept on this phone and goes out by itself as soon as you\'re online.';
+
+  @override
+  String get inspFaceKeptOffline =>
+      'There\'s no connection, so your face was taken and kept. It is matched when the inspection goes out.';
+
+  @override
+  String get inspOutboxTitle => 'Waiting to send';
+
+  @override
+  String get inspOutboxWaiting => 'Goes out when you\'re online';
+
+  @override
+  String inspOutboxRefused(String reason) {
+    return 'Not accepted: $reason';
+  }
+
+  @override
+  String get inspOutboxSendNow => 'Send now';
+
+  @override
+  String get inspOutboxSending => 'Sending…';
+
+  @override
+  String inspOutboxSent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count inspections sent',
+      one: '1 inspection sent',
+      zero: 'Nothing could be sent yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inspOutboxStill(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count are still waiting for a connection and go out by themselves.',
+      one: '1 is still waiting for a connection and goes out by itself.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inspOutboxQueuedAt(String time) {
+    return 'Saved $time';
+  }
+
+  @override
+  String get inspOutboxRemove => 'Remove';
+
+  @override
+  String get inspOutboxRemoveTitle => 'Remove this inspection?';
+
+  @override
+  String get inspOutboxRemoveMessage =>
+      'It hasn\'t been sent. Removing it deletes it from this phone.';
+
+  @override
+  String get inspOutboxTryAgain => 'Try again';
 }

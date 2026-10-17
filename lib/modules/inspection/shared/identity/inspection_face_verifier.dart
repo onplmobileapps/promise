@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/di/service_locator.dart';
+import 'package:railway_hrms/core/error/exceptions.dart';
 import 'package:railway_hrms/core/face_verification/face_attendance_outcome.dart';
 import 'package:railway_hrms/core/face_verification/face_repository.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
@@ -16,6 +17,7 @@ import 'package:railway_hrms/core/permissions/app_permission.dart';
 import 'package:railway_hrms/core/permissions/permission_gate.dart';
 import 'package:railway_hrms/core/security/device_integrity.dart';
 import 'package:railway_hrms/core/storage/storage_service.dart';
+import 'package:railway_hrms/core/utils/either.dart';
 import 'package:railway_hrms/modules/inspection/shared/file_utils.dart';
 import 'package:railway_hrms/modules/inspection/shared/identity/inspection_identity.dart';
 
@@ -57,15 +59,51 @@ abstract interface class InspectionFaceVerifier {
   Future<FaceCheckResult> verify(BuildContext context, InspectionMoment moment);
 }
 
+/// Matches a face taken with no connection, once there is one: the check
+/// matched, or why not. A [NetworkException] means there is still no
+/// connection, and the check waits; anything else, that the face isn't
+/// the employee's.
+abstract interface class InspectionFaceMatcher {
+  Future<Either<AppException, InspectionIdentity>> match(
+    InspectionIdentity identity,
+  );
+}
+
+/// Matches whichever of [signatures] were taken with no connection.
+Future<Either<AppException, InspectionSignatures>> matchSignatures(
+  InspectionSignatures signatures,
+  InspectionFaceMatcher matcher,
+) async {
+  Future<Either<AppException, InspectionIdentity?>> one(
+    InspectionIdentity? check,
+  ) async => check == null || check.matched
+      ? Right(check)
+      : (await matcher.match(check)).fold(Left.new, Right.new);
+  final start = await one(signatures.start);
+  if (start case Left(:final value)) return Left(value);
+  final submit = await one(signatures.submit);
+  if (submit case Left(:final value)) return Left(value);
+  return Right(
+    InspectionSignatures(
+      start: start.fold((_) => null, (check) => check),
+      submit: submit.fold((_) => null, (check) => check),
+    ),
+  );
+}
+
 /// Checks the face as a check-in does: the camera takes it live (passive
 /// liveness, one person, a clear frontal face), and the face server
 /// matches it against the employee's registered face. The phone must be
 /// genuine and its location real; where it was is noted with the photo.
 ///
+/// With no connection the face is still taken live and kept, to be
+/// matched (as [InspectionFaceMatcher]) before the inspection goes out.
+///
 /// This uses the face server's one verification endpoint, the one station
 /// inspections already used. Should the server gain an inspection-only
 /// check, it is the one place to change.
-class ServerInspectionFaceVerifier implements InspectionFaceVerifier {
+class ServerInspectionFaceVerifier
+    implements InspectionFaceVerifier, InspectionFaceMatcher {
   ServerInspectionFaceVerifier(this._faces);
 
   final FaceRepository _faces;
@@ -162,9 +200,30 @@ class ServerInspectionFaceVerifier implements InspectionFaceVerifier {
         position?.longitude ?? 0,
       );
       return answer.fold<Future<FaceCheckResult>>(
-        (failure) async => FaceCheckFailed(
-          failure.message.isEmpty ? l10n.inspVerifyFailed : failure.message,
-        ),
+        (failure) async {
+          if (failure is! NetworkException) {
+            return FaceCheckFailed(
+              failure.message.isEmpty ? l10n.inspVerifyFailed : failure.message,
+            );
+          }
+          // No connection: the live face is kept, to be matched before
+          // the inspection goes out.
+          final kept = [
+            for (final image in images)
+              await FootplateFileUtils.saveImagePermanently(image.path),
+          ];
+          return FaceCheckPassed(
+            InspectionIdentity(
+              photoPath: kept.first,
+              verifiedAt: DateTime.now(),
+              latitude: position?.latitude,
+              longitude: position?.longitude,
+              matched: false,
+              photos: kept,
+              embeddings: embeddings,
+            ),
+          );
+        },
         (response) async {
           final outcome = FaceAttendanceOutcome.fromResponse(response.data);
           if (!outcome.success) {
@@ -185,6 +244,42 @@ class ServerInspectionFaceVerifier implements InspectionFaceVerifier {
           );
         },
       );
+    });
+  }
+
+  @override
+  Future<Either<AppException, InspectionIdentity>> match(
+    InspectionIdentity identity,
+  ) async {
+    if (identity.matched) return Right(identity);
+    final user = (await StorageService.getUser())?.user;
+    final photos = identity.photos.isEmpty
+        ? [identity.photoPath]
+        : identity.photos;
+    final List<MultipartFile> files;
+    try {
+      files = [
+        for (final path in photos)
+          await MultipartFile.fromFile(
+            await FootplateFileUtils.resolveAbsolutePath(path),
+          ),
+      ];
+    } on Object {
+      return Left(
+        AppException("The face photo taken offline couldn't be read."),
+      );
+    }
+    final answer = await _faces.verifyFace(
+      user?.empid?.toString() ?? '',
+      files,
+      identity.embeddings,
+      identity.latitude ?? 0,
+      identity.longitude ?? 0,
+    );
+    return answer.fold(Left.new, (response) {
+      final outcome = FaceAttendanceOutcome.fromResponse(response.data);
+      if (!outcome.success) return Left(AppException(outcome.message));
+      return Right(identity.asMatched());
     });
   }
 

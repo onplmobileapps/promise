@@ -1,5 +1,6 @@
 import 'package:railway_hrms/core/error/exceptions.dart';
 import 'package:railway_hrms/core/utils/either.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_api.dart';
 import 'package:railway_hrms/modules/inspection/data/inspection_remote_datasource.dart';
 import 'package:railway_hrms/modules/inspection/data/inspection_repository.dart';
 import 'package:railway_hrms/modules/inspection/data/models/inspection_submission.dart';
@@ -23,20 +24,12 @@ class InspectionRepositoryImpl implements InspectionRepository {
   }
 
   @override
-  Future<Either<AppException, InspectionSubmission>> submitStationInspection(
+  Future<Either<AppException, InspectionSubmission>> submit(
+    InspectionApi api,
     Map<String, dynamic> payload,
-  ) => _submit(() => _remote.submitStationInspection(payload));
-
-  @override
-  Future<Either<AppException, InspectionSubmission>>
-  submitMotorTrolleyInspection(Map<String, dynamic> payload) =>
-      _submit(() => _remote.submitMotorTrolleyInspection(payload));
-
-  Future<Either<AppException, InspectionSubmission>> _submit(
-    Future<dynamic> Function() send,
   ) async {
     try {
-      final response = await send();
+      final response = await _remote.submit(api, payload);
       return Right(InspectionSubmission.fromResponse(response.data));
     } catch (e) {
       return Left(ErrorHandler.handle(e));

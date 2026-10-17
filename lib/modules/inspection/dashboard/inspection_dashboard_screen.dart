@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
+import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/core/models/login_response.dart';
 import 'package:railway_hrms/core/navigation/app_routes.dart';
@@ -17,6 +18,7 @@ import 'package:railway_hrms/modules/inspection/footplate/inspection_approval_sc
 import 'package:railway_hrms/modules/inspection/footplate/wizard/wizard_screen.dart';
 import 'package:railway_hrms/modules/inspection/locomotive/locomotive_inspection_screen.dart';
 import 'package:railway_hrms/modules/inspection/motor_trolley/motor_trolley_screen.dart';
+import 'package:railway_hrms/modules/inspection/shared/outbox/inspection_outbox.dart';
 import 'package:railway_hrms/modules/inspection/station/station_inspection_screen.dart';
 import 'package:railway_hrms/modules/inspection/traffic/traffic_inspection_home.dart';
 
@@ -57,13 +59,16 @@ extension on InspectionKind {
   };
 }
 
-/// e Inspection: this month's plan, the drafts to finish, and every kind
-/// of inspection to start.
+/// e Inspection: this month's plan, the inspections waiting to be sent,
+/// the drafts to finish, and every kind of inspection to start.
 class InspectionDashboardScreen extends StatefulWidget {
-  const InspectionDashboardScreen({super.key, this.now});
+  const InspectionDashboardScreen({super.key, this.now, this.outbox});
 
   /// The clock; the device's by default.
   final DateTime Function()? now;
+
+  /// What waits to be sent; the app's own unless a test stands in.
+  final InspectionOutbox? outbox;
 
   @override
   State<InspectionDashboardScreen> createState() =>
@@ -76,10 +81,64 @@ class _InspectionDashboardScreenState extends State<InspectionDashboardScreen> {
   User? _user;
   final _draftsKey = GlobalKey();
 
+  InspectionOutbox? get _outbox =>
+      widget.outbox ??
+      (sl.isRegistered<InspectionOutbox>() ? sl<InspectionOutbox>() : null);
+
   @override
   void initState() {
     super.initState();
     _loadUser();
+  }
+
+  /// Sends what waits, and says how it went.
+  Future<void> _sendWaiting(
+    InspectionOutbox outbox, {
+    bool retry = false,
+  }) async {
+    final l10n = context.l10n;
+    final round = await outbox.send(retry: retry);
+    if (!mounted) return;
+    await showAppMessage(
+      context,
+      [
+        l10n.inspOutboxSent(round.sent),
+        if (round.waiting > 0) l10n.inspOutboxStill(round.waiting),
+      ].join(' '),
+      tone: round.sent > 0 ? AppDialogTone.success : AppDialogTone.info,
+    );
+  }
+
+  /// What can be done with one inspection waiting: send it again, or take
+  /// it off the phone.
+  Future<void> _openWaiting(InspectionOutbox outbox, OutboxItem item) async {
+    final l10n = context.l10n;
+    final again = await showAppDialog(
+      context: context,
+      tone: item.refused ? AppDialogTone.warning : AppDialogTone.info,
+      title: [item.title, ?item.subtitle].join(' · '),
+      message: item.refused
+          ? l10n.inspOutboxRefused(item.error ?? '')
+          : l10n.inspOutboxWaiting,
+      primaryLabel: item.refused
+          ? l10n.inspOutboxTryAgain
+          : l10n.inspOutboxSendNow,
+      secondaryLabel: l10n.inspOutboxRemove,
+    );
+    if (!mounted || again == null) return;
+    if (again) {
+      await _sendWaiting(outbox, retry: true);
+      return;
+    }
+    final sure = await showAppDialog(
+      context: context,
+      tone: AppDialogTone.warning,
+      title: l10n.inspOutboxRemoveTitle,
+      message: l10n.inspOutboxRemoveMessage,
+      primaryLabel: l10n.inspOutboxRemove,
+      secondaryLabel: l10n.actionCancel,
+    );
+    if (sure == true) await outbox.remove(item.id);
   }
 
   Future<void> _loadUser() async {
@@ -268,6 +327,20 @@ class _InspectionDashboardScreenState extends State<InspectionDashboardScreen> {
                 _PlanCard(quota: quota, now: now),
                 AppSpacing.gapMd,
                 _Counts(quota: quota, now: now),
+                if (_outbox case final outbox?)
+                  ListenableBuilder(
+                    listenable: outbox,
+                    builder: (context, _) => outbox.items.isEmpty
+                        ? const SizedBox.shrink()
+                        : Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.xl),
+                            child: _Waiting(
+                              outbox: outbox,
+                              onSend: () => _sendWaiting(outbox),
+                              onOpen: (item) => _openWaiting(outbox, item),
+                            ),
+                          ),
+                  ),
                 if (drafts.isNotEmpty) ...[
                   AppSpacing.gapXl,
                   AppSectionTitle(key: _draftsKey, l10n.inspContinue),
@@ -498,6 +571,65 @@ class _Counts extends StatelessWidget {
             ),
           ),
         ],
+      ],
+    );
+  }
+}
+
+/// The inspections submitted with no connection, each saying whether it
+/// waits for one or was turned down, and a way to send them now.
+class _Waiting extends StatelessWidget {
+  const _Waiting({
+    required this.outbox,
+    required this.onSend,
+    required this.onOpen,
+  });
+
+  final InspectionOutbox outbox;
+  final VoidCallback onSend;
+  final ValueChanged<OutboxItem> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSectionTitle(
+          l10n.inspOutboxTitle,
+          badge: AppPill('${outbox.items.length}', tone: AppTone.warning),
+          trailing: AppButton(
+            label: l10n.inspOutboxSendNow,
+            variant: AppButtonVariant.tonal,
+            size: AppButtonSize.small,
+            leadingGlyph: AppGlyphs.refresh,
+            expand: false,
+            isLoading: outbox.sending,
+            loadingLabel: l10n.inspOutboxSending,
+            onPressed: outbox.sending ? null : onSend,
+          ),
+        ),
+        AppSpacing.gapSm,
+        AppListGroup(
+          children: [
+            for (final item in outbox.items)
+              AppListRow(
+                leading: AppToneIcon(
+                  glyph: item.refused
+                      ? AppGlyphs.triangleAlert
+                      : AppGlyphs.hourglass,
+                  tone: item.refused ? AppTone.danger : AppTone.warning,
+                ),
+                title: [item.title, ?item.subtitle].join(' · '),
+                subtitle: item.refused
+                    ? l10n.inspOutboxRefused(item.error ?? '')
+                    : '${l10n.inspOutboxWaiting} · ${l10n.inspOutboxQueuedAt(DateFormat('d MMM, HH:mm', locale).format(item.queuedAt))}',
+                showChevron: true,
+                onTap: () => onOpen(item),
+              ),
+          ],
+        ),
       ],
     );
   }

@@ -17,9 +17,11 @@ class CivilInspectionDraftService {
     String? department,
     String? subDepartment,
     String? asset,
+    int step = 0,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final payload = {
+      'step': step,
       'formId': formId,
       'answers': _encodeAnswers(answers),
       'startedAt': startedAt.toIso8601String(),

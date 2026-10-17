@@ -33,6 +33,10 @@ class ApiEndpoints {
       'inspection/signal-telecom/submit_complete/';
   static const String submitMotorTrolleyComplete =
       'inspection/motor-trolley/submit_complete/';
+  static const String submitShedInspection = 'inspection/shed/inspections/';
+  static const String submitRtlInspection = 'inspection/rtl/inspections/';
+  static const String submitPowerInspection =
+      'inspection/power/inspections/submit_complete/';
   static const String getactivetrains = '/accidents/active-trains';
   static const String reportaccident = '/accidents/';
   static const String getAccidentById = '/accidents/';

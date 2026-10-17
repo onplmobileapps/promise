@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
-import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
-import 'package:railway_hrms/core/utils/either.dart';
-import 'package:railway_hrms/modules/inspection/data/inspection_repository.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_api.dart';
 import 'package:railway_hrms/modules/inspection/motor_trolley/models/trolley_form.dart';
 import 'package:railway_hrms/modules/inspection/motor_trolley/models/trolley_payload.dart';
 import 'package:railway_hrms/modules/inspection/motor_trolley/motor_trolley_cubit.dart';
@@ -16,6 +14,7 @@ import 'package:railway_hrms/modules/inspection/motor_trolley/widgets/trolley_fi
 import 'package:railway_hrms/modules/inspection/shared/flow/inspection_review_screen.dart';
 import 'package:railway_hrms/modules/inspection/shared/flow/inspection_session.dart';
 import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
+import 'package:railway_hrms/modules/inspection/shared/outbox/inspection_outbox.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_form_scaffold.dart';
 
@@ -84,23 +83,26 @@ class _TrolleyFormState extends State<_TrolleyForm> {
     _autosave?.cancel();
     await cubit.saveDraft();
     if (!mounted) return;
-    final repository = sl<InspectionRepository>();
+    final id = 'trolley-${DateTime.now().millisecondsSinceEpoch}';
+    final report = trolleyReport(
+      cubit.state,
+      title: l10n.inspTrolleyTitle,
+      sectionLabel: l10n.inspFormSection,
+      dateLabel: l10n.inspFormDate,
+    );
     final sent = await reviewAndSubmit(
       context,
       verifier: widget.verifier,
-      report: trolleyReport(
-        cubit.state,
+      report: report,
+      send: (signatures) => OutboxItem(
+        id: id,
+        api: InspectionApi.motorTrolley,
         title: l10n.inspTrolleyTitle,
-        sectionLabel: l10n.inspFormSection,
-        dateLabel: l10n.inspFormDate,
+        subtitle: report.subtitle,
+        queuedAt: DateTime.now(),
+        signatures: signatures,
+        payload: TrolleyInspectionPayload.build(cubit.state),
       ),
-      submit: (signatures) async {
-        final result = await repository.submitMotorTrolleyInspection({
-          ...TrolleyInspectionPayload.build(cubit.state),
-          ...signatures.toJson(),
-        });
-        return result.fold(Left.new, (done) => Right(done.message));
-      },
     );
     if (!sent || !mounted) return;
     await cubit.clearDraft();

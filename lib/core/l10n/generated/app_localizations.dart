@@ -5247,6 +5247,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fill in the train, officer, date, times and route first.'**
   String get inspApprovalMissing;
+
+  /// Lead text on the review screen when answers can be changed.
+  ///
+  /// In en, this message translates to:
+  /// **'Check every answer before you confirm. Tap one to change it on the form.'**
+  String get inspReviewLeadEdit;
+
+  /// Tab on the review screen listing the inspection's answers.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers'**
+  String get inspReviewAnswers;
+
+  /// Tab on the review screen showing the report as a PDF.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get inspReviewPdf;
+
+  /// Filter on the review screen: every answer.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get inspReviewAll;
+
+  /// Filter on the review screen: answers that report something wrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Findings'**
+  String get inspReviewFindings;
+
+  /// Filter on the review screen: questions left unanswered.
+  ///
+  /// In en, this message translates to:
+  /// **'Blank'**
+  String get inspReviewBlank;
+
+  /// Shown when no answer reports something wrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing reported wrong'**
+  String get inspReviewNoFindings;
+
+  /// Shown when no question is blank.
+  ///
+  /// In en, this message translates to:
+  /// **'Every question is answered'**
+  String get inspReviewNoBlank;
+
+  /// Button on a review section that opens it on the form.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get inspReviewChange;
+
+  /// When the report's pages can't be drawn.
+  ///
+  /// In en, this message translates to:
+  /// **'The PDF can\'t be shown on this phone. The answers are the report as it will be sent.'**
+  String get inspReviewNoPreview;
+
+  /// Title when an inspection is kept to send once online.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to send'**
+  String get inspQueuedTitle;
+
+  /// Message when an inspection is kept to send once online.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no connection right now. The inspection is kept on this phone and goes out by itself as soon as you\'re online.'**
+  String get inspQueuedMessage;
+
+  /// When a face check was taken offline, to be matched later.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s no connection, so your face was taken and kept. It is matched when the inspection goes out.'**
+  String get inspFaceKeptOffline;
+
+  /// Dashboard section of inspections kept to send once online.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to send'**
+  String get inspOutboxTitle;
+
+  /// Status of an inspection waiting for a connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Goes out when you\'re online'**
+  String get inspOutboxWaiting;
+
+  /// Status of an inspection the server turned down.
+  ///
+  /// In en, this message translates to:
+  /// **'Not accepted: {reason}'**
+  String inspOutboxRefused(String reason);
+
+  /// Button sending the waiting inspections.
+  ///
+  /// In en, this message translates to:
+  /// **'Send now'**
+  String get inspOutboxSendNow;
+
+  /// While waiting inspections are being sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get inspOutboxSending;
+
+  /// After sending the waiting inspections.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing could be sent yet} =1{1 inspection sent} other{{count} inspections sent}}'**
+  String inspOutboxSent(int count);
+
+  /// After sending, how many still wait.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 is still waiting for a connection and goes out by itself.} other{{count} are still waiting for a connection and go out by themselves.}}'**
+  String inspOutboxStill(int count);
+
+  /// When a waiting inspection was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {time}'**
+  String inspOutboxQueuedAt(String time);
+
+  /// Removes a waiting inspection from the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get inspOutboxRemove;
+
+  /// Title asking to remove an unsent inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this inspection?'**
+  String get inspOutboxRemoveTitle;
+
+  /// Message asking to remove an unsent inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'It hasn\'t been sent. Removing it deletes it from this phone.'**
+  String get inspOutboxRemoveMessage;
+
+  /// Sends a turned-down inspection again.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get inspOutboxTryAgain;
 }
 
 class _AppLocalizationsDelegate

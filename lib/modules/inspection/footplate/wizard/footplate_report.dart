@@ -29,6 +29,7 @@ InspectionReport footplateReport(
     sections: [
       ReportSection(
         title: 'Train Schedule',
+        step: 0,
         rows: [
           ReportRow('Load', s.load, tone: ReportTone.plain),
           ReportRow('Direction', s.direction, tone: ReportTone.plain),
@@ -54,6 +55,7 @@ InspectionReport footplateReport(
       ),
       ReportSection(
         title: 'Condition of Locomotive',
+        step: 1,
         rows: [
           for (final item in kLocomotiveItems)
             if (data.locomotive.getStatus(item) case final status)
@@ -82,6 +84,7 @@ InspectionReport footplateReport(
       for (final station in data.stationAssets)
         ReportSection(
           title: 'Station Assets · ${station.stationName}',
+          step: 2,
           note: station.overallRemarks,
           photos: [for (final a in station.assets) ...a.photos],
           rows: [
@@ -102,6 +105,7 @@ InspectionReport footplateReport(
         ),
       ReportSection(
         title: 'Asset Checks',
+        step: 3,
         rows: [
           for (final entry in data.assetChecks)
             for (final MapEntry(:key, :value) in entry.answers.entries)
@@ -114,6 +118,7 @@ InspectionReport footplateReport(
       ),
       ReportSection(
         title: 'Punctuality',
+        step: 4,
         rows: [
           for (final stop in data.punctuality)
             ReportRow(
@@ -129,6 +134,7 @@ InspectionReport footplateReport(
       ),
       ReportSection(
         title: 'Caution Orders / OPs',
+        step: 4,
         note: data.finalRemarks,
         rows: [
           for (final op in data.ops)

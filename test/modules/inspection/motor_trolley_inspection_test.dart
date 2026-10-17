@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/core/error/exceptions.dart';
 import 'package:railway_hrms/core/utils/either.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_api.dart';
 import 'package:railway_hrms/modules/inspection/data/inspection_repository.dart';
 import 'package:railway_hrms/modules/inspection/data/models/inspection_submission.dart';
 import 'package:railway_hrms/modules/inspection/motor_trolley/models/trolley_form.dart';
@@ -35,14 +36,10 @@ class _Repository implements InspectionRepository {
   }) async => const Right([]);
 
   @override
-  Future<Either<AppException, InspectionSubmission>> submitStationInspection(
+  Future<Either<AppException, InspectionSubmission>> submit(
+    InspectionApi api,
     Map<String, dynamic> payload,
   ) async => const Right(InspectionSubmission(message: 'Received.'));
-
-  @override
-  Future<Either<AppException, InspectionSubmission>>
-  submitMotorTrolleyInspection(Map<String, dynamic> payload) async =>
-      const Right(InspectionSubmission(message: 'Received.'));
 }
 
 final _filled = MotorTrolleyInspectionState(

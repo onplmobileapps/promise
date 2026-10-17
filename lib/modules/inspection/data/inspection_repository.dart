@@ -1,5 +1,6 @@
 import 'package:railway_hrms/core/error/exceptions.dart';
 import 'package:railway_hrms/core/utils/either.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_api.dart';
 import 'package:railway_hrms/modules/inspection/data/models/inspection_submission.dart';
 import 'package:railway_hrms/modules/inspection/station/models/station_model.dart';
 
@@ -12,10 +13,9 @@ abstract class InspectionRepository {
     int? section,
   });
 
-  Future<Either<AppException, InspectionSubmission>> submitStationInspection(
+  /// Sends a finished inspection of the kind [api] takes.
+  Future<Either<AppException, InspectionSubmission>> submit(
+    InspectionApi api,
     Map<String, dynamic> payload,
   );
-
-  Future<Either<AppException, InspectionSubmission>>
-  submitMotorTrolleyInspection(Map<String, dynamic> payload);
 }

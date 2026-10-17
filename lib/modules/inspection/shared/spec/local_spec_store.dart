@@ -33,6 +33,7 @@ class LocalSpecStore implements SpecFormStore {
         answers: _decode(Map<String, dynamic>.from(saved['answers'] as Map)),
         startedAt:
             DateTime.tryParse('${saved['startedAt'] ?? ''}') ?? DateTime.now(),
+        step: (saved['step'] as num?)?.toInt() ?? 0,
       );
     } on Object {
       return null;
@@ -42,13 +43,15 @@ class LocalSpecStore implements SpecFormStore {
   @override
   Future<void> saveDraft(
     Map<String, dynamic> answers,
-    DateTime startedAt,
-  ) async {
+    DateTime startedAt, {
+    int step = 0,
+  }) async {
     await StorageService.saveInspectionDraft(
       id,
       jsonEncode({
         'answers': _encode(answers),
         'startedAt': startedAt.toIso8601String(),
+        'step': step,
       }),
     );
     await StorageService.saveInspectionRecord({

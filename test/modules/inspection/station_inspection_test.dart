@@ -4,6 +4,7 @@ import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/core/error/exceptions.dart';
 import 'package:railway_hrms/core/models/login_response.dart';
 import 'package:railway_hrms/core/utils/either.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_api.dart';
 import 'package:railway_hrms/modules/inspection/data/inspection_repository.dart';
 import 'package:railway_hrms/modules/inspection/data/models/inspection_submission.dart';
 import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
@@ -43,14 +44,10 @@ class _Stations implements InspectionRepository {
   }
 
   @override
-  Future<Either<AppException, InspectionSubmission>> submitStationInspection(
+  Future<Either<AppException, InspectionSubmission>> submit(
+    InspectionApi api,
     Map<String, dynamic> payload,
   ) async => const Right(InspectionSubmission(message: 'Received.'));
-
-  @override
-  Future<Either<AppException, InspectionSubmission>>
-  submitMotorTrolleyInspection(Map<String, dynamic> payload) async =>
-      const Right(InspectionSubmission(message: 'Received.'));
 }
 
 StationInspectionController _filled() {

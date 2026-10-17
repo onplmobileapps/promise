@@ -14,18 +14,26 @@ import 'package:railway_hrms/core/l10n/l10n.dart';
 import 'package:railway_hrms/core/reports/report_assets.dart';
 import 'package:railway_hrms/core/storage/storage_service.dart';
 import 'package:railway_hrms/core/utils/either.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_repository.dart';
 import 'package:railway_hrms/modules/inspection/shared/flow/inspection_session.dart';
 import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
 import 'package:railway_hrms/modules/inspection/shared/identity/inspection_identity.dart';
+import 'package:railway_hrms/modules/inspection/shared/outbox/inspection_outbox.dart';
 import 'package:railway_hrms/modules/inspection/shared/report/inspection_report.dart';
 import 'package:railway_hrms/modules/inspection/shared/report/inspection_report_pdf.dart';
+import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_form_scaffold.dart';
 
-/// Sends a finished inspection, signed with [signatures]: what the server
-/// said, or why it couldn't.
+/// Keeps a finished inspection, signed with [signatures]: what was said
+/// of it, or why it couldn't be kept.
 typedef InspectionSubmitter =
     Future<Either<AppException, String>> Function(
       InspectionSignatures signatures,
     );
+
+/// A finished inspection, signed with [signatures], as it goes to the
+/// server: sent at once, or kept to go out by itself when there is no
+/// connection.
+typedef InspectionParcel = OutboxItem Function(InspectionSignatures signatures);
 
 /// Draws a report as the PDF it goes out as.
 typedef ReportRenderer =
@@ -46,53 +54,72 @@ Future<Uint8List> _renderPdf(
   locale: locale,
 ).build();
 
-/// Shows [report] as the PDF it will go out as, and lets it be submitted
-/// only once the inspector has read and confirmed it and verified their
-/// face again; [submit] then sends it. True once it was submitted.
+/// Shows [report], every answer and the PDF it will go out as, and lets
+/// it be submitted only once the inspector has read and confirmed it and
+/// verified their face again. True once it was submitted.
+///
+/// An inspection the server takes is given as its [send] parcel: it goes
+/// out at once, or, with no connection, waits on the phone and goes out
+/// by itself. One kept on the phone is given as [submit].
 ///
 /// The report is signed with the face check the inspection was started
-/// with (its [InspectionSession]) and the one made here.
+/// with (its [InspectionSession]) and the one made here. Opened from an
+/// inspection form, a tap on an answer takes the inspector back to it.
 Future<bool> reviewAndSubmit(
   BuildContext context, {
   required InspectionReport report,
-  required InspectionSubmitter submit,
+  InspectionSubmitter? submit,
+  InspectionParcel? send,
   InspectionFaceVerifier? verifier,
   ReportRenderer? render,
 }) async {
+  assert(submit != null || send != null, 'Nothing to submit the report to');
   FocusManager.instance.primaryFocus?.unfocus();
   final start = InspectionSession.maybeOf(context)?.start;
-  final submitted = await Navigator.of(context).push<bool>(
+  final edit = InspectionEditing.current;
+  final outcome = await Navigator.of(context).push<Object?>(
     MaterialPageRoute(
       builder: (_) => InspectionReviewScreen(
         report: report.copyWith(
           signatures: report.signatures.copyWith(start: start),
         ),
         submit: submit,
+        send: send,
         verifier: verifier,
         render: render,
+        editable: edit != null,
       ),
     ),
   );
-  return submitted == true;
+  if (outcome is InspectionEdit) edit?.call(outcome);
+  return outcome == true;
 }
 
 /// The last steps of an inspection: read the report, confirm it, verify
 /// the face, submit. Each opens only once the one before is done.
+///
+/// The report reads as its answers, section by section, and as its PDF.
+/// When [editable], a tap on an answer closes the review with an
+/// [InspectionEdit] saying which.
 class InspectionReviewScreen extends StatefulWidget {
   const InspectionReviewScreen({
     super.key,
     required this.report,
-    required this.submit,
+    this.submit,
+    this.send,
     this.verifier,
     this.render,
+    this.editable = false,
   });
 
   final InspectionReport report;
-  final InspectionSubmitter submit;
+  final InspectionSubmitter? submit;
+  final InspectionParcel? send;
   final InspectionFaceVerifier? verifier;
 
   /// Draws the PDF; [InspectionReportPdf] unless a test stands in.
   final ReportRenderer? render;
+  final bool editable;
 
   @override
   State<InspectionReviewScreen> createState() => _InspectionReviewScreenState();
@@ -100,8 +127,19 @@ class InspectionReviewScreen extends StatefulWidget {
 
 enum _Step { review, verify, submit }
 
-class _InspectionReviewScreenState extends State<InspectionReviewScreen> {
+/// The answers shown: every one, those that report something wrong, or
+/// those left blank.
+enum _Showing { all, findings, blank }
+
+class _InspectionReviewScreenState extends State<InspectionReviewScreen>
+    with SingleTickerProviderStateMixin {
   late InspectionReport _report = widget.report;
+  late final TabController _tabs = TabController(
+    length: 2,
+    vsync: this,
+    animationDuration: Duration.zero,
+  )..addListener(_tabChanged);
+  _Showing _showing = _Showing.all;
   Uint8List? _pdf;
   List<ui.Image>? _pages;
 
@@ -131,8 +169,15 @@ class _InspectionReviewScreenState extends State<InspectionReviewScreen> {
 
   @override
   void dispose() {
+    _tabs
+      ..removeListener(_tabChanged)
+      ..dispose();
     _disposePages(_pages);
     super.dispose();
+  }
+
+  void _tabChanged() {
+    if (!_tabs.indexIsChanging) setState(() {});
   }
 
   void _disposePages(List<ui.Image>? pages) {
@@ -201,6 +246,9 @@ class _InspectionReviewScreenState extends State<InspectionReviewScreen> {
         );
         // The PDF that goes out carries the check.
         unawaited(_draw());
+        if (!identity.matched) {
+          await showAppMessage(context, context.l10n.inspFaceKeptOffline);
+        }
       case FaceCheckFailed(:final message):
         await showAppDialog(
           context: context,
@@ -217,7 +265,20 @@ class _InspectionReviewScreenState extends State<InspectionReviewScreen> {
   Future<void> _submit() async {
     if (_submitting || _step != _Step.submit) return;
     setState(() => _submitting = true);
-    final result = await widget.submit(_report.signatures);
+    final send = widget.send;
+    final Either<AppException, InspectionDelivery> result;
+    if (send != null) {
+      result = await deliverInspection(
+        send(_report.signatures),
+        outbox: sl<InspectionOutbox>(),
+        repository: sl<InspectionRepository>(),
+        matcher: sl<InspectionFaceMatcher>(),
+      );
+    } else {
+      result = (await widget.submit!(
+        _report.signatures,
+      )).fold(Left.new, (said) => Right(InspectionDelivery.sent(said)));
+    }
     if (!mounted) return;
     setState(() => _submitting = false);
     final l10n = context.l10n;
@@ -232,15 +293,27 @@ class _InspectionReviewScreenState extends State<InspectionReviewScreen> {
       );
       return;
     }
-    final message = result.fold((_) => '', (said) => said);
+    final delivery = result.fold(
+      (_) => const InspectionDelivery.queued(),
+      (done) => done,
+    );
     await showAppDialog(
       context: context,
-      tone: AppDialogTone.success,
-      title: l10n.inspSubmittedTitle,
-      message: message.isEmpty ? l10n.inspSubmittedMessage : message,
+      tone: delivery.queued ? AppDialogTone.info : AppDialogTone.success,
+      title: delivery.queued ? l10n.inspQueuedTitle : l10n.inspSubmittedTitle,
+      message: delivery.queued
+          ? l10n.inspQueuedMessage
+          : delivery.message.isEmpty
+          ? l10n.inspSubmittedMessage
+          : delivery.message,
       primaryLabel: l10n.actionOk,
     );
     if (mounted) Navigator.of(context).pop(true);
+  }
+
+  /// Back to the form, at the answer [row] of [section], or of the facts.
+  void _edit(ReportSection? section, String? row) {
+    Navigator.of(context).pop(InspectionEdit(section: section, row: row));
   }
 
   Future<void> _savePdf() async {
@@ -298,6 +371,37 @@ class _InspectionReviewScreenState extends State<InspectionReviewScreen> {
     final colors = context.colors;
     final text = context.textTheme;
     final pages = _pages;
+    final rows = [for (final section in _report.sections) ...section.rows];
+    final findings = rows.where((row) => row.tone == ReportTone.bad).length;
+    final blank = rows.where((row) => !row.answered).length;
+    final Widget pdf;
+    if (_noPreview) {
+      pdf = AppEmptyState(
+        key: const ValueKey('no-pdf'),
+        glyph: AppGlyphs.layers,
+        title: l10n.inspReviewNoPreview,
+      );
+    } else if (pages == null) {
+      pdf = Padding(
+        key: const ValueKey('loading'),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
+        child: AppLoader(label: l10n.inspReviewPreparing),
+      );
+    } else {
+      pdf = Column(
+        key: ValueKey(pages),
+        children: [
+          for (final (i, page) in pages.indexed) ...[
+            if (i > 0) AppSpacing.gapLg,
+            _PagePreview(
+              image: page,
+              caption: l10n.inspReviewPage(i + 1, pages.length),
+              onTap: () => _openPage(i),
+            ),
+          ],
+        ],
+      );
+    }
     return Scaffold(
       body: AppScrollPage(
         backdrop: AppPageBackdrop.blobs,
@@ -319,41 +423,70 @@ class _InspectionReviewScreenState extends State<InspectionReviewScreen> {
           ),
           AppSpacing.gapLg,
           Text(
-            l10n.inspReviewLead,
+            widget.editable ? l10n.inspReviewLeadEdit : l10n.inspReviewLead,
             style: text.bodyMedium?.copyWith(color: colors.textSecondary),
           ),
           AppSpacing.gapLg,
+          AppSegmentedTabs(
+            controller: _tabs,
+            segments: [
+              AppSegment(
+                label: l10n.inspReviewAnswers,
+                glyph: AppGlyphs.clipboardList,
+              ),
+              AppSegment(label: l10n.inspReviewPdf, glyph: AppGlyphs.layers),
+            ],
+          ),
+          AppSpacing.gapLg,
           AnimatedSwitcher(
-            duration: AppMotion.medium,
-            child: _noPreview
-                ? _ReportList(key: const ValueKey('list'), report: _report)
-                : pages == null
-                ? Padding(
-                    key: const ValueKey('loading'),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.xxxl,
-                    ),
-                    child: AppLoader(label: l10n.inspReviewPreparing),
-                  )
-                : Column(
-                    key: ValueKey(pages),
-                    children: [
-                      for (final (i, page) in pages.indexed) ...[
-                        if (i > 0) AppSpacing.gapLg,
-                        _PagePreview(
-                          image: page,
-                          caption: l10n.inspReviewPage(i + 1, pages.length),
-                          onTap: () => _openPage(i),
+            duration: AppMotion.short,
+            child: _tabs.index == 0
+                ? KeyedSubtree(
+                    key: const ValueKey('answers'),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        AppFilterChips<_Showing>(
+                          options: [
+                            AppFilterOption(
+                              value: _Showing.all,
+                              label: l10n.inspReviewAll,
+                              count: rows.length,
+                              urgent: false,
+                            ),
+                            AppFilterOption(
+                              value: _Showing.findings,
+                              label: l10n.inspReviewFindings,
+                              count: findings,
+                              mark: findings > 0 ? colors.danger : null,
+                            ),
+                            AppFilterOption(
+                              value: _Showing.blank,
+                              label: l10n.inspReviewBlank,
+                              count: blank,
+                              urgent: false,
+                            ),
+                          ],
+                          selected: _showing,
+                          onSelected: (showing) =>
+                              setState(() => _showing = showing),
+                        ),
+                        AppSpacing.gapLg,
+                        _Answers(
+                          report: _report,
+                          showing: _showing,
+                          onEdit: widget.editable ? _edit : null,
                         ),
                       ],
-                    ],
-                  ),
+                    ),
+                  )
+                : KeyedSubtree(key: const ValueKey('pdf'), child: pdf),
           ),
         ],
       ),
       bottomNavigationBar: _ActionBar(
         step: _step,
-        ready: _pdf != null || _noPreview,
+        ready: true,
         verifying: _verifying,
         submitting: _submitting,
         verifiedAt: _report.signatures.submit?.verifiedAt,
@@ -580,47 +713,86 @@ class _PageViewer extends StatelessWidget {
   );
 }
 
-/// The report as a list, where its pages can't be drawn.
-class _ReportList extends StatelessWidget {
-  const _ReportList({super.key, required this.report});
+/// The report's answers, section by section, each in the tone it reads
+/// in; with [onEdit], each opens its question on the form to change.
+class _Answers extends StatelessWidget {
+  const _Answers({
+    required this.report,
+    required this.showing,
+    required this.onEdit,
+  });
 
   final InspectionReport report;
+  final _Showing showing;
+  final void Function(ReportSection? section, String? row)? onEdit;
+
+  /// The longest an answer is to sit beside its question, as a pill.
+  static const int _short = 22;
+
+  bool _shows(ReportRow row) => switch (showing) {
+    _Showing.all => true,
+    _Showing.findings => row.tone == ReportTone.bad,
+    _Showing.blank => !row.answered,
+  };
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
+    final onEdit = this.onEdit;
     AppTone toneOf(ReportTone tone) => switch (tone) {
       ReportTone.good => AppTone.brand,
       ReportTone.bad => AppTone.danger,
       ReportTone.missing => AppTone.neutral,
       ReportTone.plain => AppTone.neutral,
     };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (report.facts.isNotEmpty)
+    Widget answer(ReportSection? section, ReportRow row) {
+      final value = row.answered ? row.value : l10n.inspPdfUnanswered;
+      final long = value.length > _short;
+      return AppListRow(
+        title: row.label,
+        subtitle: long ? value : null,
+        trailing: long
+            ? null
+            : AppPill(
+                value,
+                tone: toneOf(row.tone),
+                dot: row.tone == ReportTone.bad ? colors.danger : null,
+              ),
+        showChevron: onEdit != null,
+        onTap: onEdit == null ? null : () => onEdit(section, row.label),
+      );
+    }
+
+    final facts = [
+      for (final fact in report.facts)
+        if (fact.answered) fact,
+    ];
+    final parts = <Widget>[
+      if (showing == _Showing.all && facts.isNotEmpty)
+        AppListGroup(children: [for (final fact in facts) answer(null, fact)]),
+      for (final section in report.sections)
+        if (section.rows.where(_shows).toList() case final rows
+            when rows.isNotEmpty ||
+                (showing == _Showing.all && !section.isEmpty)) ...[
+          AppSectionTitle(
+            section.title,
+            trailing: onEdit == null
+                ? null
+                : AppButton(
+                    label: l10n.inspReviewChange,
+                    variant: AppButtonVariant.text,
+                    size: AppButtonSize.small,
+                    leadingGlyph: AppGlyphs.fileEdit,
+                    expand: false,
+                    onPressed: () => onEdit(section, null),
+                  ),
+          ),
+          AppSpacing.gapSm,
           AppListGroup(
             children: [
-              for (final fact in report.facts.where((f) => f.answered))
-                AppListRow(title: fact.label, meta: fact.value),
-            ],
-          ),
-        for (final section in report.sections)
-          if (!section.isEmpty) ...[
-            AppSpacing.gapLg,
-            AppSectionTitle(section.title),
-            AppSpacing.gapSm,
-            AppListGroup(
-              children: [
-                for (final row in section.rows)
-                  AppListRow(
-                    title: row.label,
-                    trailing: AppPill(
-                      row.answered ? row.value : l10n.inspPdfUnanswered,
-                      tone: toneOf(row.tone),
-                    ),
-                  ),
+              for (final row in rows) answer(section, row),
+              if (showing == _Showing.all)
                 if (section.note case final note? when note.trim().isNotEmpty)
                   AppListRow(
                     title: note.trim(),
@@ -629,9 +801,27 @@ class _ReportList extends StatelessWidget {
                       color: colors.iconAccent,
                     ),
                   ),
-              ],
-            ),
-          ],
+            ],
+          ),
+        ],
+    ];
+    if (parts.isEmpty) {
+      return AppEmptyState(
+        glyph: showing == _Showing.findings
+            ? AppGlyphs.badgeCheck
+            : AppGlyphs.check,
+        title: showing == _Showing.findings
+            ? l10n.inspReviewNoFindings
+            : l10n.inspReviewNoBlank,
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, part) in parts.indexed) ...[
+          if (i > 0 && part is AppSectionTitle) AppSpacing.gapLg,
+          part,
+        ],
       ],
     );
   }

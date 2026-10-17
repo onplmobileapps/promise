@@ -75,6 +75,9 @@ class _TrafficVisitState extends State<_TrafficVisit> {
 
   /// The forms already sent this visit.
   final Set<String> _done = {};
+
+  /// The step each form was left on.
+  final Map<String, int> _steps = {};
   bool _ready = false;
   Timer? _autosave;
 
@@ -109,6 +112,11 @@ class _TrafficVisitState extends State<_TrafficVisit> {
         _done.addAll([
           for (final kind in saved['done'] as List? ?? []) '$kind',
         ]);
+        _steps.addAll({
+          for (final MapEntry(:key, :value)
+              in (saved['steps'] as Map? ?? const {}).entries)
+            if (value is num) '$key': value.toInt(),
+        });
       } on Object catch (e) {
         debugPrint('Traffic draft could not be read: $e');
       }
@@ -125,6 +133,7 @@ class _TrafficVisitState extends State<_TrafficVisit> {
     'transport': _transport.toJson(),
     'levelCrossings': [for (final lc in _crossings) lc.toJson()],
     'done': _done.toList(),
+    'steps': _steps,
   };
 
   void _changed() {
@@ -200,6 +209,11 @@ class _TrafficVisitState extends State<_TrafficVisit> {
         ),
         onChanged: _changed,
         onLeave: _save,
+        initialStep: _steps[kind.name] ?? 0,
+        onStepChanged: (step) {
+          _steps[kind.name] = step;
+          _changed();
+        },
         onKept: (signatures) async {
           _done.add(kind.name);
           await _save();
@@ -286,6 +300,8 @@ class _TrafficForm extends StatefulWidget {
     required this.onChanged,
     required this.onLeave,
     required this.onKept,
+    this.initialStep = 0,
+    this.onStepChanged,
     this.verifier,
   });
 
@@ -298,6 +314,8 @@ class _TrafficForm extends StatefulWidget {
 
   /// Keeps the finished form, signed.
   final Future<void> Function(Map<String, dynamic> signatures) onKept;
+  final int initialStep;
+  final ValueChanged<int>? onStepChanged;
   final InspectionFaceVerifier? verifier;
 
   @override
@@ -335,6 +353,8 @@ class _TrafficFormState extends State<_TrafficForm> {
     dirty: _dirty,
     onLeave: widget.onLeave,
     onReview: _review,
+    initialStep: widget.initialStep,
+    onStepChanged: widget.onStepChanged,
     steps: widget.steps(_changed),
   );
 }

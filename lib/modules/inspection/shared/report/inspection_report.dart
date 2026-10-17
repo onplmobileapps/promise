@@ -63,10 +63,16 @@ class ReportSection {
     this.rows = const [],
     this.note,
     this.photos = const [],
+    this.step,
   });
 
   final String title;
   final List<ReportRow> rows;
+
+  /// The form's step its answers are given on, counted from 0, so a tap
+  /// on one of them opens it to change; the step of the same title if
+  /// not given.
+  final int? step;
 
   /// Free text written for the section, such as remarks.
   final String? note;

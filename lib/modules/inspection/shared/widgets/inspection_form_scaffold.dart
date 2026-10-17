@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
+import 'package:railway_hrms/modules/inspection/shared/report/inspection_report.dart';
 
 /// A step of an inspection form: its [title], what it asks, and how much
 /// of it is answered.
@@ -27,12 +30,45 @@ class InspectionStep {
   bool get complete => total > 0 && left == 0;
 }
 
+/// An answer the inspector tapped on the report to change: a [row] of one
+/// of its sections, or of its facts when [section] is null.
+@immutable
+class InspectionEdit {
+  const InspectionEdit({this.section, this.row});
+
+  final ReportSection? section;
+
+  /// The row's label, as the report reads it.
+  final String? row;
+}
+
+/// Takes a review's edit back to the form it was opened from.
+///
+/// A form's review is pushed as a page of its own, away from the form, by
+/// code the form calls; the form runs that call in [run], and the review
+/// finds where to send an edit with [current], as long as it was opened
+/// from within the call.
+abstract final class InspectionEditing {
+  static final Object _key = Object();
+
+  /// Runs [review], sending an edit asked of it to [open].
+  static Future<T> run<T>(
+    ValueChanged<InspectionEdit> open,
+    Future<T> Function() review,
+  ) => runZoned(review, zoneValues: {_key: open});
+
+  /// Where an edit asked now goes, if a form is waiting for one.
+  static ValueChanged<InspectionEdit>? get current =>
+      Zone.current[_key] as ValueChanged<InspectionEdit>?;
+}
+
 /// The page every inspection form is: a header, the steps as chips that
 /// show what each still needs, the open step's fields, and a bar at the
 /// foot that moves step to step and, on the last, to the report.
 ///
 /// Leaving with answers given asks first, saying whether they are kept as
-/// a draft ([onLeave] keeps them) or lost.
+/// a draft ([onLeave] keeps them) or lost. An answer tapped on the report
+/// opens its step again, scrolled to the question.
 class InspectionFormScaffold extends StatefulWidget {
   const InspectionFormScaffold({
     super.key,
@@ -76,6 +112,11 @@ class InspectionFormScaffold extends StatefulWidget {
 
   @override
   State<InspectionFormScaffold> createState() => _InspectionFormScaffoldState();
+}
+
+/// The open step's fields, told apart from any other key in the form.
+class _StepKey extends ValueKey<int> {
+  const _StepKey(super.value);
 }
 
 class _InspectionFormScaffoldState extends State<InspectionFormScaffold> {
@@ -144,11 +185,142 @@ class _InspectionFormScaffoldState extends State<InspectionFormScaffold> {
     }
     setState(() => _reviewing = true);
     try {
-      await widget.onReview();
+      await InspectionEditing.run(_edit, widget.onReview);
     } finally {
       if (mounted) setState(() => _reviewing = false);
     }
   }
+
+  /// The step [edit] is answered on: the one its section names, or the
+  /// first for the facts at the head of the report.
+  int? _stepOf(InspectionEdit edit) {
+    final section = edit.section;
+    if (section == null) return 0;
+    final steps = widget.steps;
+    if (section.step case final step? when step >= 0 && step < steps.length) {
+      return step;
+    }
+    final title = _plain(section.title);
+    final same = steps.indexWhere((step) => _plain(step.title) == title);
+    if (same >= 0) return same;
+    final part = steps.indexWhere((step) {
+      final name = _plain(step.title);
+      return title.startsWith(name) || name.startsWith(title);
+    });
+    return part >= 0 ? part : null;
+  }
+
+  /// Opens the step [edit] is answered on and brings its question into
+  /// view, marked for a moment.
+  void _edit(InspectionEdit edit) {
+    if (!mounted) return;
+    final step = _stepOf(edit);
+    if (step != null) _go(step);
+    final row = edit.row;
+    if (row == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final question = _questionFor(row);
+      final shown = question?.findRenderObject();
+      if (question == null || shown is! RenderBox) return;
+      await Scrollable.ensureVisible(
+        question,
+        alignment: 0.25,
+        duration: AppMotion.medium,
+        curve: AppMotion.enter,
+      );
+      if (mounted && shown.attached) _mark(shown);
+    });
+  }
+
+  /// The label of the open step's question [row] answers, as the report
+  /// names it: the same words, or the last part of a name such as
+  /// "Pump 1 · Discharge".
+  Element? _questionFor(String row) {
+    Element? stepFields;
+    void findStep(Element element) {
+      if (stepFields != null) return;
+      if (element.widget.key == _StepKey(_step)) {
+        stepFields = element;
+        return;
+      }
+      element.visitChildElements(findStep);
+    }
+
+    (context as Element).visitChildElements(findStep);
+    final fields = stepFields;
+    if (fields == null) return null;
+    final labels = <(String, Element)>[];
+    void collect(Element element) {
+      if (element.widget case Text(:final data, :final textSpan)) {
+        final words = data ?? textSpan?.toPlainText();
+        if (words != null && words.trim().isNotEmpty) {
+          labels.add((_plain(words), element));
+        }
+      }
+      element.visitChildElements(collect);
+    }
+
+    fields.visitChildElements(collect);
+    final names = {
+      _plain(row),
+      _plain(row.split(' · ').last),
+      _plain(row.split(' — ').first),
+    }..remove('');
+    for (final name in names) {
+      for (final (words, element) in labels) {
+        if (words == name) return element;
+      }
+    }
+    for (final name in names) {
+      for (final (words, element) in labels) {
+        if (words.startsWith(name) || name.startsWith(words)) return element;
+      }
+    }
+    return null;
+  }
+
+  /// A ring around [label] that fades, so the eye finds it.
+  void _mark(RenderBox label) {
+    final overlay = Overlay.maybeOf(context);
+    final ground = overlay?.context.findRenderObject();
+    if (overlay == null || ground is! RenderBox) return;
+    final at = label.localToGlobal(Offset.zero, ancestor: ground) & label.size;
+    final colors = context.colors;
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => Positioned.fromRect(
+        rect: at.inflate(AppSpacing.sm),
+        child: IgnorePointer(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 1, end: 0),
+            duration: const Duration(milliseconds: 1600),
+            curve: Curves.easeInCubic,
+            onEnd: entry.remove,
+            builder: (_, fade, _) => DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: AppRadius.borderMd,
+                color: colors.primaryContainer.withValues(alpha: 0.5 * fade),
+                border: Border.all(
+                  color: colors.primary.withValues(alpha: fade),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(entry);
+  }
+
+  /// [words] as compared: lower case, without a required mark or extra
+  /// spaces.
+  static String _plain(String words) => words
+      .replaceAll('*', '')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim()
+      .toLowerCase();
 
   Future<void> _leave() async {
     if (_leaving) return;
@@ -268,7 +440,7 @@ class _InspectionFormScaffoldState extends State<InspectionFormScaffold> {
                 children: [...previous, ?current],
               ),
               transitionBuilder: (child, animation) {
-                final entering = child.key == ValueKey(_step);
+                final entering = child.key == _StepKey(_step);
                 final from = (entering == _forward ? 1 : -1) * 0.06;
                 return FadeTransition(
                   opacity: animation,
@@ -282,7 +454,7 @@ class _InspectionFormScaffoldState extends State<InspectionFormScaffold> {
                 );
               },
               child: KeyedSubtree(
-                key: ValueKey(_step),
+                key: _StepKey(_step),
                 child: Builder(builder: step.builder),
               ),
             ),

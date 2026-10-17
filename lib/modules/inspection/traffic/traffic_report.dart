@@ -54,10 +54,12 @@ ReportSection _section(
   String title,
   List<ChecklistItem> items,
   ChecklistFormData data, {
+  required int step,
   String positive = 'OK',
   String negative = 'Issue',
 }) => ReportSection(
   title: title,
+  step: step,
   rows: _checks(items, data, positive: positive, negative: negative),
 );
 
@@ -67,6 +69,7 @@ List<ReportSection> commercialReport(TrafficCommercialStationData d) => [
     'Booking Office',
     kBookingOfficeChecklist,
     d.bookingOffice,
+    step: 0,
     positive: 'Updated',
     negative: 'Not Updated',
   ),
@@ -74,6 +77,7 @@ List<ReportSection> commercialReport(TrafficCommercialStationData d) => [
     'Station Statistics (TM-34)',
     kStationStatisticsChecklist,
     d.stationStatistics,
+    step: 0,
     positive: 'Updated',
     negative: 'Not Updated',
   ),
@@ -81,6 +85,7 @@ List<ReportSection> commercialReport(TrafficCommercialStationData d) => [
     'Ticketing Data of TCR Office',
     kTcrCommercialChecklist,
     d.tcrOffice,
+    step: 0,
     positive: 'Updated',
     negative: 'Not Updated',
   ),
@@ -88,11 +93,13 @@ List<ReportSection> commercialReport(TrafficCommercialStationData d) => [
     'Station Mirror (T.M 35)',
     kStationMirrorChecklist,
     d.stationMirror,
+    step: 0,
     positive: 'Updated',
     negative: 'Not Updated',
   ),
   ReportSection(
     title: 'Parcels',
+    step: 1,
     rows: [
       ..._checks(kInwardParcelChecklist, d.inwardParcel),
       _yesNo(
@@ -110,6 +117,7 @@ List<ReportSection> commercialReport(TrafficCommercialStationData d) => [
   ),
   ReportSection(
     title: 'Lost Property Office (LPO)',
+    step: 1,
     rows: [
       _yesNo('Weighment accuracy available', d.lpoWeighmentAvailable),
       if (d.lpoWeighmentAvailable) _text('Number', d.lpoWeighmentNumber),
@@ -124,6 +132,7 @@ List<ReportSection> commercialReport(TrafficCommercialStationData d) => [
   ),
   ReportSection(
     title: 'Goods Office',
+    step: 2,
     rows: [
       _text('Weighment machine due date', d.weighmentDueDate),
       _text('Weighment machine next date', d.weighmentNextDate),
@@ -132,6 +141,7 @@ List<ReportSection> commercialReport(TrafficCommercialStationData d) => [
   ),
   ReportSection(
     title: 'Vending Shops / Stalls',
+    step: 3,
     rows: [
       ..._checks(kVendingStallsChecklist, d.vendingStalls),
       _yesNo(
@@ -150,11 +160,13 @@ List<ReportSection> commercialReport(TrafficCommercialStationData d) => [
     "Station Master's Office",
     kStationMastersOfficeChecklist,
     d.stationMastersOffice,
+    step: 3,
   ),
   _section(
     'General Cleanliness of the Station',
     kGeneralCleanlinessChecklist,
     d.generalCleanliness,
+    step: 3,
     positive: 'Satisfactory',
     negative: 'Not Satisfactory',
   ),
@@ -162,11 +174,13 @@ List<ReportSection> commercialReport(TrafficCommercialStationData d) => [
     'Safety Equipment — Condition',
     kSafetyEquipmentConditionChecklist,
     d.safetyEquipmentCondition,
+    step: 3,
     positive: 'Satisfactory',
     negative: 'Not Satisfactory',
   ),
   ReportSection(
     title: 'Train(s) Present / Arrived',
+    step: 3,
     rows: _checks(
       kTrainPresentChecklist,
       d.trainsPresent,
@@ -196,11 +210,13 @@ List<ReportSection> transportReport(TrafficTransportStationData d) {
       'Registers & Books',
       kRegisterBooksChecklist,
       d.stationJournal,
+      step: 0,
       positive: 'Updated',
       negative: 'Not Updated',
     ),
     ReportSection(
       title: 'Staff & Systems',
+      step: 0,
       rows: [
         _yesNo('Staff present', d.stationJournal.of('staff_present').checked),
         for (final key in const [
@@ -223,11 +239,13 @@ List<ReportSection> transportReport(TrafficTransportStationData d) {
       'Ticketing Data of TCR Office',
       kTcrTransportBooksChecklist,
       d.tcrBooks,
+      step: 1,
       positive: 'Available',
       negative: 'Not Available',
     ),
     ReportSection(
       title: 'Operating Document & Caution Orders',
+      step: 1,
       rows: [
         _yesNo('Operating document issued', d.operatingDocumentIssued),
         if (d.operatingDocumentIssued)
@@ -237,6 +255,7 @@ List<ReportSection> transportReport(TrafficTransportStationData d) {
     ),
     ReportSection(
       title: 'Staff Equipment — Condition',
+      step: 2,
       rows: _checks(
         [
           ...kSafetyEquipmentConditionChecklist,
@@ -252,6 +271,7 @@ List<ReportSection> transportReport(TrafficTransportStationData d) {
     ),
     ReportSection(
       title: 'Points',
+      step: 2,
       rows: [
         for (final point in d.points)
           ReportRow(
@@ -262,6 +282,7 @@ List<ReportSection> transportReport(TrafficTransportStationData d) {
     ),
     ReportSection(
       title: 'Siding',
+      step: 3,
       rows: [
         _yesNo('DVM stock present', d.dvmStockPresent),
         _yesNo('Fit stock present', d.fitStockPresent),
@@ -278,6 +299,7 @@ List<ReportSection> levelCrossingReport(List<LevelCrossingRecord> records) => [
   for (final (i, r) in records.indexed) ...[
     ReportSection(
       title: 'Crossing ${i + 1}',
+      step: i,
       rows: [
         _text('Sponsoring agency', r.sponsoringAgency),
         _text('Road surface type', r.roadSurfaceType),
@@ -292,6 +314,7 @@ List<ReportSection> levelCrossingReport(List<LevelCrossingRecord> records) => [
     ),
     ReportSection(
       title: 'Crossing ${i + 1} · Equipment',
+      step: i,
       rows: _checks(
         kLevelCrossingEquipmentChecklist,
         r.equipment,

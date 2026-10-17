@@ -31,9 +31,11 @@ class ElectricalInspectionDraftService {
     String? subDepartment,
     String? asset,
     Map<String, dynamic>? assetData,
+    int step = 0,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final payload = {
+      'step': step,
       'formId': formId,
       'answers': _encodeAnswers(answers),
       'startedAt': startedAt.toIso8601String(),

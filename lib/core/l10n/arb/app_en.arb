@@ -24,9 +24,9 @@
   "@poweredBy": {
     "description": "Credit line at the bottom of the sign-in screens."
   },
-  "copyrightNotice": "© {year} ONE Network. All rights reserved.",
+  "copyrightNotice": "© {year} All rights reserved",
   "@copyrightNotice": {
-    "description": "Copyright line at the bottom of the code screen.",
+    "description": "Under the credit line; year is this year.",
     "placeholders": {
       "year": {
         "type": "int"
@@ -1997,15 +1997,6 @@
   "poweredByLead": "Designed & Developed by",
   "@poweredByLead": {
     "description": "Before the company's name in the credit."
-  },
-  "copyrightNotice": "© {year} All rights reserved",
-  "@copyrightNotice": {
-    "description": "Under the credit line; year is this year.",
-    "placeholders": {
-      "year": {
-        "type": "int"
-      }
-    }
   },
   "poweredByName": "One Network",
   "@poweredByName": {
@@ -4045,5 +4036,125 @@
   "inspApprovalMissing": "Fill in the train, officer, date, times and route first.",
   "@inspApprovalMissing": {
     "description": "Shown when the approval request is incomplete."
+  },
+  "inspReviewLeadEdit": "Check every answer before you confirm. Tap one to change it on the form.",
+  "@inspReviewLeadEdit": {
+    "description": "Lead text on the review screen when answers can be changed."
+  },
+  "inspReviewAnswers": "Answers",
+  "@inspReviewAnswers": {
+    "description": "Tab on the review screen listing the inspection's answers."
+  },
+  "inspReviewPdf": "PDF",
+  "@inspReviewPdf": {
+    "description": "Tab on the review screen showing the report as a PDF."
+  },
+  "inspReviewAll": "All",
+  "@inspReviewAll": {
+    "description": "Filter on the review screen: every answer."
+  },
+  "inspReviewFindings": "Findings",
+  "@inspReviewFindings": {
+    "description": "Filter on the review screen: answers that report something wrong."
+  },
+  "inspReviewBlank": "Blank",
+  "@inspReviewBlank": {
+    "description": "Filter on the review screen: questions left unanswered."
+  },
+  "inspReviewNoFindings": "Nothing reported wrong",
+  "@inspReviewNoFindings": {
+    "description": "Shown when no answer reports something wrong."
+  },
+  "inspReviewNoBlank": "Every question is answered",
+  "@inspReviewNoBlank": {
+    "description": "Shown when no question is blank."
+  },
+  "inspReviewChange": "Change",
+  "@inspReviewChange": {
+    "description": "Button on a review section that opens it on the form."
+  },
+  "inspReviewNoPreview": "The PDF can't be shown on this phone. The answers are the report as it will be sent.",
+  "@inspReviewNoPreview": {
+    "description": "When the report's pages can't be drawn."
+  },
+  "inspQueuedTitle": "Saved to send",
+  "@inspQueuedTitle": {
+    "description": "Title when an inspection is kept to send once online."
+  },
+  "inspQueuedMessage": "There's no connection right now. The inspection is kept on this phone and goes out by itself as soon as you're online.",
+  "@inspQueuedMessage": {
+    "description": "Message when an inspection is kept to send once online."
+  },
+  "inspFaceKeptOffline": "There's no connection, so your face was taken and kept. It is matched when the inspection goes out.",
+  "@inspFaceKeptOffline": {
+    "description": "When a face check was taken offline, to be matched later."
+  },
+  "inspOutboxTitle": "Waiting to send",
+  "@inspOutboxTitle": {
+    "description": "Dashboard section of inspections kept to send once online."
+  },
+  "inspOutboxWaiting": "Goes out when you're online",
+  "@inspOutboxWaiting": {
+    "description": "Status of an inspection waiting for a connection."
+  },
+  "inspOutboxRefused": "Not accepted: {reason}",
+  "@inspOutboxRefused": {
+    "description": "Status of an inspection the server turned down.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "inspOutboxSendNow": "Send now",
+  "@inspOutboxSendNow": {
+    "description": "Button sending the waiting inspections."
+  },
+  "inspOutboxSending": "Sending…",
+  "@inspOutboxSending": {
+    "description": "While waiting inspections are being sent."
+  },
+  "inspOutboxSent": "{count, plural, =0{Nothing could be sent yet} =1{1 inspection sent} other{{count} inspections sent}}",
+  "@inspOutboxSent": {
+    "description": "After sending the waiting inspections.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inspOutboxStill": "{count, plural, =1{1 is still waiting for a connection and goes out by itself.} other{{count} are still waiting for a connection and go out by themselves.}}",
+  "@inspOutboxStill": {
+    "description": "After sending, how many still wait.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inspOutboxQueuedAt": "Saved {time}",
+  "@inspOutboxQueuedAt": {
+    "description": "When a waiting inspection was saved.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "inspOutboxRemove": "Remove",
+  "@inspOutboxRemove": {
+    "description": "Removes a waiting inspection from the phone."
+  },
+  "inspOutboxRemoveTitle": "Remove this inspection?",
+  "@inspOutboxRemoveTitle": {
+    "description": "Title asking to remove an unsent inspection."
+  },
+  "inspOutboxRemoveMessage": "It hasn't been sent. Removing it deletes it from this phone.",
+  "@inspOutboxRemoveMessage": {
+    "description": "Message asking to remove an unsent inspection."
+  },
+  "inspOutboxTryAgain": "Try again",
+  "@inspOutboxTryAgain": {
+    "description": "Sends a turned-down inspection again."
   }
 }

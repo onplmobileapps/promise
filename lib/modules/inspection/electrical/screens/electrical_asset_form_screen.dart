@@ -75,20 +75,25 @@ class _ElectricalStore implements SpecFormStore {
       answers: Map<String, dynamic>.from(draft['answers'] as Map),
       startedAt:
           DateTime.tryParse('${draft['startedAt'] ?? ''}') ?? DateTime.now(),
+      step: (draft['step'] as num?)?.toInt() ?? 0,
     );
   }
 
   @override
-  Future<void> saveDraft(Map<String, dynamic> answers, DateTime startedAt) =>
-      ElectricalInspectionDraftService.saveDraft(
-        formId: form.formId,
-        answers: answers,
-        startedAt: startedAt,
-        department: form.department,
-        subDepartment: form.subDepartment,
-        asset: form.asset,
-        assetData: form.assetData,
-      );
+  Future<void> saveDraft(
+    Map<String, dynamic> answers,
+    DateTime startedAt, {
+    int step = 0,
+  }) => ElectricalInspectionDraftService.saveDraft(
+    formId: form.formId,
+    answers: answers,
+    startedAt: startedAt,
+    step: step,
+    department: form.department,
+    subDepartment: form.subDepartment,
+    asset: form.asset,
+    assetData: form.assetData,
+  );
 
   @override
   Future<void> complete(
