@@ -161,8 +161,8 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
     }
     if (!camera.value.isInitialized || camera.value.isStreamingImages) return;
     try {
-      await camera.startImageStream(_frame);
       _watchdog.start();
+      await camera.startImageStream(_frame);
     } catch (error) {
       debugPrint('The camera failed to resume: $error');
       _failWith(CameraHealth.faultOf(error) ?? CameraFault.broken);
@@ -277,8 +277,10 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
       camera.addListener(_onCameraValue);
       _minZoom = _maxZoom = _zoom = 1;
       if (_framesWanted) {
-        await camera.startImageStream(_frame);
+        // Watched from here: a broken camera can hang starting its
+        // pictures, or never send one.
         _watchdog.start();
+        await camera.startImageStream(_frame);
       }
       if (_disposed || session != _session) return;
       _setStatus(LiveCameraStatus.ready);
@@ -326,7 +328,8 @@ class LiveCamera extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _aim(CameraController camera) async {
     Future<void> attempt(Future<void> Function() action) async {
       try {
-        await action();
+        // A setting a broken camera never answers is given up on.
+        await action().timeout(const Duration(seconds: 2));
       } catch (error) {
         debugPrint('A camera setting failed: $error');
       }

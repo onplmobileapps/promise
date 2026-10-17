@@ -358,9 +358,12 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
       }
       _controller = controller;
       controller.addListener(_onCameraValue);
+      // Watched from here: a broken camera can open, then hang in its
+      // settings or never send a picture, and that is a fault too.
+      _watchdog.start();
+      if (mounted) setState(() {});
       await _meterOnFace(controller);
       await controller.startImageStream(_onFrame);
-      _watchdog.start();
       debugPrint(
         '📷 Camera streaming after ${sw.elapsedMilliseconds} ms '
         '(engine ready: ${_engine.isReady})',
@@ -419,7 +422,8 @@ class _FaceCaptureViewState extends State<FaceCaptureView> {
     const faceCenter = Offset(0.5, 0.5);
     Future<void> attempt(Future<void> Function() action) async {
       try {
-        await action();
+        // A setting a broken camera never answers is given up on.
+        await action().timeout(const Duration(seconds: 2));
       } catch (e) {
         debugPrint('⚠️ Camera metering: $e');
       }
