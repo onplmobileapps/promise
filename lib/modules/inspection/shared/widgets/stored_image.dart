@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/modules/inspection/shared/file_utils.dart';
 
 class StoredImage extends StatelessWidget {
@@ -33,20 +34,14 @@ class StoredImage extends StatelessWidget {
 
   Widget _placeholder(BuildContext context, {bool loading = false}) {
     if (placeholder != null) return placeholder!;
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      color: scheme.surfaceContainerHighest,
-      alignment: Alignment.center,
-      child: loading
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(
-              Icons.image_not_supported_outlined,
-              color: scheme.onSurfaceVariant,
-            ),
+    final colors = context.colors;
+    return ColoredBox(
+      color: colors.surfaceMuted,
+      child: Center(
+        child: loading
+            ? const AppLoader(size: AppSizes.loaderSmall)
+            : AppGlyphIcon(AppGlyphs.image, color: colors.textTertiary),
+      ),
     );
   }
 }

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Station-wise asset model for footplate inspection
 class StationAsset {
   final String id;
@@ -148,23 +146,6 @@ class StationAssetItem {
 }
 
 /// Asset categories for organization
-enum AssetCategory {
-  signal('Signal', Icons.traffic, Colors.blue),
-  track('Track', Icons.linear_scale, Colors.brown),
-  levelCrossing('Level Crossing', Icons.alt_route, Colors.orange),
-  tunnel('Tunnel', Icons.landscape, Colors.grey),
-  bridge('Bridge', Icons.architecture, Colors.purple),
-  curve('Curve', Icons.turn_right, Colors.teal),
-  station('Station', Icons.apartment, Colors.indigo),
-  platform('Platform', Icons.deck, Colors.cyan),
-  other('Other', Icons.category, Colors.grey);
-
-  const AssetCategory(this.label, this.icon, this.color);
-  final String label;
-  final IconData icon;
-  final Color color;
-}
-
 /// Mock station data with predefined assets
 class StationAssetData {
   static List<StationAsset> getMockStations() {
