@@ -1468,10 +1468,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inspMotorTrolley => 'Motor Trolley';
 
   @override
-  String get inspLocomotive => 'Locomotive';
+  String get inspLocomotive => 'Loco & shed';
 
   @override
-  String get inspElectrical => 'Electrical (RTL)';
+  String get inspElectrical => 'Electrical';
 
   @override
   String get inspFootplateAbout => 'Day and night, from the cab';
@@ -1483,10 +1483,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inspMotorTrolleyAbout => 'Track patrol by trolley';
 
   @override
-  String get inspLocomotiveAbout => 'Condition of the loco';
+  String get inspLocomotiveAbout => 'Locomotives by class, and the shed';
 
   @override
-  String get inspElectricalAbout => 'Electrical assets';
+  String get inspElectricalAbout =>
+      'Power installations and train lighting (RTL)';
 
   @override
   String inspPlan(String month) {
@@ -2741,25 +2742,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inspCivilSubtitle => 'Works, track and bridges';
 
   @override
-  String get inspElectricalSubtitle => 'Power and rolling stock';
-
-  @override
-  String get inspRtlRole => 'Your role';
-
-  @override
-  String get inspRtlPlaces => 'Places to inspect';
-
-  @override
-  String get inspRtlPickPlace => 'Pick at least one place to inspect.';
-
-  @override
-  String get inspFormStart => 'Start inspection';
-
-  @override
   String get inspLocomotiveTitle => 'Locomotive inspection';
-
-  @override
-  String get inspLocomotiveSubtitle => 'GEU-40 · Mechanical';
 
   @override
   String inspTrafficAllGood(String label) {
@@ -2996,4 +2979,307 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inspOutboxTryAgain => 'Try again';
+
+  @override
+  String get inspFormObservation => 'Observation';
+
+  @override
+  String inspFormMarkRest(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mark the other $count in order',
+      one: 'Mark the last one in order',
+      zero: 'All answered',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get inspFormUndo => 'Undo';
+
+  @override
+  String get inspFormReading => 'Reading';
+
+  @override
+  String get inspFormExpiry => 'Expiry date';
+
+  @override
+  String get inspFormRecord => 'Record';
+
+  @override
+  String get inspFormLikelyCause => 'Likely cause';
+
+  @override
+  String get inspFormAddNote => 'Add a note';
+
+  @override
+  String get inspFormCountOk => 'OK';
+
+  @override
+  String get inspFormCountDefective => 'Defective';
+
+  @override
+  String get inspFormCountMissing => 'Missing';
+
+  @override
+  String get inspFormFinish => 'Result';
+
+  @override
+  String inspFormFaultsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items were found at fault.',
+      one: '1 item was found at fault.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get inspProformaOfficer => 'Inspecting officer';
+
+  @override
+  String get inspProformaDesignation => 'Designation';
+
+  @override
+  String get inspResultSatisfactory => 'Satisfactory';
+
+  @override
+  String get inspResultImprove => 'Needs improvement';
+
+  @override
+  String get inspResultUnsatisfactory => 'Unsatisfactory';
+
+  @override
+  String get inspResultCritical => 'Critical deficiency';
+
+  @override
+  String get inspOfficersTable => 'Inspections by officers this year';
+
+  @override
+  String get inspOfficersTableAbout =>
+      'Officers and officials during the calendar year';
+
+  @override
+  String get inspOfficersName => 'Officer / official';
+
+  @override
+  String get inspOfficersQuota => 'Annual quota';
+
+  @override
+  String get inspOfficersLast => 'Last inspection date';
+
+  @override
+  String get inspOfficersRow => 'Officer';
+
+  @override
+  String get inspProformaLocoNumber => 'Loco number';
+
+  @override
+  String get inspProformaShed => 'Shed / depot name';
+
+  @override
+  String get inspProformaDepartment => 'Department';
+
+  @override
+  String get inspProformaResult => 'Inspection result';
+
+  @override
+  String get inspProformaRemarks => 'Remarks / observations';
+
+  @override
+  String get inspProformaUnderway => 'In progress';
+
+  @override
+  String get inspProformaClass => 'Locomotive class';
+
+  @override
+  String inspProformaSize(int sections, int items) {
+    return '$sections parts · $items checks';
+  }
+
+  @override
+  String get inspShedPremises => 'Shed';
+
+  @override
+  String get inspShedPremisesTitle => 'Shed inspection';
+
+  @override
+  String get inspShedPremisesAbout =>
+      'Cleanliness, schedule office, laboratory, store, repair shop and machinery';
+
+  @override
+  String get inspRtlTitle => 'Train lighting (RTL) inspection';
+
+  @override
+  String get inspRtlGroup => 'Train lighting (RTL)';
+
+  @override
+  String get inspRtlPoint => 'Inspection point';
+
+  @override
+  String get inspRtlPointStation => 'Station';
+
+  @override
+  String get inspRtlPointWashingline => 'Washingline';
+
+  @override
+  String get inspRtlPointWorkshop => 'Workshop';
+
+  @override
+  String get inspRtlStock => 'Coach or van';
+
+  @override
+  String get inspRtlStockAc => 'AC / standard coach';
+
+  @override
+  String get inspRtlStockEconomy => 'Economy coach';
+
+  @override
+  String get inspRtlStockPowerVan => 'Power van / TL van';
+
+  @override
+  String get inspRtlStage => 'Work stage';
+
+  @override
+  String get inspRtlStagePoh => 'POH';
+
+  @override
+  String get inspRtlStageFirst => 'First stage';
+
+  @override
+  String get inspRtlStageFinal => 'Final stage';
+
+  @override
+  String get inspRtlStageRepair => 'Repair';
+
+  @override
+  String get inspRtlStageOther => 'Other';
+
+  @override
+  String get inspRtlCause => 'Cause / date received';
+
+  @override
+  String get inspRtlTrain => 'Train / coach / PV-TL van no.';
+
+  @override
+  String get inspRtlClass => 'Class / make / capacity';
+
+  @override
+  String get inspRtlPreviousDate => 'Previous inspection date';
+
+  @override
+  String get inspRtlPreviousDefects => 'Previous outstanding defects';
+
+  @override
+  String get inspRtlIncharge => 'Maintenance in-charge';
+
+  @override
+  String get inspRtlEfo => 'EFO / AEFO · Detailed field inspection';
+
+  @override
+  String get inspRtlDee => 'DEE / AEE · Supervisory & verification';
+
+  @override
+  String get inspRtlDyCee => 'Dy. CEE · Divisional performance & compliance';
+
+  @override
+  String get inspRtlCee => 'CEE · Departmental control & performance';
+
+  @override
+  String get inspRtlEfoFrequency => 'AEFO daily · DEFO / EFO twice a month';
+
+  @override
+  String get inspRtlDeeFrequency => 'AEE weekly · DEE / SEE twice a month';
+
+  @override
+  String get inspRtlDyCeeFrequency => 'Any division in a month';
+
+  @override
+  String get inspRtlCeeFrequency => 'Any division in 3 months';
+
+  @override
+  String get inspPowerTitle => 'Electrical power inspection';
+
+  @override
+  String get inspPowerGroup => 'Power';
+
+  @override
+  String get inspPowerForeman => 'Electrical Foreman / Sub-Engineer';
+
+  @override
+  String get inspPowerAee => 'Assistant Electrical Engineer (AEE)';
+
+  @override
+  String get inspPowerDee => 'Divisional Electrical Engineer (DEE / DAEE)';
+
+  @override
+  String get inspPowerDyCee =>
+      'Deputy Chief Electrical Engineer (Dy. CEE / Power)';
+
+  @override
+  String get inspPowerCee => 'Chief Electrical Engineer (CEE)';
+
+  @override
+  String get inspPowerForemanFrequency => 'Every 15 days';
+
+  @override
+  String get inspPowerAeeFrequency => 'Monthly';
+
+  @override
+  String get inspPowerDeeFrequency => 'Quarterly';
+
+  @override
+  String get inspPowerDyCeeFrequency => 'One division within two months';
+
+  @override
+  String get inspPowerCeeFrequency => 'Any division within 3 months';
+
+  @override
+  String get inspPowerLocation => 'Location / installation';
+
+  @override
+  String get inspPowerAreas => 'Applicable inspection areas';
+
+  @override
+  String get inspPowerAreasNote =>
+      'Each area picked is inspected as a step of its own.';
+
+  @override
+  String get inspPowerAreaStation => 'Station';
+
+  @override
+  String get inspPowerAreaWorkshop => 'Workshop';
+
+  @override
+  String get inspPowerAreaSubStation => 'Sub-Station';
+
+  @override
+  String get inspPowerAreaSolar => 'Solar';
+
+  @override
+  String get inspPowerAreaCrossing => 'WAPDA crossing';
+
+  @override
+  String get inspPowerSubStation => 'Name of sub-station';
+
+  @override
+  String get inspPowerReviewed => 'Previous observations reviewed';
+
+  @override
+  String get inspPowerRectified => 'Previous observations rectified';
+
+  @override
+  String get inspPowerPending => 'Previous observations pending';
+
+  @override
+  String get inspYes => 'Yes';
+
+  @override
+  String get inspNo => 'No';
+
+  @override
+  String get inspPlanNone =>
+      'No monthly plan is set for your designation. The inspections you finish this month count here.';
 }

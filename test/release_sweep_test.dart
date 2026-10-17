@@ -37,8 +37,7 @@ import 'package:railway_hrms/modules/hrms/screens/team_view.dart';
 import 'package:railway_hrms/modules/inspection/civil/screens/civil_inspection_home_screen.dart';
 import 'package:railway_hrms/modules/inspection/civil/screens/sleepers_rails_sidings_screen.dart';
 import 'package:railway_hrms/modules/inspection/dashboard/inspection_dashboard_screen.dart';
-import 'package:railway_hrms/modules/inspection/electrical/screens/electrical_inspection_home_screen.dart';
-import 'package:railway_hrms/modules/inspection/electrical/screens/electrical_rtl_inspection_screen.dart';
+import 'package:railway_hrms/modules/inspection/electrical/electrical_inspection_screen.dart';
 import 'package:railway_hrms/modules/inspection/footplate/inspection_approval_screen.dart';
 import 'package:railway_hrms/modules/inspection/footplate/wizard/wizard_screen.dart';
 import 'package:railway_hrms/modules/inspection/locomotive/locomotive_inspection_screen.dart';
@@ -468,8 +467,7 @@ final Map<String, Widget Function()> _screens = {
   'insp-station': () => const StationInspectionScreen(),
   'insp-motor-trolley': () => const MotorTrolleyInspectionScreen(),
   'insp-locomotive': () => const LocomotiveInspectionScreen(),
-  'insp-electrical-rtl': () => const ElectricalRtlInspectionScreen(),
-  'insp-electrical-home': () => const ElectricalInspectionHomeScreen(),
+  'insp-electrical': () => const ElectricalInspectionScreen(),
   'insp-civil-home': () => const CivilInspectionHomeScreen(),
   'insp-civil-sleepers': () => const SleepersRailsSidingsScreen(),
   'insp-traffic': () =>

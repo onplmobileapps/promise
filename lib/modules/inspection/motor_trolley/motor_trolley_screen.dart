@@ -14,6 +14,7 @@ import 'package:railway_hrms/modules/inspection/motor_trolley/widgets/trolley_fi
 import 'package:railway_hrms/modules/inspection/shared/flow/inspection_review_screen.dart';
 import 'package:railway_hrms/modules/inspection/shared/flow/inspection_session.dart';
 import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
+import 'package:railway_hrms/modules/inspection/shared/inspection_history.dart';
 import 'package:railway_hrms/modules/inspection/shared/outbox/inspection_outbox.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_form_scaffold.dart';
@@ -106,6 +107,10 @@ class _TrolleyFormState extends State<_TrolleyForm> {
     );
     if (!sent || !mounted) return;
     await cubit.clearDraft();
+    await keepFinishedInspection(
+      type: 'motor_trolley',
+      title: [l10n.inspTrolleyTitle, ?report.subtitle].join(' · '),
+    );
     if (mounted) Navigator.of(context).pop();
   }
 

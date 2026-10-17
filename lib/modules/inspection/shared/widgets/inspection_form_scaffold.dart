@@ -262,9 +262,12 @@ class _InspectionFormScaffoldState extends State<InspectionFormScaffold> {
     }
 
     fields.visitChildElements(collect);
+    // A numbered item, as "4. Fuel Oil Pressure", is labelled without it.
+    final unnumbered = row.replaceFirst(RegExp(r'^[\d.]+\s+'), '');
     final names = {
       _plain(row),
-      _plain(row.split(' · ').last),
+      _plain(unnumbered),
+      _plain(unnumbered.split(' · ').last),
       _plain(row.split(' — ').first),
     }..remove('');
     for (final name in names) {

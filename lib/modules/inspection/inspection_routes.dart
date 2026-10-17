@@ -3,7 +3,7 @@ import 'package:railway_hrms/core/navigation/app_routes.dart';
 import 'package:railway_hrms/modules/inspection/civil/screens/civil_inspection_home_screen.dart';
 import 'package:railway_hrms/modules/inspection/civil/screens/sleepers_rails_sidings_screen.dart';
 import 'package:railway_hrms/modules/inspection/dashboard/inspection_dashboard_screen.dart';
-import 'package:railway_hrms/modules/inspection/electrical/screens/electrical_inspection_home_screen.dart';
+import 'package:railway_hrms/modules/inspection/electrical/electrical_inspection_screen.dart';
 
 /// e-Inspection screens, by route name.
 final Map<String, WidgetBuilder> inspectionRoutes = {
@@ -11,6 +11,5 @@ final Map<String, WidgetBuilder> inspectionRoutes = {
   AppRoutes.civilInspectionHome: (_) => const CivilInspectionHomeScreen(),
   AppRoutes.civilInspectionSleepersRails: (_) =>
       const SleepersRailsSidingsScreen(),
-  AppRoutes.electricalInspectionHome: (_) =>
-      const ElectricalInspectionHomeScreen(),
+  AppRoutes.electricalInspectionHome: (_) => const ElectricalInspectionScreen(),
 };

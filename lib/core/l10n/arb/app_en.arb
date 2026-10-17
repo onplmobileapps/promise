@@ -2085,13 +2085,13 @@
   "@inspMotorTrolley": {
     "description": "A kind of inspection."
   },
-  "inspLocomotive": "Locomotive",
+  "inspLocomotive": "Loco & shed",
   "@inspLocomotive": {
-    "description": "A kind of inspection."
+    "description": "Dashboard entry for locomotive and shed inspections."
   },
-  "inspElectrical": "Electrical (RTL)",
+  "inspElectrical": "Electrical",
   "@inspElectrical": {
-    "description": "A kind of inspection."
+    "description": "Dashboard entry for electrical inspections."
   },
   "inspFootplateAbout": "Day and night, from the cab",
   "@inspFootplateAbout": {
@@ -2105,13 +2105,13 @@
   "@inspMotorTrolleyAbout": {
     "description": "What a motor trolley inspection covers."
   },
-  "inspLocomotiveAbout": "Condition of the loco",
+  "inspLocomotiveAbout": "Locomotives by class, and the shed",
   "@inspLocomotiveAbout": {
-    "description": "What a locomotive inspection covers."
+    "description": "Under the loco and shed entry."
   },
-  "inspElectricalAbout": "Electrical assets",
+  "inspElectricalAbout": "Power installations and train lighting (RTL)",
   "@inspElectricalAbout": {
-    "description": "What an electrical inspection covers."
+    "description": "Under the electrical entry."
   },
   "inspPlan": "{month} plan",
   "@inspPlan": {
@@ -3833,33 +3833,9 @@
   "@inspCivilSubtitle": {
     "description": "What civil inspections cover."
   },
-  "inspElectricalSubtitle": "Power and rolling stock",
-  "@inspElectricalSubtitle": {
-    "description": "What electrical inspections cover."
-  },
-  "inspRtlRole": "Your role",
-  "@inspRtlRole": {
-    "description": "Label of the role an RTL electrical inspector inspects as."
-  },
-  "inspRtlPlaces": "Places to inspect",
-  "@inspRtlPlaces": {
-    "description": "Heading of the places an RTL electrical inspection covers."
-  },
-  "inspRtlPickPlace": "Pick at least one place to inspect.",
-  "@inspRtlPickPlace": {
-    "description": "Shown when an RTL inspection is started with no place picked."
-  },
-  "inspFormStart": "Start inspection",
-  "@inspFormStart": {
-    "description": "Opens an inspection's form once what it covers is chosen."
-  },
   "inspLocomotiveTitle": "Locomotive inspection",
   "@inspLocomotiveTitle": {
     "description": "Title of the locomotive inspection form."
-  },
-  "inspLocomotiveSubtitle": "GEU-40 · Mechanical",
-  "@inspLocomotiveSubtitle": {
-    "description": "What a locomotive inspection covers, under its title."
   },
   "inspTrafficAllGood": "All {label}",
   "@inspTrafficAllGood": {
@@ -4156,5 +4132,395 @@
   "inspOutboxTryAgain": "Try again",
   "@inspOutboxTryAgain": {
     "description": "Sends a turned-down inspection again."
+  },
+  "inspFormObservation": "Observation",
+  "@inspFormObservation": {
+    "description": "A note on what was found on an inspected item."
+  },
+  "inspFormMarkRest": "{count, plural, =0{All answered} =1{Mark the last one in order} other{Mark the other {count} in order}}",
+  "@inspFormMarkRest": {
+    "description": "Marks every unanswered item of a section with its in-order answer.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inspFormUndo": "Undo",
+  "@inspFormUndo": {
+    "description": "Undoes marking a section's items in order."
+  },
+  "inspFormReading": "Reading",
+  "@inspFormReading": {
+    "description": "A value noted on an inspected item, as a pressure."
+  },
+  "inspFormExpiry": "Expiry date",
+  "@inspFormExpiry": {
+    "description": "The day something inspected expires, as a fire extinguisher."
+  },
+  "inspFormRecord": "Record",
+  "@inspFormRecord": {
+    "description": "What is written down for an inspected item, as a coach number."
+  },
+  "inspFormLikelyCause": "Likely cause",
+  "@inspFormLikelyCause": {
+    "description": "Why an inspected item is at fault."
+  },
+  "inspFormAddNote": "Add a note",
+  "@inspFormAddNote": {
+    "description": "Opens a note on an inspected item."
+  },
+  "inspFormCountOk": "OK",
+  "@inspFormCountOk": {
+    "description": "How many of an item are in order."
+  },
+  "inspFormCountDefective": "Defective",
+  "@inspFormCountDefective": {
+    "description": "How many of an item are defective."
+  },
+  "inspFormCountMissing": "Missing",
+  "@inspFormCountMissing": {
+    "description": "How many of an item are missing."
+  },
+  "inspFormFinish": "Result",
+  "@inspFormFinish": {
+    "description": "The last step of an inspection: its result and remarks."
+  },
+  "inspFormFaultsFound": "{count, plural, =1{1 item was found at fault.} other{{count} items were found at fault.}}",
+  "@inspFormFaultsFound": {
+    "description": "On the result step: how many items are at fault.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inspProformaOfficer": "Inspecting officer",
+  "@inspProformaOfficer": {
+    "description": "Who made an inspection."
+  },
+  "inspProformaDesignation": "Designation",
+  "@inspProformaDesignation": {
+    "description": "An officer's designation."
+  },
+  "inspResultSatisfactory": "Satisfactory",
+  "@inspResultSatisfactory": {
+    "description": "An inspection's result."
+  },
+  "inspResultImprove": "Needs improvement",
+  "@inspResultImprove": {
+    "description": "An inspection's result."
+  },
+  "inspResultUnsatisfactory": "Unsatisfactory",
+  "@inspResultUnsatisfactory": {
+    "description": "An inspection's result."
+  },
+  "inspResultCritical": "Critical deficiency",
+  "@inspResultCritical": {
+    "description": "An inspection's result."
+  },
+  "inspOfficersTable": "Inspections by officers this year",
+  "@inspOfficersTable": {
+    "description": "Table of the officers' inspections of a locomotive in the year."
+  },
+  "inspOfficersTableAbout": "Officers and officials during the calendar year",
+  "@inspOfficersTableAbout": {
+    "description": "Under the officers' inspections table."
+  },
+  "inspOfficersName": "Officer / official",
+  "@inspOfficersName": {
+    "description": "Column of the officers' inspections table."
+  },
+  "inspOfficersQuota": "Annual quota",
+  "@inspOfficersQuota": {
+    "description": "Column of the officers' inspections table."
+  },
+  "inspOfficersLast": "Last inspection date",
+  "@inspOfficersLast": {
+    "description": "Column of the officers' inspections table."
+  },
+  "inspOfficersRow": "Officer",
+  "@inspOfficersRow": {
+    "description": "One row of the officers' inspections table."
+  },
+  "inspProformaLocoNumber": "Loco number",
+  "@inspProformaLocoNumber": {
+    "description": "The inspected locomotive's number."
+  },
+  "inspProformaShed": "Shed / depot name",
+  "@inspProformaShed": {
+    "description": "The shed or depot inspected at."
+  },
+  "inspProformaDepartment": "Department",
+  "@inspProformaDepartment": {
+    "description": "The department inspected."
+  },
+  "inspProformaResult": "Inspection result",
+  "@inspProformaResult": {
+    "description": "The overall result of an inspection."
+  },
+  "inspProformaRemarks": "Remarks / observations",
+  "@inspProformaRemarks": {
+    "description": "Overall remarks on an inspection."
+  },
+  "inspProformaUnderway": "In progress",
+  "@inspProformaUnderway": {
+    "description": "Marks an inspection left part-way."
+  },
+  "inspProformaClass": "Locomotive class",
+  "@inspProformaClass": {
+    "description": "Heading over the classes of locomotive to inspect."
+  },
+  "inspProformaSize": "{sections} parts · {items} checks",
+  "@inspProformaSize": {
+    "description": "How big a proforma is.",
+    "placeholders": {
+      "sections": {
+        "type": "int"
+      },
+      "items": {
+        "type": "int"
+      }
+    }
+  },
+  "inspShedPremises": "Shed",
+  "@inspShedPremises": {
+    "description": "Heading over the shed inspection."
+  },
+  "inspShedPremisesTitle": "Shed inspection",
+  "@inspShedPremisesTitle": {
+    "description": "Title of the shed inspection."
+  },
+  "inspShedPremisesAbout": "Cleanliness, schedule office, laboratory, store, repair shop and machinery",
+  "@inspShedPremisesAbout": {
+    "description": "What the shed inspection covers."
+  },
+  "inspRtlTitle": "Train lighting (RTL) inspection",
+  "@inspRtlTitle": {
+    "description": "Title of a train lighting inspection."
+  },
+  "inspRtlGroup": "Train lighting (RTL)",
+  "@inspRtlGroup": {
+    "description": "Heading over the train lighting proformas."
+  },
+  "inspRtlPoint": "Inspection point",
+  "@inspRtlPoint": {
+    "description": "Where a train lighting inspection is made."
+  },
+  "inspRtlPointStation": "Station",
+  "@inspRtlPointStation": {
+    "description": "Train lighting inspection point."
+  },
+  "inspRtlPointWashingline": "Washingline",
+  "@inspRtlPointWashingline": {
+    "description": "Train lighting inspection point."
+  },
+  "inspRtlPointWorkshop": "Workshop",
+  "@inspRtlPointWorkshop": {
+    "description": "Train lighting inspection point."
+  },
+  "inspRtlStock": "Coach or van",
+  "@inspRtlStock": {
+    "description": "What is inspected at the workshop."
+  },
+  "inspRtlStockAc": "AC / standard coach",
+  "@inspRtlStockAc": {
+    "description": "Rolling stock inspected at the workshop."
+  },
+  "inspRtlStockEconomy": "Economy coach",
+  "@inspRtlStockEconomy": {
+    "description": "Rolling stock inspected at the workshop."
+  },
+  "inspRtlStockPowerVan": "Power van / TL van",
+  "@inspRtlStockPowerVan": {
+    "description": "Rolling stock inspected at the workshop."
+  },
+  "inspRtlStage": "Work stage",
+  "@inspRtlStage": {
+    "description": "The stage of workshop work."
+  },
+  "inspRtlStagePoh": "POH",
+  "@inspRtlStagePoh": {
+    "description": "Workshop work stage: periodic overhaul."
+  },
+  "inspRtlStageFirst": "First stage",
+  "@inspRtlStageFirst": {
+    "description": "Workshop work stage."
+  },
+  "inspRtlStageFinal": "Final stage",
+  "@inspRtlStageFinal": {
+    "description": "Workshop work stage."
+  },
+  "inspRtlStageRepair": "Repair",
+  "@inspRtlStageRepair": {
+    "description": "Workshop work stage."
+  },
+  "inspRtlStageOther": "Other",
+  "@inspRtlStageOther": {
+    "description": "Workshop work stage."
+  },
+  "inspRtlCause": "Cause / date received",
+  "@inspRtlCause": {
+    "description": "Why and when a coach came to the workshop."
+  },
+  "inspRtlTrain": "Train / coach / PV-TL van no.",
+  "@inspRtlTrain": {
+    "description": "What train lighting is inspected on."
+  },
+  "inspRtlClass": "Class / make / capacity",
+  "@inspRtlClass": {
+    "description": "The inspected coach or van's class, make and capacity."
+  },
+  "inspRtlPreviousDate": "Previous inspection date",
+  "@inspRtlPreviousDate": {
+    "description": "When it was last inspected."
+  },
+  "inspRtlPreviousDefects": "Previous outstanding defects",
+  "@inspRtlPreviousDefects": {
+    "description": "Defects left from the last inspection."
+  },
+  "inspRtlIncharge": "Maintenance in-charge",
+  "@inspRtlIncharge": {
+    "description": "Who signs for the maintenance."
+  },
+  "inspRtlEfo": "EFO / AEFO · Detailed field inspection",
+  "@inspRtlEfo": {
+    "description": "Train lighting proforma."
+  },
+  "inspRtlDee": "DEE / AEE · Supervisory & verification",
+  "@inspRtlDee": {
+    "description": "Train lighting proforma."
+  },
+  "inspRtlDyCee": "Dy. CEE · Divisional performance & compliance",
+  "@inspRtlDyCee": {
+    "description": "Train lighting proforma."
+  },
+  "inspRtlCee": "CEE · Departmental control & performance",
+  "@inspRtlCee": {
+    "description": "Train lighting proforma."
+  },
+  "inspRtlEfoFrequency": "AEFO daily · DEFO / EFO twice a month",
+  "@inspRtlEfoFrequency": {
+    "description": "How often the proforma is made."
+  },
+  "inspRtlDeeFrequency": "AEE weekly · DEE / SEE twice a month",
+  "@inspRtlDeeFrequency": {
+    "description": "How often the proforma is made."
+  },
+  "inspRtlDyCeeFrequency": "Any division in a month",
+  "@inspRtlDyCeeFrequency": {
+    "description": "How often the proforma is made."
+  },
+  "inspRtlCeeFrequency": "Any division in 3 months",
+  "@inspRtlCeeFrequency": {
+    "description": "How often the proforma is made."
+  },
+  "inspPowerTitle": "Electrical power inspection",
+  "@inspPowerTitle": {
+    "description": "Title of a power inspection."
+  },
+  "inspPowerGroup": "Power",
+  "@inspPowerGroup": {
+    "description": "Heading over the power proformas."
+  },
+  "inspPowerForeman": "Electrical Foreman / Sub-Engineer",
+  "@inspPowerForeman": {
+    "description": "Power proforma's officer."
+  },
+  "inspPowerAee": "Assistant Electrical Engineer (AEE)",
+  "@inspPowerAee": {
+    "description": "Power proforma's officer."
+  },
+  "inspPowerDee": "Divisional Electrical Engineer (DEE / DAEE)",
+  "@inspPowerDee": {
+    "description": "Power proforma's officer."
+  },
+  "inspPowerDyCee": "Deputy Chief Electrical Engineer (Dy. CEE / Power)",
+  "@inspPowerDyCee": {
+    "description": "Power proforma's officer."
+  },
+  "inspPowerCee": "Chief Electrical Engineer (CEE)",
+  "@inspPowerCee": {
+    "description": "Power proforma's officer."
+  },
+  "inspPowerForemanFrequency": "Every 15 days",
+  "@inspPowerForemanFrequency": {
+    "description": "How often the proforma is made."
+  },
+  "inspPowerAeeFrequency": "Monthly",
+  "@inspPowerAeeFrequency": {
+    "description": "How often the proforma is made."
+  },
+  "inspPowerDeeFrequency": "Quarterly",
+  "@inspPowerDeeFrequency": {
+    "description": "How often the proforma is made."
+  },
+  "inspPowerDyCeeFrequency": "One division within two months",
+  "@inspPowerDyCeeFrequency": {
+    "description": "How often the proforma is made."
+  },
+  "inspPowerCeeFrequency": "Any division within 3 months",
+  "@inspPowerCeeFrequency": {
+    "description": "How often the proforma is made."
+  },
+  "inspPowerLocation": "Location / installation",
+  "@inspPowerLocation": {
+    "description": "Where a power inspection is made."
+  },
+  "inspPowerAreas": "Applicable inspection areas",
+  "@inspPowerAreas": {
+    "description": "The areas a power inspection covers."
+  },
+  "inspPowerAreasNote": "Each area picked is inspected as a step of its own.",
+  "@inspPowerAreasNote": {
+    "description": "Under the areas of a foreman's power inspection."
+  },
+  "inspPowerAreaStation": "Station",
+  "@inspPowerAreaStation": {
+    "description": "Power inspection area."
+  },
+  "inspPowerAreaWorkshop": "Workshop",
+  "@inspPowerAreaWorkshop": {
+    "description": "Power inspection area."
+  },
+  "inspPowerAreaSubStation": "Sub-Station",
+  "@inspPowerAreaSubStation": {
+    "description": "Power inspection area."
+  },
+  "inspPowerAreaSolar": "Solar",
+  "@inspPowerAreaSolar": {
+    "description": "Power inspection area."
+  },
+  "inspPowerAreaCrossing": "WAPDA crossing",
+  "@inspPowerAreaCrossing": {
+    "description": "Power inspection area."
+  },
+  "inspPowerSubStation": "Name of sub-station",
+  "@inspPowerSubStation": {
+    "description": "The sub-station inspected."
+  },
+  "inspPowerReviewed": "Previous observations reviewed",
+  "@inspPowerReviewed": {
+    "description": "Previous inspection compliance."
+  },
+  "inspPowerRectified": "Previous observations rectified",
+  "@inspPowerRectified": {
+    "description": "Previous inspection compliance."
+  },
+  "inspPowerPending": "Previous observations pending",
+  "@inspPowerPending": {
+    "description": "Previous inspection compliance."
+  },
+  "inspYes": "Yes",
+  "@inspYes": {
+    "description": "An answer."
+  },
+  "inspNo": "No",
+  "@inspNo": {
+    "description": "An answer."
+  },
+  "inspPlanNone": "No monthly plan is set for your designation. The inspections you finish this month count here.",
+  "@inspPlanNone": {
+    "description": "On the plan card when the designation has no monthly inspection plan."
   }
 }

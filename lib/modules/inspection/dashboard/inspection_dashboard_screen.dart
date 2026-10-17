@@ -11,19 +11,17 @@ import 'package:railway_hrms/core/storage/storage_service.dart';
 import 'package:railway_hrms/core/utils/module_notifications.dart';
 import 'package:railway_hrms/modules/inspection/civil/models/civil_inspection_catalog.dart';
 import 'package:railway_hrms/modules/inspection/civil/screens/civil_asset_form_screen.dart';
-import 'package:railway_hrms/modules/inspection/electrical/models/electrical_inspection_catalog.dart';
-import 'package:railway_hrms/modules/inspection/electrical/screens/electrical_asset_form_screen.dart';
-import 'package:railway_hrms/modules/inspection/electrical/screens/electrical_rtl_inspection_screen.dart';
+import 'package:railway_hrms/modules/inspection/dashboard/inspection_plan.dart';
+import 'package:railway_hrms/modules/inspection/electrical/electrical_inspection_screen.dart';
 import 'package:railway_hrms/modules/inspection/footplate/inspection_approval_screen.dart';
 import 'package:railway_hrms/modules/inspection/footplate/wizard/wizard_screen.dart';
 import 'package:railway_hrms/modules/inspection/locomotive/locomotive_inspection_screen.dart';
 import 'package:railway_hrms/modules/inspection/motor_trolley/motor_trolley_screen.dart';
+import 'package:railway_hrms/modules/inspection/proformas.dart';
 import 'package:railway_hrms/modules/inspection/shared/outbox/inspection_outbox.dart';
+import 'package:railway_hrms/modules/inspection/shared/proforma/proforma_inspection_screen.dart';
 import 'package:railway_hrms/modules/inspection/station/station_inspection_screen.dart';
 import 'package:railway_hrms/modules/inspection/traffic/traffic_inspection_home.dart';
-
-/// The kinds of inspection, in the order they are offered.
-enum InspectionKind { footplate, station, motorTrolley, locomotive, electrical }
 
 extension on InspectionKind {
   String title(AppLocalizations l10n) => switch (this) {
@@ -55,7 +53,7 @@ extension on InspectionKind {
     InspectionKind.station => const StationInspectionScreen(),
     InspectionKind.motorTrolley => const MotorTrolleyInspectionScreen(),
     InspectionKind.locomotive => const LocomotiveInspectionScreen(),
-    InspectionKind.electrical => const ElectricalRtlInspectionScreen(),
+    InspectionKind.electrical => const ElectricalInspectionScreen(),
   };
 }
 
@@ -160,35 +158,6 @@ class _InspectionDashboardScreenState extends State<InspectionDashboardScreen> {
     }
   }
 
-  /// The plan for the kinds the signed-in employee inspects.
-  List<InspectionQuota> get _quota {
-    final user = _user;
-    if (user == null) return kInspectionQuota;
-    final role = (user.roleData?.name ?? '').toLowerCase();
-    final code = (user.roleData?.codeName ?? '').toLowerCase();
-    final designation = (user.designation ?? '').toLowerCase();
-    if (user.isSuperuser == true ||
-        user.isHqUser == true ||
-        designation.contains('officer') ||
-        designation.contains('admin') ||
-        designation.isEmpty ||
-        designation == 'end user') {
-      return kInspectionQuota;
-    }
-    final mine = [
-      for (final item in kInspectionQuota)
-        if (item.roles.any(
-          (r) =>
-              r == 'all' ||
-              role.contains(r) ||
-              code.contains(r) ||
-              designation.contains(r),
-        ))
-          item,
-    ];
-    return mine.isEmpty ? kInspectionQuota : mine;
-  }
-
   Future<void> _start(InspectionKind kind) async {
     await Navigator.of(
       context,
@@ -246,27 +215,16 @@ class _InspectionDashboardScreenState extends State<InspectionDashboardScreen> {
           formId: formId,
         );
       }
-    } else if (type == 'electrical') {
-      final assetData = payload['assetData'] as Map<String, dynamic>? ?? {};
-      final fields =
-          department == null || subDepartment == null || asset == null
-          ? null
-          : ElectricalInspectionCatalog.resolveFields(
-              department,
-              subDepartment,
-              asset,
-              assetData,
-            );
-      if (fields != null && formId != null) {
-        screen = ElectricalAssetFormScreen(
-          department: department!,
-          subDepartment: subDepartment!,
-          asset: asset!,
-          fields: fields,
-          formId: formId,
-          assetData: assetData,
-        );
+    } else if (type == 'proforma') {
+      final definition = proformaNamed(
+        context.l10n,
+        payload['proforma']?.toString(),
+      );
+      if (definition != null) {
+        screen = ProformaInspectionScreen(definition: definition);
       }
+    } else if (type == 'electrical') {
+      screen = const ElectricalInspectionScreen();
     } else if (type == 'station' || type == 'signal') {
       screen = const StationInspectionScreen();
     } else if (type == 'motor_trolley') {
@@ -286,7 +244,6 @@ class _InspectionDashboardScreenState extends State<InspectionDashboardScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final now = (widget.now ?? DateTime.now)();
-    final quota = _quota;
     // A page of its own now, so back and the iOS swipe close it as any.
     return PopScope(
       canPop: true,
@@ -294,10 +251,17 @@ class _InspectionDashboardScreenState extends State<InspectionDashboardScreen> {
         body: FutureBuilder<List<Map<String, dynamic>>>(
           future: _records,
           builder: (context, snapshot) {
+            final records = snapshot.data ?? const <Map<String, dynamic>>[];
             final drafts = <Map<String, dynamic>>[
-              for (final record in snapshot.data ?? const [])
+              for (final record in records)
                 if (record['status'] == 'in_progress') record,
             ];
+            final quota = monthlyPlan(
+              _user,
+              records,
+              now,
+              kindOf: InspectionKindDrafts.ofDraft,
+            );
             return AppScrollPage(
               onRefresh: _refresh,
               children: [
@@ -352,20 +316,20 @@ class _InspectionDashboardScreenState extends State<InspectionDashboardScreen> {
                 AppSpacing.gapSm,
                 AppListGroup(
                   children: [
-                    for (final item in quota)
+                    for (final kind in InspectionKind.values)
                       AppListRow(
                         leading: AppIconTile(
                           size: AppSizes.rowTile,
                           child: AppGlyphIcon(
-                            item.kind.glyph,
+                            kind.glyph,
                             size: AppSizes.iconMd,
                             color: context.colors.iconAccent,
                           ),
                         ),
-                        title: item.kind.title(l10n),
-                        subtitle: item.kind.about(l10n),
+                        title: kind.title(l10n),
+                        subtitle: kind.about(l10n),
                         showChevron: true,
-                        onTap: () => _start(item.kind),
+                        onTap: () => _start(kind),
                       ),
                   ],
                 ),
@@ -379,7 +343,8 @@ class _InspectionDashboardScreenState extends State<InspectionDashboardScreen> {
 }
 
 /// The month's plan: how many of the inspections are done, on a ring, and
-/// each kind's share under it.
+/// each kind's share under it. With no plan for the designation, what was
+/// done this month.
 class _PlanCard extends StatelessWidget {
   const _PlanCard({required this.quota, required this.now});
 
@@ -397,6 +362,8 @@ class _PlanCard extends StatelessWidget {
       (sum, item) => sum + math.min(item.done, item.total),
     );
     final total = quota.fold(0, (sum, item) => sum + item.total);
+    final made = quota.fold(0, (sum, item) => sum + item.done);
+    final planned = total > 0;
     final due = DateTime(now.year, now.month + 1, 0);
     return DecoratedBox(
       decoration: appCardDecoration(context, radius: AppRadius.borderHeroCard),
@@ -425,24 +392,27 @@ class _PlanCard extends StatelessWidget {
             Row(
               children: [
                 AppRingGauge(
-                  fraction: total == 0 ? 0 : done / total,
+                  fraction: planned ? done / total : (made > 0 ? 1 : 0),
                   color: colors.primaryShade,
                   size: AppSizes.planRing,
                   stroke: AppSizes.planRingStroke,
-                  semanticLabel: l10n.inspDoneOf(done, total),
+                  semanticLabel: planned
+                      ? l10n.inspDoneOf(done, total)
+                      : '$made ${l10n.inspDone}',
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text.rich(
                         TextSpan(
                           children: [
-                            TextSpan(text: '$done'),
-                            TextSpan(
-                              text: '/$total',
-                              style: text.titleSmall?.copyWith(
-                                color: colors.textTertiary,
+                            TextSpan(text: planned ? '$done' : '$made'),
+                            if (planned)
+                              TextSpan(
+                                text: '/$total',
+                                style: text.titleSmall?.copyWith(
+                                  color: colors.textTertiary,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                         style: text.headlineSmall?.copyWith(
@@ -461,14 +431,21 @@ class _PlanCard extends StatelessWidget {
                 ),
                 AppSpacing.gapLg,
                 Expanded(
-                  child: Column(
-                    children: [
-                      for (final (i, item) in quota.indexed) ...[
-                        if (i > 0) AppSpacing.gapSm,
-                        _KindProgress(item: item),
-                      ],
-                    ],
-                  ),
+                  child: quota.isEmpty
+                      ? Text(
+                          l10n.inspPlanNone,
+                          style: text.bodySmall?.copyWith(
+                            color: colors.textSecondary,
+                          ),
+                        )
+                      : Column(
+                          children: [
+                            for (final (i, item) in quota.indexed) ...[
+                              if (i > 0) AppSpacing.gapSm,
+                              _KindProgress(item: item),
+                            ],
+                          ],
+                        ),
                 ),
               ],
             ),
@@ -509,7 +486,7 @@ class _KindProgress extends StatelessWidget {
               ),
             ),
             Text(
-              '${item.done}/${item.total}',
+              item.total == 0 ? '${item.done}' : '${item.done}/${item.total}',
               style: text.labelMedium?.copyWith(
                 color: colors.textTertiary,
                 fontFeatures: AppFonts.tabularFigures,
@@ -517,15 +494,17 @@ class _KindProgress extends StatelessWidget {
             ),
           ],
         ),
-        AppSpacing.gapXxs,
-        AppProgressTrack(
-          to: share,
-          height: AppSizes.progressThin,
-          fill: share > 0.5
-              ? null
-              : LinearGradient(colors: [colors.goldContainer, colors.gold]),
-          semanticLabel: l10n.inspDoneOf(item.done, item.total),
-        ),
+        if (item.total > 0) ...[
+          AppSpacing.gapXxs,
+          AppProgressTrack(
+            to: share,
+            height: AppSizes.progressThin,
+            fill: share > 0.5
+                ? null
+                : LinearGradient(colors: [colors.goldContainer, colors.gold]),
+            semanticLabel: l10n.inspDoneOf(item.done, item.total),
+          ),
+        ],
       ],
     );
   }
@@ -548,7 +527,8 @@ class _Counts extends StatelessWidget {
     for (final item in quota) {
       completed += item.done;
       pending += math.max(0, item.total - item.done);
-      extra += math.max(0, item.done - item.total);
+      // Beyond a plan; with none, nothing is extra.
+      if (item.total > 0) extra += math.max(0, item.done - item.total);
     }
     // The plan is monthly; what is left of an earlier month is overdue.
     final overdue = quota.fold(0, (sum, item) => sum + item.overdue);
@@ -763,72 +743,21 @@ class _DraftCard extends StatelessWidget {
 
 /// Reads which kind a saved draft is.
 extension InspectionKindDrafts on InspectionKind {
-  static InspectionKind? ofDraft(Map<String, dynamic> record) =>
-      switch (record['payload']?['type']?.toString()) {
-        'station' || 'signal' || 'traffic' => InspectionKind.station,
-        'electrical' => InspectionKind.electrical,
-        'locomotive' => InspectionKind.locomotive,
-        'civil' || 'motor_trolley' => InspectionKind.motorTrolley,
-        null || '' || 'footplate' => InspectionKind.footplate,
-        _ => null,
-      };
+  static InspectionKind? ofDraft(Map<String, dynamic> record) {
+    final payload = record['payload'];
+    final type = payload is Map ? payload['type']?.toString() : null;
+    return switch (type) {
+      'station' || 'signal' || 'traffic' => InspectionKind.station,
+      'electrical' => InspectionKind.electrical,
+      'locomotive' => InspectionKind.locomotive,
+      'civil' || 'motor_trolley' => InspectionKind.motorTrolley,
+      'proforma' => switch ('${payload['proforma']}') {
+        final id when id.startsWith('power_') || id.startsWith('rtl_') =>
+          InspectionKind.electrical,
+        _ => InspectionKind.locomotive,
+      },
+      null || '' || 'footplate' => InspectionKind.footplate,
+      _ => null,
+    };
+  }
 }
-
-// ─── Quota data ───────────────────────────────────────────────────────────
-
-/// One kind of inspection's share of the month's plan, and who inspects it.
-@immutable
-class InspectionQuota {
-  const InspectionQuota({
-    required this.kind,
-    required this.done,
-    required this.total,
-    required this.roles,
-    this.overdue = 0,
-  });
-
-  final InspectionKind kind;
-  final int done;
-  final int total;
-
-  /// Left over from earlier months.
-  final int overdue;
-
-  /// Words in a role or designation that inspect this kind.
-  final List<String> roles;
-}
-
-/// This month's plan. The server doesn't send one yet, so this stands in.
-const List<InspectionQuota> kInspectionQuota = [
-  InspectionQuota(
-    kind: InspectionKind.footplate,
-    done: 2,
-    total: 3,
-    roles: ['loco', 'mechanical', 'driver', 'officer', 'all'],
-  ),
-  InspectionQuota(
-    kind: InspectionKind.station,
-    done: 2,
-    total: 3,
-    roles: ['station', 'traffic', 'officer', 'all'],
-  ),
-  InspectionQuota(
-    kind: InspectionKind.motorTrolley,
-    done: 1,
-    total: 2,
-    overdue: 1,
-    roles: ['trolley', 'civil', 'mechanical', 'officer', 'all'],
-  ),
-  InspectionQuota(
-    kind: InspectionKind.locomotive,
-    done: 1,
-    total: 2,
-    roles: ['loco', 'mechanical', 'officer', 'all'],
-  ),
-  InspectionQuota(
-    kind: InspectionKind.electrical,
-    done: 2,
-    total: 2,
-    roles: ['electrical', 'officer', 'all'],
-  ),
-];

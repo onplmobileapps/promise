@@ -11,6 +11,7 @@ import 'package:railway_hrms/modules/inspection/data/inspection_repository.dart'
 import 'package:railway_hrms/modules/inspection/shared/flow/inspection_review_screen.dart';
 import 'package:railway_hrms/modules/inspection/shared/flow/inspection_session.dart';
 import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
+import 'package:railway_hrms/modules/inspection/shared/inspection_history.dart';
 import 'package:railway_hrms/modules/inspection/shared/outbox/inspection_outbox.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_fields.dart';
 import 'package:railway_hrms/modules/inspection/shared/widgets/inspection_form_scaffold.dart';
@@ -174,6 +175,10 @@ class _StationFormState extends State<_StationForm> {
     );
     if (!sent || !mounted) return;
     await _form.clearDraftFromDisk();
+    await keepFinishedInspection(
+      type: 'station',
+      title: '${l10n.inspStationTitle} · ${_form.station ?? ''}',
+    );
     if (mounted) Navigator.of(context).pop();
   }
 

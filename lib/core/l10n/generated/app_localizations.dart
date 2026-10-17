@@ -2644,16 +2644,16 @@ abstract class AppLocalizations {
   /// **'Motor Trolley'**
   String get inspMotorTrolley;
 
-  /// A kind of inspection.
+  /// Dashboard entry for locomotive and shed inspections.
   ///
   /// In en, this message translates to:
-  /// **'Locomotive'**
+  /// **'Loco & shed'**
   String get inspLocomotive;
 
-  /// A kind of inspection.
+  /// Dashboard entry for electrical inspections.
   ///
   /// In en, this message translates to:
-  /// **'Electrical (RTL)'**
+  /// **'Electrical'**
   String get inspElectrical;
 
   /// What a footplate inspection covers.
@@ -2674,16 +2674,16 @@ abstract class AppLocalizations {
   /// **'Track patrol by trolley'**
   String get inspMotorTrolleyAbout;
 
-  /// What a locomotive inspection covers.
+  /// Under the loco and shed entry.
   ///
   /// In en, this message translates to:
-  /// **'Condition of the loco'**
+  /// **'Locomotives by class, and the shed'**
   String get inspLocomotiveAbout;
 
-  /// What an electrical inspection covers.
+  /// Under the electrical entry.
   ///
   /// In en, this message translates to:
-  /// **'Electrical assets'**
+  /// **'Power installations and train lighting (RTL)'**
   String get inspElectricalAbout;
 
   /// The month plan card title, like "October plan".
@@ -4966,47 +4966,11 @@ abstract class AppLocalizations {
   /// **'Works, track and bridges'**
   String get inspCivilSubtitle;
 
-  /// What electrical inspections cover.
-  ///
-  /// In en, this message translates to:
-  /// **'Power and rolling stock'**
-  String get inspElectricalSubtitle;
-
-  /// Label of the role an RTL electrical inspector inspects as.
-  ///
-  /// In en, this message translates to:
-  /// **'Your role'**
-  String get inspRtlRole;
-
-  /// Heading of the places an RTL electrical inspection covers.
-  ///
-  /// In en, this message translates to:
-  /// **'Places to inspect'**
-  String get inspRtlPlaces;
-
-  /// Shown when an RTL inspection is started with no place picked.
-  ///
-  /// In en, this message translates to:
-  /// **'Pick at least one place to inspect.'**
-  String get inspRtlPickPlace;
-
-  /// Opens an inspection's form once what it covers is chosen.
-  ///
-  /// In en, this message translates to:
-  /// **'Start inspection'**
-  String get inspFormStart;
-
   /// Title of the locomotive inspection form.
   ///
   /// In en, this message translates to:
   /// **'Locomotive inspection'**
   String get inspLocomotiveTitle;
-
-  /// What a locomotive inspection covers, under its title.
-  ///
-  /// In en, this message translates to:
-  /// **'GEU-40 · Mechanical'**
-  String get inspLocomotiveSubtitle;
 
   /// Marks every item of a traffic checklist in order at once.
   ///
@@ -5397,6 +5361,564 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get inspOutboxTryAgain;
+
+  /// A note on what was found on an inspected item.
+  ///
+  /// In en, this message translates to:
+  /// **'Observation'**
+  String get inspFormObservation;
+
+  /// Marks every unanswered item of a section with its in-order answer.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{All answered} =1{Mark the last one in order} other{Mark the other {count} in order}}'**
+  String inspFormMarkRest(int count);
+
+  /// Undoes marking a section's items in order.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get inspFormUndo;
+
+  /// A value noted on an inspected item, as a pressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get inspFormReading;
+
+  /// The day something inspected expires, as a fire extinguisher.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry date'**
+  String get inspFormExpiry;
+
+  /// What is written down for an inspected item, as a coach number.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get inspFormRecord;
+
+  /// Why an inspected item is at fault.
+  ///
+  /// In en, this message translates to:
+  /// **'Likely cause'**
+  String get inspFormLikelyCause;
+
+  /// Opens a note on an inspected item.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note'**
+  String get inspFormAddNote;
+
+  /// How many of an item are in order.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get inspFormCountOk;
+
+  /// How many of an item are defective.
+  ///
+  /// In en, this message translates to:
+  /// **'Defective'**
+  String get inspFormCountDefective;
+
+  /// How many of an item are missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing'**
+  String get inspFormCountMissing;
+
+  /// The last step of an inspection: its result and remarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get inspFormFinish;
+
+  /// On the result step: how many items are at fault.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item was found at fault.} other{{count} items were found at fault.}}'**
+  String inspFormFaultsFound(int count);
+
+  /// Who made an inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspecting officer'**
+  String get inspProformaOfficer;
+
+  /// An officer's designation.
+  ///
+  /// In en, this message translates to:
+  /// **'Designation'**
+  String get inspProformaDesignation;
+
+  /// An inspection's result.
+  ///
+  /// In en, this message translates to:
+  /// **'Satisfactory'**
+  String get inspResultSatisfactory;
+
+  /// An inspection's result.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs improvement'**
+  String get inspResultImprove;
+
+  /// An inspection's result.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsatisfactory'**
+  String get inspResultUnsatisfactory;
+
+  /// An inspection's result.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical deficiency'**
+  String get inspResultCritical;
+
+  /// Table of the officers' inspections of a locomotive in the year.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspections by officers this year'**
+  String get inspOfficersTable;
+
+  /// Under the officers' inspections table.
+  ///
+  /// In en, this message translates to:
+  /// **'Officers and officials during the calendar year'**
+  String get inspOfficersTableAbout;
+
+  /// Column of the officers' inspections table.
+  ///
+  /// In en, this message translates to:
+  /// **'Officer / official'**
+  String get inspOfficersName;
+
+  /// Column of the officers' inspections table.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual quota'**
+  String get inspOfficersQuota;
+
+  /// Column of the officers' inspections table.
+  ///
+  /// In en, this message translates to:
+  /// **'Last inspection date'**
+  String get inspOfficersLast;
+
+  /// One row of the officers' inspections table.
+  ///
+  /// In en, this message translates to:
+  /// **'Officer'**
+  String get inspOfficersRow;
+
+  /// The inspected locomotive's number.
+  ///
+  /// In en, this message translates to:
+  /// **'Loco number'**
+  String get inspProformaLocoNumber;
+
+  /// The shed or depot inspected at.
+  ///
+  /// In en, this message translates to:
+  /// **'Shed / depot name'**
+  String get inspProformaShed;
+
+  /// The department inspected.
+  ///
+  /// In en, this message translates to:
+  /// **'Department'**
+  String get inspProformaDepartment;
+
+  /// The overall result of an inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspection result'**
+  String get inspProformaResult;
+
+  /// Overall remarks on an inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Remarks / observations'**
+  String get inspProformaRemarks;
+
+  /// Marks an inspection left part-way.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get inspProformaUnderway;
+
+  /// Heading over the classes of locomotive to inspect.
+  ///
+  /// In en, this message translates to:
+  /// **'Locomotive class'**
+  String get inspProformaClass;
+
+  /// How big a proforma is.
+  ///
+  /// In en, this message translates to:
+  /// **'{sections} parts · {items} checks'**
+  String inspProformaSize(int sections, int items);
+
+  /// Heading over the shed inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Shed'**
+  String get inspShedPremises;
+
+  /// Title of the shed inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Shed inspection'**
+  String get inspShedPremisesTitle;
+
+  /// What the shed inspection covers.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleanliness, schedule office, laboratory, store, repair shop and machinery'**
+  String get inspShedPremisesAbout;
+
+  /// Title of a train lighting inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Train lighting (RTL) inspection'**
+  String get inspRtlTitle;
+
+  /// Heading over the train lighting proformas.
+  ///
+  /// In en, this message translates to:
+  /// **'Train lighting (RTL)'**
+  String get inspRtlGroup;
+
+  /// Where a train lighting inspection is made.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspection point'**
+  String get inspRtlPoint;
+
+  /// Train lighting inspection point.
+  ///
+  /// In en, this message translates to:
+  /// **'Station'**
+  String get inspRtlPointStation;
+
+  /// Train lighting inspection point.
+  ///
+  /// In en, this message translates to:
+  /// **'Washingline'**
+  String get inspRtlPointWashingline;
+
+  /// Train lighting inspection point.
+  ///
+  /// In en, this message translates to:
+  /// **'Workshop'**
+  String get inspRtlPointWorkshop;
+
+  /// What is inspected at the workshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Coach or van'**
+  String get inspRtlStock;
+
+  /// Rolling stock inspected at the workshop.
+  ///
+  /// In en, this message translates to:
+  /// **'AC / standard coach'**
+  String get inspRtlStockAc;
+
+  /// Rolling stock inspected at the workshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Economy coach'**
+  String get inspRtlStockEconomy;
+
+  /// Rolling stock inspected at the workshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Power van / TL van'**
+  String get inspRtlStockPowerVan;
+
+  /// The stage of workshop work.
+  ///
+  /// In en, this message translates to:
+  /// **'Work stage'**
+  String get inspRtlStage;
+
+  /// Workshop work stage: periodic overhaul.
+  ///
+  /// In en, this message translates to:
+  /// **'POH'**
+  String get inspRtlStagePoh;
+
+  /// Workshop work stage.
+  ///
+  /// In en, this message translates to:
+  /// **'First stage'**
+  String get inspRtlStageFirst;
+
+  /// Workshop work stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Final stage'**
+  String get inspRtlStageFinal;
+
+  /// Workshop work stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair'**
+  String get inspRtlStageRepair;
+
+  /// Workshop work stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get inspRtlStageOther;
+
+  /// Why and when a coach came to the workshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Cause / date received'**
+  String get inspRtlCause;
+
+  /// What train lighting is inspected on.
+  ///
+  /// In en, this message translates to:
+  /// **'Train / coach / PV-TL van no.'**
+  String get inspRtlTrain;
+
+  /// The inspected coach or van's class, make and capacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Class / make / capacity'**
+  String get inspRtlClass;
+
+  /// When it was last inspected.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous inspection date'**
+  String get inspRtlPreviousDate;
+
+  /// Defects left from the last inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous outstanding defects'**
+  String get inspRtlPreviousDefects;
+
+  /// Who signs for the maintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance in-charge'**
+  String get inspRtlIncharge;
+
+  /// Train lighting proforma.
+  ///
+  /// In en, this message translates to:
+  /// **'EFO / AEFO · Detailed field inspection'**
+  String get inspRtlEfo;
+
+  /// Train lighting proforma.
+  ///
+  /// In en, this message translates to:
+  /// **'DEE / AEE · Supervisory & verification'**
+  String get inspRtlDee;
+
+  /// Train lighting proforma.
+  ///
+  /// In en, this message translates to:
+  /// **'Dy. CEE · Divisional performance & compliance'**
+  String get inspRtlDyCee;
+
+  /// Train lighting proforma.
+  ///
+  /// In en, this message translates to:
+  /// **'CEE · Departmental control & performance'**
+  String get inspRtlCee;
+
+  /// How often the proforma is made.
+  ///
+  /// In en, this message translates to:
+  /// **'AEFO daily · DEFO / EFO twice a month'**
+  String get inspRtlEfoFrequency;
+
+  /// How often the proforma is made.
+  ///
+  /// In en, this message translates to:
+  /// **'AEE weekly · DEE / SEE twice a month'**
+  String get inspRtlDeeFrequency;
+
+  /// How often the proforma is made.
+  ///
+  /// In en, this message translates to:
+  /// **'Any division in a month'**
+  String get inspRtlDyCeeFrequency;
+
+  /// How often the proforma is made.
+  ///
+  /// In en, this message translates to:
+  /// **'Any division in 3 months'**
+  String get inspRtlCeeFrequency;
+
+  /// Title of a power inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Electrical power inspection'**
+  String get inspPowerTitle;
+
+  /// Heading over the power proformas.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get inspPowerGroup;
+
+  /// Power proforma's officer.
+  ///
+  /// In en, this message translates to:
+  /// **'Electrical Foreman / Sub-Engineer'**
+  String get inspPowerForeman;
+
+  /// Power proforma's officer.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant Electrical Engineer (AEE)'**
+  String get inspPowerAee;
+
+  /// Power proforma's officer.
+  ///
+  /// In en, this message translates to:
+  /// **'Divisional Electrical Engineer (DEE / DAEE)'**
+  String get inspPowerDee;
+
+  /// Power proforma's officer.
+  ///
+  /// In en, this message translates to:
+  /// **'Deputy Chief Electrical Engineer (Dy. CEE / Power)'**
+  String get inspPowerDyCee;
+
+  /// Power proforma's officer.
+  ///
+  /// In en, this message translates to:
+  /// **'Chief Electrical Engineer (CEE)'**
+  String get inspPowerCee;
+
+  /// How often the proforma is made.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 15 days'**
+  String get inspPowerForemanFrequency;
+
+  /// How often the proforma is made.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get inspPowerAeeFrequency;
+
+  /// How often the proforma is made.
+  ///
+  /// In en, this message translates to:
+  /// **'Quarterly'**
+  String get inspPowerDeeFrequency;
+
+  /// How often the proforma is made.
+  ///
+  /// In en, this message translates to:
+  /// **'One division within two months'**
+  String get inspPowerDyCeeFrequency;
+
+  /// How often the proforma is made.
+  ///
+  /// In en, this message translates to:
+  /// **'Any division within 3 months'**
+  String get inspPowerCeeFrequency;
+
+  /// Where a power inspection is made.
+  ///
+  /// In en, this message translates to:
+  /// **'Location / installation'**
+  String get inspPowerLocation;
+
+  /// The areas a power inspection covers.
+  ///
+  /// In en, this message translates to:
+  /// **'Applicable inspection areas'**
+  String get inspPowerAreas;
+
+  /// Under the areas of a foreman's power inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Each area picked is inspected as a step of its own.'**
+  String get inspPowerAreasNote;
+
+  /// Power inspection area.
+  ///
+  /// In en, this message translates to:
+  /// **'Station'**
+  String get inspPowerAreaStation;
+
+  /// Power inspection area.
+  ///
+  /// In en, this message translates to:
+  /// **'Workshop'**
+  String get inspPowerAreaWorkshop;
+
+  /// Power inspection area.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-Station'**
+  String get inspPowerAreaSubStation;
+
+  /// Power inspection area.
+  ///
+  /// In en, this message translates to:
+  /// **'Solar'**
+  String get inspPowerAreaSolar;
+
+  /// Power inspection area.
+  ///
+  /// In en, this message translates to:
+  /// **'WAPDA crossing'**
+  String get inspPowerAreaCrossing;
+
+  /// The sub-station inspected.
+  ///
+  /// In en, this message translates to:
+  /// **'Name of sub-station'**
+  String get inspPowerSubStation;
+
+  /// Previous inspection compliance.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous observations reviewed'**
+  String get inspPowerReviewed;
+
+  /// Previous inspection compliance.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous observations rectified'**
+  String get inspPowerRectified;
+
+  /// Previous inspection compliance.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous observations pending'**
+  String get inspPowerPending;
+
+  /// An answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get inspYes;
+
+  /// An answer.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get inspNo;
+
+  /// On the plan card when the designation has no monthly inspection plan.
+  ///
+  /// In en, this message translates to:
+  /// **'No monthly plan is set for your designation. The inspections you finish this month count here.'**
+  String get inspPlanNone;
 }
 
 class _AppLocalizationsDelegate
