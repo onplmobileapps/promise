@@ -55,6 +55,9 @@ class _FakeFeed implements TrainFeed {
   }
 
   @override
+  void follow(int? deviceId) {}
+
+  @override
   void dispose() {}
 }
 
@@ -351,6 +354,67 @@ void main() {
     cubit.clearSelection(trainId: '2');
     expect(cubit.state.selectedTrainId, isNull);
     expect(feed.watchers, isEmpty);
+    await cubit.close();
+  });
+
+  test('a burst of every train\'s report gets each its route, a few at a '
+      'time', () async {
+    late _FakeFeed feed;
+    var routed = 0;
+    final cubit = RealTimeTrackingCubit(
+      _FakeTrainRepository(
+        Right(
+          _response([
+            for (var i = 1; i <= 120; i++)
+              {
+                ..._trainWithDevice(i, 100 + i, i),
+                'origin_station': {
+                  'id': 1,
+                  'name': 'Lahore Jn',
+                  'latitude': 31.0,
+                  'longitude': 74.0,
+                },
+                'destination_station': {
+                  'id': 2,
+                  'name': 'Shahdara',
+                  'latitude': 32.0,
+                  'longitude': 75.0,
+                },
+              },
+          ]),
+        ),
+      ),
+      feed: ({required onPosition, required onLinkChanged}) => feed = _FakeFeed(
+        onPosition: onPosition,
+        onLinkChanged: onLinkChanged,
+      ),
+      route: (points) async {
+        routed++;
+        return [
+          for (var k = 0; k < 2000; k++)
+            LatLng(31 + k * 0.0005, 74 + k * 0.0005),
+        ];
+      },
+    );
+    await cubit.loadTrains();
+    cubit.watchFleet();
+    final now = DateTime.now();
+    for (var i = 1; i <= 120; i++) {
+      feed.onPosition(
+        TrainPosition(
+          deviceId: i,
+          position: LatLng(31 + i * 0.005, 74 + i * 0.005),
+          speedKmh: 60,
+          course: 45,
+          moving: true,
+          validFix: true,
+          fixTime: now,
+        ),
+      );
+    }
+    await Future<void>.delayed(const Duration(seconds: 1));
+    expect(routed, 120);
+    expect(cubit.state.paths, hasLength(120));
     await cubit.close();
   });
 }

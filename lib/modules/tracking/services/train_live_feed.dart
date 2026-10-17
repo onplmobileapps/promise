@@ -26,6 +26,11 @@ enum LinkState {
 abstract interface class TrainFeed {
   void watch(int deviceId);
   void unwatch(int deviceId);
+
+  /// The device of the train followed on its own map, whose reports come
+  /// the moment they arrive; the rest come a few times a second, together.
+  /// Null when none is followed.
+  void follow(int? deviceId);
   void dispose();
 }
 
@@ -102,6 +107,16 @@ class TrainProxyFeed implements TrainFeed {
 
   /// The devices watched, lingering ones included.
   Iterable<int> get watched => _watchers.keys;
+
+  /// The device followed; see [follow].
+  int? followed;
+
+  @override
+  void follow(int? deviceId) {
+    if (_disposed || deviceId == followed) return;
+    followed = deviceId;
+    _connection.watchedChanged();
+  }
 
   @override
   void watch(int deviceId) {
@@ -259,8 +274,9 @@ class _ProxyConnection {
   bool _paused = false;
   bool _wasOffline = false;
 
-  /// The devices the worker was last told of.
+  /// The devices the worker was last told of, and of those the followed.
   Set<int> _sent = const {};
+  Set<int> _sentFollowed = const {};
   bool _syncScheduled = false;
 
   /// Tests have no network: there the feed stays connecting.
@@ -297,6 +313,11 @@ class _ProxyConnection {
       _idleTimer?.cancel();
       _idleTimer = null;
       unawaited(_start());
+    }
+    final followed = {for (final feed in _feeds) ?feed.followed};
+    if (!setEquals(followed, _sentFollowed)) {
+      _sentFollowed = followed;
+      _worker?.send(('follow', followed));
     }
     if (setEquals(ids, _sent)) return;
     _sent = ids;
@@ -357,7 +378,9 @@ class _ProxyConnection {
       case final SendPort worker:
         _worker = worker;
         _sent = {for (final feed in _feeds) ...feed.watched};
+        _sentFollowed = {for (final feed in _feeds) ?feed.followed};
         worker
+          ..send(('follow', _sentFollowed))
           ..send(_sent)
           // What changed while it started.
           ..send(_paused ? 'pause' : 'resume');
@@ -400,6 +423,7 @@ class _ProxyConnection {
       Timer(const Duration(seconds: 2), () => isolate.kill());
     }
     _sent = const {};
+    _sentFollowed = const {};
     _unlisten();
     _setLink(LinkState.connecting);
   }
@@ -520,6 +544,17 @@ class _ProxyWorker {
   Timer? _quietTimer;
   Timer? _pauseTimer;
 
+  /// Fresh reports on their way to the app, newest of each device: sent
+  /// together a few times a second, however the proxy splits them up, so
+  /// the app's isolate wakes for a handful of messages rather than one per
+  /// train; a followed device's go at once.
+  final Map<int, TrainPosition> _outbox = {};
+  Timer? _sendTimer;
+  Set<int> _followed = const {};
+
+  /// The longest a report waits to be sent with others.
+  static const Duration _sendEvery = Duration(milliseconds: 200);
+
   /// Each connection made; a callback of an older one is ignored.
   int _attempt = 0;
   int _failures = 0;
@@ -581,6 +616,8 @@ class _ProxyWorker {
       case final Set<int> ids:
         final known = _reports.watch(ids);
         if (known.isNotEmpty) _out.send(known);
+      case ('follow', final Set<int> ids):
+        _followed = ids;
       case 'pause':
         if (_paused) return;
         _paused = true;
@@ -627,6 +664,7 @@ class _ProxyWorker {
       case 'close':
         _closed = true;
         _pauseTimer?.cancel();
+        _sendTimer?.cancel();
         _drop(retry: false);
         Isolate.exit();
     }
@@ -662,8 +700,7 @@ class _ProxyWorker {
         _lastHeard = DateTime.now();
         _expectMore(attempt);
         if (message is! String) return;
-        final fresh = _reports.read(message);
-        if (fresh.isNotEmpty) _out.send(fresh);
+        _pass(_reports.read(message));
       },
       onError: (Object _) {
         if (attempt == _attempt) _drop(retry: true);
@@ -673,6 +710,28 @@ class _ProxyWorker {
       },
       cancelOnError: true,
     );
+  }
+
+  void _pass(List<TrainPosition> fresh) {
+    if (fresh.isEmpty) return;
+    var now = false;
+    for (final report in fresh) {
+      _outbox[report.deviceId] = report;
+      if (_followed.contains(report.deviceId)) now = true;
+    }
+    if (now) {
+      _sendOutbox();
+    } else {
+      _sendTimer ??= Timer(_sendEvery, _sendOutbox);
+    }
+  }
+
+  void _sendOutbox() {
+    _sendTimer?.cancel();
+    _sendTimer = null;
+    if (_outbox.isEmpty) return;
+    _out.send(_outbox.values.toList());
+    _outbox.clear();
   }
 
   void _expectMore(int attempt) {

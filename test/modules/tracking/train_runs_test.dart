@@ -47,6 +47,9 @@ class _Feed implements TrainFeed {
   @override
   void unwatch(int deviceId) {}
   @override
+  void follow(int? deviceId) {}
+
+  @override
   void dispose() {}
 }
 

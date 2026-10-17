@@ -127,7 +127,7 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
   @override
   void initState() {
     super.initState();
-    _feedMotions(_cubit.state);
+    _queueFeed(_cubit.state);
     // Statuses age without new reports (a moving train becomes "last seen").
     _clock = Timer.periodic(const Duration(seconds: 15), (_) {
       _entries = null;
@@ -464,24 +464,55 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
 
   // ─── Drawing ──────────────────────────────────────────────────────────
 
-  /// Gives each train's motion its route and newest report; the frames
-  /// then move it along the track between reports.
-  void _feedMotions(RealTimeTrackingState state) {
-    final now = DateTime.now();
+  /// Trains whose motion hasn't had their newest report or route yet. A
+  /// burst brings every train's report at once, and placing each on its
+  /// route takes a moment: they are handed over a slice at a time on the
+  /// map's ticks, so a burst never holds up a frame.
+  final Map<String, LiveTrain> _toFeed = {};
+
+  /// The most time one tick spends handing reports to the motions.
+  static const Duration _feedBudget = Duration(milliseconds: 3);
+
+  /// Notes which trains' motions need [state]'s reports and routes, and
+  /// lets go of those no longer on the map.
+  void _queueFeed(RealTimeTrackingState state) {
     final seen = <String>{};
     for (final train in state.trains) {
       final position = state.positionOf(train);
       if (position == null) continue;
       seen.add(train.id);
-      // Off the screen a train is moved on only now and then, in longer
-      // steps.
-      _motions.putIfAbsent(train.id, () => TrainMotion(maxStepS: 1.5))
-        ..setPath(state.pathOf(train.id))
-        ..report(position, now);
+      final motion = _motions[train.id];
+      if (motion != null &&
+          identical(motion.path, state.pathOf(train.id)) &&
+          motion.reportedAt == position.fixTime) {
+        continue;
+      }
+      _toFeed[train.id] = train;
     }
     _motions.removeWhere((id, _) => !seen.contains(id));
     _poses.removeWhere((id, _) => !seen.contains(id));
     _posedAt.removeWhere((id, _) => !seen.contains(id));
+    _toFeed.removeWhere((id, _) => !seen.contains(id));
+  }
+
+  /// Gives motions their route and newest report, for up to [budget]; the
+  /// ticks then move each train along the track between reports.
+  void _feedSome(DateTime now, Duration budget) {
+    if (_toFeed.isEmpty) return;
+    final state = _cubit.state;
+    final watch = Stopwatch()..start();
+    while (_toFeed.isNotEmpty && watch.elapsed < budget) {
+      final id = _toFeed.keys.first;
+      final train = _toFeed.remove(id)!;
+      final position = state.positionOf(train);
+      if (position == null) continue;
+      // Off the screen a train is moved on only now and then, in longer
+      // steps.
+      _motions.putIfAbsent(id, () => TrainMotion(maxStepS: 1.5))
+        ..setPath(state.pathOf(id))
+        ..report(position, now);
+      _drawSoon = true;
+    }
   }
 
   /// Every station, those where today's trains start and end standing out.
@@ -503,7 +534,7 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
   }
 
   void _onState(RealTimeTrackingState state) {
-    _feedMotions(state);
+    _queueFeed(state);
     _entries = null;
     _drawSoon = true;
     if (_layersReady && !_loop.isActive) _loop.start();
@@ -516,6 +547,7 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
     final map = _map;
     if (map == null || !_layersReady) return;
     final now = DateTime.now();
+    _feedSome(now, _feedBudget);
     final camera = map.cameraPosition;
     final interval = camera == null
         ? const Duration(milliseconds: 250)

@@ -299,8 +299,46 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     }
     for (final train in state.trains) {
       final report = train.hasDevice ? arrived[train.deviceId] : null;
-      if (report != null) _checkRoute(train, report);
+      if (report == null) continue;
+      // The followed train's route at once; the rest a few at a time.
+      if (train.id == state.selectedTrainId) {
+        _checkRoute(train, report);
+      } else {
+        _toCheck[train.id] = (train, report);
+      }
     }
+    _checkSoon();
+  }
+
+  /// Trains whose newest report is still to be checked against their
+  /// route. A burst brings every train's report at once, and placing each
+  /// on its route takes a moment: they are checked a slice at a time
+  /// between frames, so a burst never holds one up.
+  final Map<String, (LiveTrain, TrainPosition)> _toCheck = {};
+  bool _checking = false;
+
+  /// The most time one slice of route checks takes.
+  static const Duration _sliceBudget = Duration(milliseconds: 2);
+
+  void _checkSoon() {
+    if (_checking || _toCheck.isEmpty) return;
+    _checking = true;
+    Timer.run(_checkSome);
+  }
+
+  void _checkSome() {
+    _checking = false;
+    if (isClosed) {
+      _toCheck.clear();
+      return;
+    }
+    final watch = Stopwatch()..start();
+    while (_toCheck.isNotEmpty && watch.elapsed < _sliceBudget) {
+      final id = _toCheck.keys.first;
+      final (train, report) = _toCheck.remove(id)!;
+      _checkRoute(train, report);
+    }
+    _checkSoon();
   }
 
   // ─── Selected train ───────────────────────────────────────────────────
@@ -334,6 +372,7 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     if (train == null) return;
     _releaseSelection();
     _selectedDevice = train.hasDevice ? train.deviceId : null;
+    _feed.follow(_selectedDevice);
     final path = state.pathOf(train.id);
     final position = state.positionOf(train);
     final stops = path == null
@@ -366,6 +405,7 @@ class RealTimeTrackingCubit extends SafeCubit<RealTimeTrackingState> {
     if (trainId != null && state.selectedTrainId != trainId) return;
     _releaseSelection();
     _selectedDevice = null;
+    _feed.follow(null);
     emit(
       state.copyWith(
         selectedTrainId: null,

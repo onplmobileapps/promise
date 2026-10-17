@@ -123,6 +123,9 @@ class TrainMotion {
   /// Whether a report has come in yet.
   bool get hasReport => _report != null;
 
+  /// When the last report taken was made, by the device's clock.
+  DateTime? get reportedAt => _report?.fixTime;
+
   /// The train's route, or null while it has none. The drawn train and the
   /// last report are carried over to it.
   void setPath(RoutePath? path) {
