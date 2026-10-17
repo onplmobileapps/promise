@@ -18,7 +18,7 @@ class InspectionRepositoryImpl implements InspectionRepository {
       final response = await _remote.getUserStations(section: section);
       return Right(stationsFrom(response.data));
     } catch (e) {
-      return Left(readable(ErrorHandler.handle(e)));
+      return Left(ErrorHandler.handle(e));
     }
   }
 
@@ -39,7 +39,7 @@ class InspectionRepositoryImpl implements InspectionRepository {
       final response = await send();
       return Right(InspectionSubmission.fromResponse(response.data));
     } catch (e) {
-      return Left(readable(ErrorHandler.handle(e)));
+      return Left(ErrorHandler.handle(e));
     }
   }
 
@@ -63,35 +63,5 @@ class InspectionRepositoryImpl implements InspectionRepository {
         else if (item != null && item.toString().trim().isNotEmpty)
           StationItem(id: 0, name: item.toString().trim(), code: ''),
     ];
-  }
-
-  /// [error] with a message a person can read: a server that refused a
-  /// report field by field (as Django REST does) says which fields, rather
-  /// than just its status code.
-  static AppException readable(AppException error) {
-    final data = error.data;
-    if (data == null || !error.message.startsWith('Server error')) {
-      return error;
-    }
-    final problems = <String>[
-      for (final MapEntry(:key, :value) in data.entries)
-        if (value is List && value.isNotEmpty)
-          '${_label(key)}: ${value.first}'
-        else if (value is String && value.trim().isNotEmpty)
-          '${_label(key)}: $value',
-    ];
-    if (problems.isEmpty) return error;
-    return ServerException(
-      problems.take(3).join('\n'),
-      error.status,
-      error.data,
-    );
-  }
-
-  /// `relay_room_ac` as "Relay room ac".
-  static String _label(String key) {
-    final words = key.replaceAll('_', ' ').trim();
-    if (words.isEmpty) return key;
-    return words[0].toUpperCase() + words.substring(1);
   }
 }

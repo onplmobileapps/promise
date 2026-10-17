@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:railway_hrms/core/error/api_error_text.dart';
+import 'package:railway_hrms/core/error/exceptions.dart';
 import 'package:railway_hrms/core/navigation/app_routes.dart';
 import 'package:railway_hrms/core/navigation/navigator_key.dart';
 import 'package:railway_hrms/core/network/api_endpoints.dart';
@@ -65,6 +67,10 @@ class DioClient {
 
   Dio get dio => _dio;
 
+  /// The client that renews the session, for tests to stand a network in.
+  @visibleForTesting
+  Dio get refreshDio => _refreshDio;
+
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -83,7 +89,7 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw NetworkException('Unexpected error: $e');
+      throw AppException('Unexpected error: $e');
     }
   }
 
@@ -109,7 +115,7 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw NetworkException('Unexpected error: $e');
+      throw AppException('Unexpected error: $e');
     }
   }
 
@@ -135,7 +141,7 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw NetworkException('Unexpected error: $e');
+      throw AppException('Unexpected error: $e');
     }
   }
 
@@ -157,7 +163,7 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw NetworkException('Unexpected error: $e');
+      throw AppException('Unexpected error: $e');
     }
   }
 
@@ -189,101 +195,59 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw NetworkException('Unexpected error: $e');
+      throw AppException('Unexpected error: $e');
     }
   }
 
-  dynamic _handleError(DioException error) {
+  /// [error] as the app's own failure: a lost connection as a
+  /// [NetworkException], a refusal as a [ServerException] carrying the
+  /// status, the answer, and what the server said in words.
+  AppException _handleError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        throw NetworkException('Connection timeout');
+        return NetworkException('Connection timeout');
       case DioExceptionType.unknown:
         final cause = error.error;
         if (cause is SocketException || cause is HttpException) {
-          throw NetworkException(_offlineMessage);
+          return NetworkException(_offlineMessage);
         }
-        throw NetworkException('Network error, please try again');
-
-      case DioExceptionType.cancel:
-        throw NetworkException('Request cancelled');
-
-      case DioExceptionType.badCertificate:
-        throw NetworkException('Invalid server certificate');
-
-      case DioExceptionType.badResponse:
-        final statusCode = error.response?.statusCode;
-        final data = error.response?.data;
-
-        if (statusCode == 400) {
-          final errorData = data is Map
-              ? (data['msg'] ?? data['details'] ?? data['Error'])
-              : null;
-          final errorMessage = errorData is List ? errorData.first : errorData;
-          throw BadRequestException(errorMessage?.toString() ?? 'Bad Request');
-        }
-
-        if (statusCode == 401) {
-          throw UnauthorizedException('Unauthorized access');
-        }
-
-        if (statusCode == 403) {
-          if (data is Map &&
-              data['detail'] ==
-                  'User has been logged out, needs to login again') {
-            _forceLogout();
-          }
-          throw ForbiddenException(
-            data is Map
-                ? (data['Error'] ?? data['message'] ?? data['detail'])
-                : 'Not allowed',
-          );
-        }
-
-        if (statusCode == 404) throw NotFoundException('Not Matched');
-
-        if (statusCode == 406) {
-          final message = data is Map
-              ? (data['Error'] ??
-                    data['message'] ??
-                    data['detail'] ??
-                    'Bad request')
-              : 'Bad request';
-          throw NotAcceptableException(message.toString());
-        }
-
-        if (statusCode == 422) {
-          final message = data is Map
-              ? (data['detail'] ??
-                    data['Error'] ??
-                    data['message'] ??
-                    'Validation error')
-              : 'Validation error';
-          throw ValidationException(message.toString());
-        }
-
-        if (statusCode == 500) throw ServerException('Internal server error');
-
-        if (statusCode == 502) {
-          final message = data is Map
-              ? (data['detail'] ??
-                    data['Error'] ??
-                    data['message'] ??
-                    'Bad Gateway')
-              : 'Server Error';
-          throw ServerException(message.toString());
-        }
-
-        final message = data is Map
-            ? (data['detail'] ?? data['Error'] ?? data['message'])
-            : 'Unknown error';
-        throw ApiException(message?.toString() ?? 'Unknown error', statusCode);
-
+        return NetworkException('Network error, please try again');
       case DioExceptionType.connectionError:
-        throw NetworkException(_offlineMessage);
+        return NetworkException(_offlineMessage);
       case DioExceptionType.transformTimeout:
-        throw NetworkException('Transforming Timeout');
+        return NetworkException('Transforming Timeout');
+      case DioExceptionType.cancel:
+        return AppException('Request cancelled');
+      case DioExceptionType.badCertificate:
+        return AppException('Invalid server certificate');
+      case DioExceptionType.badResponse:
+        final status = error.response?.statusCode;
+        final data = error.response?.data;
+        if (status == 403 &&
+            data is Map &&
+            data['detail'] == 'User has been logged out, needs to login again') {
+          _forceLogout();
+        }
+        final message =
+            ApiErrorText.of(data) ??
+            switch (status) {
+              400 => 'Bad request',
+              401 => 'Your session has ended. Please sign in again.',
+              403 => 'Not allowed',
+              404 => 'Not found',
+              405 => 'This action is not allowed by the server',
+              422 => 'Validation error',
+              500 => 'Internal server error',
+              502 || 503 || 504 => 'The server is not available right now',
+              _ => 'Server error: $status',
+            };
+        return ServerException(
+          message,
+          status?.toString(),
+          data is Map ? Map<String, dynamic>.from(data) : null,
+        );
     }
   }
 
@@ -381,27 +345,27 @@ class RefreshTokenInterceptor extends Interceptor {
       return handler.next(err);
     }
 
-    try {
-      final newToken = await _refreshAccessToken();
-      if (newToken == null) {
-        await _handleRefreshFailure();
-        return handler.next(err);
-      }
-
-      final retryOptions = err.requestOptions
-        ..headers['Authorization'] = 'Bearer $newToken'
-        ..extra['retriedAfterRefresh'] = true;
-      // A form is read once, as it is sent: a fresh copy of it goes again,
-      // files and all.
-      if (retryOptions.data case final FormData form) {
-        retryOptions.data = form.clone();
-      }
-
-      final retryResponse = await dio.fetch(retryOptions);
-      return handler.resolve(retryResponse);
-    } catch (_) {
+    final newToken = await _refreshAccessToken();
+    if (newToken == null) {
       await _handleRefreshFailure();
       return handler.next(err);
+    }
+
+    final retryOptions = err.requestOptions
+      ..headers['Authorization'] = 'Bearer $newToken'
+      ..extra['retriedAfterRefresh'] = true;
+    // A form is read once, as it is sent: a fresh copy of it goes again,
+    // files and all.
+    if (retryOptions.data case final FormData form) {
+      retryOptions.data = form.clone();
+    }
+    try {
+      return handler.resolve(await dio.fetch(retryOptions));
+    } on DioException catch (refused) {
+      // The session was renewed and the request still refused, as a wrong
+      // old password is: that is the request's own answer to show, not a
+      // reason to sign the user out.
+      return handler.next(refused);
     }
   }
 
@@ -439,8 +403,8 @@ class RefreshTokenInterceptor extends Interceptor {
 
       dio.options.headers['Authorization'] = 'Bearer $newAccessToken';
       return newAccessToken;
-    } on DioException catch (e) {
-      log('Token refresh failed: ${e.message}');
+    } on Object catch (e) {
+      log('Token refresh failed: $e');
       return null;
     }
   }
@@ -451,69 +415,4 @@ class RefreshTokenInterceptor extends Interceptor {
       navigatorKey.currentState?.pushReplacementNamed(AppRoutes.login);
     });
   }
-}
-
-// Custom Exception Classes
-class NetworkException implements Exception {
-  final String message;
-  NetworkException(this.message);
-  @override
-  String toString() => message;
-}
-
-class UnauthorizedException implements Exception {
-  final String message;
-  UnauthorizedException(this.message);
-  @override
-  String toString() => message;
-}
-
-class BadRequestException implements Exception {
-  final String message;
-  BadRequestException(this.message);
-  @override
-  String toString() => message;
-}
-
-class ForbiddenException implements Exception {
-  final String message;
-  ForbiddenException(this.message);
-  @override
-  String toString() => message;
-}
-
-class NotFoundException implements Exception {
-  final String message;
-  NotFoundException(this.message);
-  @override
-  String toString() => message;
-}
-
-class NotAcceptableException implements Exception {
-  final String message;
-  NotAcceptableException(this.message);
-  @override
-  String toString() => message;
-}
-
-class ValidationException implements Exception {
-  final String message;
-  ValidationException(this.message);
-  @override
-  String toString() => message;
-}
-
-class ServerException implements Exception {
-  final String message;
-  ServerException(this.message);
-  @override
-  String toString() => message;
-}
-
-class ApiException implements Exception {
-  final String message;
-  final int? statusCode;
-  ApiException(this.message, [this.statusCode]);
-  @override
-  String toString() => message;
 }
