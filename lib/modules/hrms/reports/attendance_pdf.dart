@@ -4,118 +4,41 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:railway_hrms/core/constants/app_assets.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
+import 'package:railway_hrms/core/reports/report_assets.dart';
+import 'package:railway_hrms/core/reports/report_ink.dart';
 import 'package:railway_hrms/modules/hrms/data/models/emp_leave_record.dart';
 import 'package:railway_hrms/modules/hrms/reports/attendance_report.dart';
 import 'package:railway_hrms/modules/hrms/utils/attendance_day.dart';
-
-/// The fonts and logo a report is drawn with, read once from the app.
-class ReportAssets {
-  const ReportAssets({
-    required this.regular,
-    required this.medium,
-    required this.semiBold,
-    required this.bold,
-    required this.display,
-    required this.logo,
-    required this.emblem,
-    required this.poweredBy,
-  });
-
-  final pw.Font regular;
-  final pw.Font medium;
-  final pw.Font semiBold;
-  final pw.Font bold;
-
-  /// Outfit, for headings and big numbers.
-  final pw.Font display;
-
-  /// The PROMISE wordmark.
-  final pw.ImageProvider logo;
-
-  /// The emblem the splash shows, faint behind every page.
-  final pw.ImageProvider emblem;
-
-  /// The company's logo, for "Powered by".
-  final pw.ImageProvider poweredBy;
-
-  static Future<ReportAssets> load() async {
-    Future<pw.Font> font(String file) async =>
-        pw.Font.ttf(await rootBundle.load(file));
-    Future<pw.ImageProvider> image(String file) async =>
-        pw.MemoryImage((await rootBundle.load(file)).buffer.asUint8List());
-    return ReportAssets(
-      regular: await font('assets/fonts/inter/Inter-Regular.ttf'),
-      medium: await font('assets/fonts/inter/Inter-Medium.ttf'),
-      semiBold: await font('assets/fonts/inter/Inter-SemiBold.ttf'),
-      bold: await font('assets/fonts/inter/Inter-Bold.ttf'),
-      display: await font('assets/fonts/outfit/Outfit-Bold.ttf'),
-      logo: await image(AppAssets.wordmark),
-      emblem: await image(AppAssets.emblemPng),
-      poweredBy: await image(AppAssets.poweredByLogo),
-    );
-  }
-}
-
-/// The app's palette, as the PDF draws it.
-abstract final class _Ink {
-  static const brand = PdfColor.fromInt(0xFF13492C);
-  static const brandGold = PdfColor.fromInt(0xFFB09440);
-  static const jade950 = PdfColor.fromInt(0xFF2E5A4B);
-  static const jade800 = PdfColor.fromInt(0xFF4A8571);
-  static const jade700 = PdfColor.fromInt(0xFF5E9C85);
-  static const jade200 = PdfColor.fromInt(0xFFD5E6DE);
-  static const jade100 = PdfColor.fromInt(0xFFE3EEE9);
-  static const jade50 = PdfColor.fromInt(0xFFEFF5F2);
-  static const gold800 = PdfColor.fromInt(0xFF7D5A12);
-  static const gold500 = PdfColor.fromInt(0xFFD9A93A);
-  static const gold300 = PdfColor.fromInt(0xFFE4C575);
-  static const gold50 = PdfColor.fromInt(0xFFFBF1DA);
-  static const coral800 = PdfColor.fromInt(0xFFA63323);
-  static const coral500 = PdfColor.fromInt(0xFFE5675A);
-  static const coral50 = PdfColor.fromInt(0xFFFDE7E3);
-  static const sky800 = PdfColor.fromInt(0xFF1F5F99);
-  static const sky500 = PdfColor.fromInt(0xFF5FA3D9);
-  static const sky50 = PdfColor.fromInt(0xFFE6F1FB);
-  static const ink900 = PdfColor.fromInt(0xFF1D2939);
-  static const ink700 = PdfColor.fromInt(0xFF4D5B68);
-  static const ink500 = PdfColor.fromInt(0xFF6A7683);
-  static const ink400 = PdfColor.fromInt(0xFF8A96A1);
-  static const sand300 = PdfColor.fromInt(0xFFDEDAD2);
-  static const ivory200 = PdfColor.fromInt(0xFFF4F2EE);
-  static const ivory50 = PdfColor.fromInt(0xFFFCFBF9);
-  static const white = PdfColors.white;
-}
 
 /// How a day's status is coloured: its deep ink, its fill and its tint.
 typedef _Tone = ({PdfColor ink, PdfColor fill, PdfColor tint});
 
 _Tone _toneOf(AttendanceMark mark) => switch (mark) {
   AttendanceMark.onTime => (
-    ink: _Ink.jade950,
-    fill: _Ink.jade700,
-    tint: _Ink.jade100,
+    ink: ReportInk.jade950,
+    fill: ReportInk.jade700,
+    tint: ReportInk.jade100,
   ),
   AttendanceMark.late => (
-    ink: _Ink.gold800,
-    fill: _Ink.gold500,
-    tint: _Ink.gold50,
+    ink: ReportInk.gold800,
+    fill: ReportInk.gold500,
+    tint: ReportInk.gold50,
   ),
   AttendanceMark.leave => (
-    ink: _Ink.sky800,
-    fill: _Ink.sky500,
-    tint: _Ink.sky50,
+    ink: ReportInk.sky800,
+    fill: ReportInk.sky500,
+    tint: ReportInk.sky50,
   ),
   AttendanceMark.absent => (
-    ink: _Ink.coral800,
-    fill: _Ink.coral500,
-    tint: _Ink.coral50,
+    ink: ReportInk.coral800,
+    fill: ReportInk.coral500,
+    tint: ReportInk.coral50,
   ),
   AttendanceMark.weekend || AttendanceMark.none => (
-    ink: _Ink.ink700,
-    fill: _Ink.ink400,
-    tint: _Ink.ivory200,
+    ink: ReportInk.ink700,
+    fill: ReportInk.ink400,
+    tint: ReportInk.ivory200,
   ),
 };
 
@@ -167,7 +90,7 @@ class AttendancePdf {
   pw.TextStyle _text(
     double size, {
     pw.Font? font,
-    PdfColor color = _Ink.ink900,
+    PdfColor color = ReportInk.ink900,
     double? spacing,
   }) => pw.TextStyle(
     font: font ?? assets.regular,
@@ -220,7 +143,7 @@ class AttendancePdf {
       ignoreMargins: true,
       child: pw.Stack(
         children: [
-          pw.Container(color: _Ink.ivory50),
+          pw.Container(color: ReportInk.ivory50),
           // A band of colour along the top edge.
           pw.Positioned(
             left: 0,
@@ -230,19 +153,19 @@ class AttendancePdf {
               children: [
                 pw.Expanded(
                   flex: 6,
-                  child: pw.Container(height: 5, color: _Ink.brand),
+                  child: pw.Container(height: 5, color: ReportInk.brand),
                 ),
                 pw.Expanded(
                   flex: 2,
-                  child: pw.Container(height: 5, color: _Ink.brandGold),
+                  child: pw.Container(height: 5, color: ReportInk.brandGold),
                 ),
                 pw.Expanded(
                   flex: 1,
-                  child: pw.Container(height: 5, color: _Ink.coral500),
+                  child: pw.Container(height: 5, color: ReportInk.coral500),
                 ),
                 pw.Expanded(
                   flex: 1,
-                  child: pw.Container(height: 5, color: _Ink.sky500),
+                  child: pw.Container(height: 5, color: ReportInk.sky500),
                 ),
               ],
             ),
@@ -269,7 +192,7 @@ class AttendancePdf {
       padding: const pw.EdgeInsets.only(bottom: 6),
       decoration: const pw.BoxDecoration(
         border: pw.Border(
-          bottom: pw.BorderSide(color: _Ink.sand300, width: 0.6),
+          bottom: pw.BorderSide(color: ReportInk.sand300, width: 0.6),
         ),
       ),
       child: pw.Row(
@@ -280,7 +203,7 @@ class AttendancePdf {
           pw.Spacer(),
           pw.Text(
             '${person.subject.name} · $_period',
-            style: _text(8.5, font: assets.semiBold, color: _Ink.ink700),
+            style: _text(8.5, font: assets.semiBold, color: ReportInk.ink700),
           ),
         ],
       ),
@@ -297,33 +220,35 @@ class AttendancePdf {
     margin: const pw.EdgeInsets.only(top: 8),
     padding: const pw.EdgeInsets.only(top: 6),
     decoration: const pw.BoxDecoration(
-      border: pw.Border(top: pw.BorderSide(color: _Ink.sand300, width: 0.6)),
+      border: pw.Border(
+        top: pw.BorderSide(color: ReportInk.sand300, width: 0.6),
+      ),
     ),
     child: pw.Row(
       children: [
         pw.Text(
           l10n.attReportFooter,
-          style: _text(7.5, font: assets.semiBold, color: _Ink.jade800),
+          style: _text(7.5, font: assets.semiBold, color: ReportInk.jade800),
         ),
         if (report.madeBy.isNotEmpty)
           pw.Text(
             '  ·  ${l10n.attReportGeneratedBy(report.madeBy)}',
-            style: _text(7.5, color: _Ink.ink500),
+            style: _text(7.5, color: ReportInk.ink500),
           ),
         pw.Spacer(),
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: pw.BoxDecoration(
-            color: _Ink.white,
+            color: ReportInk.white,
             borderRadius: pw.BorderRadius.circular(8),
-            border: pw.Border.all(color: _Ink.sand300, width: 0.5),
+            border: pw.Border.all(color: ReportInk.sand300, width: 0.5),
           ),
           child: pw.Row(
             mainAxisSize: pw.MainAxisSize.min,
             children: [
               pw.Text(
                 l10n.poweredByLead,
-                style: _text(7, font: assets.medium, color: _Ink.ink500),
+                style: _text(7, font: assets.medium, color: ReportInk.ink500),
               ),
               pw.SizedBox(width: 5),
               pw.Image(assets.poweredBy, height: 12),
@@ -333,7 +258,7 @@ class AttendancePdf {
         pw.SizedBox(width: 10),
         pw.Text(
           l10n.attReportPage(context.pageNumber, context.pagesCount),
-          style: _text(7.5, color: _Ink.ink500),
+          style: _text(7.5, color: ReportInk.ink500),
         ),
       ],
     ),
@@ -352,7 +277,7 @@ class AttendancePdf {
       gradient: const pw.LinearGradient(
         begin: pw.Alignment.topLeft,
         end: pw.Alignment.bottomRight,
-        colors: [_Ink.brand, _Ink.jade950, _Ink.jade700],
+        colors: [ReportInk.brand, ReportInk.jade950, ReportInk.jade700],
       ),
     ),
     child: pw.Row(
@@ -367,20 +292,24 @@ class AttendancePdf {
                 style: _text(
                   8,
                   font: assets.bold,
-                  color: _Ink.gold300,
+                  color: ReportInk.gold300,
                   spacing: 1.4,
                 ),
               ),
               pw.SizedBox(height: 6),
               pw.Text(
                 title,
-                style: _text(22, font: assets.display, color: _Ink.white),
+                style: _text(22, font: assets.display, color: ReportInk.white),
               ),
               if (subtitle.isNotEmpty) ...[
                 pw.SizedBox(height: 3),
                 pw.Text(
                   subtitle,
-                  style: _text(10, font: assets.medium, color: _Ink.jade200),
+                  style: _text(
+                    10,
+                    font: assets.medium,
+                    color: ReportInk.jade200,
+                  ),
                 ),
               ],
             ],
@@ -396,7 +325,7 @@ class AttendancePdf {
                 vertical: 6,
               ),
               decoration: pw.BoxDecoration(
-                color: _Ink.white,
+                color: ReportInk.white,
                 borderRadius: pw.BorderRadius.circular(8),
               ),
               child: pw.Row(
@@ -415,19 +344,19 @@ class AttendancePdf {
                 vertical: 5,
               ),
               decoration: pw.BoxDecoration(
-                color: _Ink.gold500,
+                color: ReportInk.gold500,
                 borderRadius: pw.BorderRadius.circular(9),
               ),
               child: pw.Text(
                 _period,
-                style: _text(9, font: assets.bold, color: _Ink.white),
+                style: _text(9, font: assets.bold, color: ReportInk.white),
               ),
             ),
             if (report.monthly) ...[
               pw.SizedBox(height: 4),
               pw.Text(
                 _range(report.from, report.to),
-                style: _text(7.5, color: _Ink.jade200),
+                style: _text(7.5, color: ReportInk.jade200),
               ),
             ],
             pw.SizedBox(height: 4),
@@ -435,7 +364,7 @@ class AttendancePdf {
               l10n.attReportGenerated(
                 DateFormat.yMMMd(locale).add_jm().format(report.made),
               ),
-              style: _text(7.5, color: _Ink.jade200),
+              style: _text(7.5, color: ReportInk.jade200),
             ),
           ],
         ),
@@ -485,7 +414,7 @@ class AttendancePdf {
               ),
               if (share != null) ...[
                 pw.SizedBox(height: 5),
-                _bar(share, tone.fill, _Ink.white),
+                _bar(share, tone.fill, ReportInk.white),
               ],
             ],
           ),
@@ -597,7 +526,7 @@ class AttendancePdf {
                   pw.SizedBox(width: 4),
                   pw.Text(
                     '${_markName(mark)} ${counts[mark]} (${_percent(counts[mark]! / total)})',
-                    style: _text(7.5, color: _Ink.ink700),
+                    style: _text(7.5, color: ReportInk.ink700),
                   ),
                 ],
               ),
@@ -607,45 +536,48 @@ class AttendancePdf {
     );
   }
 
-  pw.Widget _keyFigure(String label, String value, PdfColor color) =>
-      pw.Expanded(
-        child: pw.Container(
-          padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          decoration: pw.BoxDecoration(
-            color: _Ink.white,
-            borderRadius: pw.BorderRadius.circular(10),
-            border: pw.Border.all(color: _Ink.sand300, width: 0.6),
+  pw.Widget _keyFigure(
+    String label,
+    String value,
+    PdfColor color,
+  ) => pw.Expanded(
+    child: pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: pw.BoxDecoration(
+        color: ReportInk.white,
+        borderRadius: pw.BorderRadius.circular(10),
+        border: pw.Border.all(color: ReportInk.sand300, width: 0.6),
+      ),
+      child: pw.Row(
+        children: [
+          pw.Container(
+            width: 6,
+            height: 26,
+            decoration: pw.BoxDecoration(
+              color: color,
+              borderRadius: pw.BorderRadius.circular(3),
+            ),
           ),
-          child: pw.Row(
+          pw.SizedBox(width: 8),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Container(
-                width: 6,
-                height: 26,
-                decoration: pw.BoxDecoration(
-                  color: color,
-                  borderRadius: pw.BorderRadius.circular(3),
-                ),
+              pw.Text(
+                value,
+                style: _text(14, font: assets.display, color: ReportInk.ink900),
               ),
-              pw.SizedBox(width: 8),
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(
-                    value,
-                    style: _text(14, font: assets.display, color: _Ink.ink900),
-                  ),
-                  pw.Text(
-                    label,
-                    style: _text(7.5, font: assets.medium, color: _Ink.ink500),
-                  ),
-                ],
+              pw.Text(
+                label,
+                style: _text(7.5, font: assets.medium, color: ReportInk.ink500),
               ),
             ],
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 
-  pw.Widget _section(String title, {PdfColor accent = _Ink.jade700}) =>
+  pw.Widget _section(String title, {PdfColor accent = ReportInk.jade700}) =>
       pw.Padding(
         padding: const pw.EdgeInsets.only(top: 16, bottom: 7),
         child: pw.Row(
@@ -661,7 +593,7 @@ class AttendancePdf {
             pw.SizedBox(width: 6),
             pw.Text(
               title,
-              style: _text(12, font: assets.display, color: _Ink.ink900),
+              style: _text(12, font: assets.display, color: ReportInk.ink900),
             ),
           ],
         ),
@@ -710,9 +642,9 @@ class AttendancePdf {
                   vertical: 7,
                 ),
                 decoration: pw.BoxDecoration(
-                  color: _Ink.white,
+                  color: ReportInk.white,
                   borderRadius: pw.BorderRadius.circular(8),
-                  border: pw.Border.all(color: _Ink.sand300, width: 0.6),
+                  border: pw.Border.all(color: ReportInk.sand300, width: 0.6),
                 ),
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -722,7 +654,7 @@ class AttendancePdf {
                       style: _text(
                         6.5,
                         font: assets.bold,
-                        color: _Ink.jade800,
+                        color: ReportInk.jade800,
                         spacing: 0.8,
                       ),
                     ),
@@ -733,7 +665,7 @@ class AttendancePdf {
                       style: _text(
                         9.5,
                         font: assets.semiBold,
-                        color: _Ink.ink900,
+                        color: ReportInk.ink900,
                       ),
                     ),
                   ],
@@ -747,13 +679,13 @@ class AttendancePdf {
           margin: const pw.EdgeInsets.only(top: 12),
           padding: const pw.EdgeInsets.all(12),
           decoration: pw.BoxDecoration(
-            color: _Ink.coral50,
+            color: ReportInk.coral50,
             borderRadius: pw.BorderRadius.circular(10),
-            border: pw.Border.all(color: _Ink.coral500, width: 0.8),
+            border: pw.Border.all(color: ReportInk.coral500, width: 0.8),
           ),
           child: pw.Text(
             l10n.attReportLoadFailed,
-            style: _text(10, font: assets.semiBold, color: _Ink.coral800),
+            style: _text(10, font: assets.semiBold, color: ReportInk.coral800),
           ),
         )
       else ...[
@@ -769,31 +701,35 @@ class AttendancePdf {
         pw.SizedBox(height: 8),
         pw.Row(
           children: [
-            _keyFigure(l10n.attReportRate, _percent(person.rate), _Ink.jade700),
+            _keyFigure(
+              l10n.attReportRate,
+              _percent(person.rate),
+              ReportInk.jade700,
+            ),
             pw.SizedBox(width: 6),
             _keyFigure(
               l10n.attReportHours,
               _hours(person.worked),
-              _Ink.gold500,
+              ReportInk.gold500,
             ),
             pw.SizedBox(width: 6),
             _keyFigure(
               l10n.attReportWorkingDays,
               '${person.workingDays}',
-              _Ink.sky500,
+              ReportInk.sky500,
             ),
           ],
         ),
         pw.SizedBox(height: 10),
         _spread(counts),
         if (person.days.length <= 93) ...[
-          _section(l10n.attReportGlance, accent: _Ink.gold500),
+          _section(l10n.attReportGlance, accent: ReportInk.gold500),
           _glance(person.days),
         ],
         _section(l10n.attReportDaily),
         _dailyTable(person.days),
       ],
-      _section(l10n.attReportLeaves, accent: _Ink.sky500),
+      _section(l10n.attReportLeaves, accent: ReportInk.sky500),
       _leaveTable(person.leaves),
     ];
   }
@@ -821,10 +757,10 @@ class AttendancePdf {
           height: 24,
           margin: const pw.EdgeInsets.all(1.5),
           decoration: pw.BoxDecoration(
-            color: tone?.tint ?? _Ink.white,
+            color: tone?.tint ?? ReportInk.white,
             borderRadius: pw.BorderRadius.circular(5),
             border: pw.Border.all(
-              color: tone?.fill ?? _Ink.ivory200,
+              color: tone?.fill ?? ReportInk.ivory200,
               width: entry == null ? 0.4 : 0.8,
             ),
           ),
@@ -837,13 +773,13 @@ class AttendancePdf {
                   style: _text(
                     8,
                     font: assets.bold,
-                    color: tone?.ink ?? _Ink.sand300,
+                    color: tone?.ink ?? ReportInk.sand300,
                   ),
                 ),
                 if (day.day == 1)
                   pw.Text(
                     DateFormat.MMM(locale).format(day),
-                    style: _text(5, color: tone?.ink ?? _Ink.ink400),
+                    style: _text(5, color: tone?.ink ?? ReportInk.ink400),
                   ),
               ],
             ),
@@ -860,7 +796,11 @@ class AttendancePdf {
               child: pw.Center(
                 child: pw.Text(
                   weekday.format(DateTime(2024, 1, 1 + i)),
-                  style: _text(7, font: assets.semiBold, color: _Ink.ink500),
+                  style: _text(
+                    7,
+                    font: assets.semiBold,
+                    color: ReportInk.ink500,
+                  ),
                 ),
               ),
             ),
@@ -872,9 +812,9 @@ class AttendancePdf {
     return pw.Container(
       padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
-        color: _Ink.white,
+        color: ReportInk.white,
         borderRadius: pw.BorderRadius.circular(10),
-        border: pw.Border.all(color: _Ink.sand300, width: 0.6),
+        border: pw.Border.all(color: ReportInk.sand300, width: 0.6),
       ),
       child: pw.Table(children: weeks),
     );
@@ -896,7 +836,7 @@ class AttendancePdf {
   pw.Widget _cell(
     String text, {
     pw.Font? font,
-    PdfColor color = _Ink.ink900,
+    PdfColor color = ReportInk.ink900,
     pw.TextAlign align = pw.TextAlign.left,
   }) => pw.Padding(
     padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
@@ -908,7 +848,7 @@ class AttendancePdf {
   );
 
   pw.TableRow _headRow(List<String> titles) => pw.TableRow(
-    decoration: const pw.BoxDecoration(color: _Ink.jade950),
+    decoration: const pw.BoxDecoration(color: ReportInk.jade950),
     repeat: true,
     children: [
       for (final title in titles)
@@ -919,7 +859,7 @@ class AttendancePdf {
             style: _text(
               6.5,
               font: assets.bold,
-              color: _Ink.white,
+              color: ReportInk.white,
               spacing: 0.6,
             ),
           ),
@@ -933,10 +873,10 @@ class AttendancePdf {
   ) => pw.Table(
     // Square, so it breaks cleanly across pages.
     border: const pw.TableBorder(
-      left: pw.BorderSide(color: _Ink.sand300, width: 0.6),
-      right: pw.BorderSide(color: _Ink.sand300, width: 0.6),
-      bottom: pw.BorderSide(color: _Ink.sand300, width: 0.6),
-      horizontalInside: pw.BorderSide(color: _Ink.ivory200, width: 0.4),
+      left: pw.BorderSide(color: ReportInk.sand300, width: 0.6),
+      right: pw.BorderSide(color: ReportInk.sand300, width: 0.6),
+      bottom: pw.BorderSide(color: ReportInk.sand300, width: 0.6),
+      horizontalInside: pw.BorderSide(color: ReportInk.ivory200, width: 0.4),
     ),
     columnWidths: widths,
     defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
@@ -961,14 +901,14 @@ class AttendancePdf {
           pw.TableRow(
             decoration: pw.BoxDecoration(
               color: day.mark == AttendanceMark.weekend
-                  ? _Ink.ivory200
+                  ? ReportInk.ivory200
                   : i.isEven
-                  ? _Ink.white
-                  : _Ink.jade50,
+                  ? ReportInk.white
+                  : ReportInk.jade50,
             ),
             children: [
               _cell(date.format(day.day), font: assets.semiBold),
-              _cell(weekday.format(day.day), color: _Ink.ink500),
+              _cell(weekday.format(day.day), color: ReportInk.ink500),
               pw.Padding(
                 padding: const pw.EdgeInsets.symmetric(
                   horizontal: 6,
@@ -986,13 +926,13 @@ class AttendancePdf {
                     ? _hours(day.checkOut!.difference(day.checkIn!))
                     : '—',
                 font: assets.semiBold,
-                color: _Ink.jade950,
+                color: ReportInk.jade950,
               ),
               _cell(
                 day.record?.shift?.trim().isNotEmpty ?? false
                     ? day.record!.shift!.trim()
                     : '—',
-                color: _Ink.ink500,
+                color: ReportInk.ink500,
               ),
             ],
           ),
@@ -1026,12 +966,12 @@ class AttendancePdf {
         width: double.infinity,
         padding: const pw.EdgeInsets.all(12),
         decoration: pw.BoxDecoration(
-          color: _Ink.sky50,
+          color: ReportInk.sky50,
           borderRadius: pw.BorderRadius.circular(10),
         ),
         child: pw.Text(
           l10n.attReportNoLeaves,
-          style: _text(9, font: assets.medium, color: _Ink.sky800),
+          style: _text(9, font: assets.medium, color: ReportInk.sky800),
         ),
       );
     }
@@ -1055,7 +995,7 @@ class AttendancePdf {
         for (final (i, leave) in leaves.indexed)
           pw.TableRow(
             decoration: pw.BoxDecoration(
-              color: i.isEven ? _Ink.white : _Ink.sky50,
+              color: i.isEven ? ReportInk.white : ReportInk.sky50,
             ),
             children: [
               _cell(
@@ -1071,7 +1011,7 @@ class AttendancePdf {
                   _ => '—',
                 },
                 font: assets.semiBold,
-                color: _Ink.sky800,
+                color: ReportInk.sky800,
               ),
               pw.Padding(
                 padding: const pw.EdgeInsets.symmetric(
@@ -1083,10 +1023,10 @@ class AttendancePdf {
                   child: _pill(leave.status, _leaveTone(leave.status)),
                 ),
               ),
-              _cell(day(leave.appliedDate), color: _Ink.ink500),
+              _cell(day(leave.appliedDate), color: ReportInk.ink500),
               _cell(
                 leave.remarks.isEmpty ? '—' : leave.remarks,
-                color: _Ink.ink700,
+                color: ReportInk.ink700,
               ),
             ],
           ),
@@ -1135,15 +1075,15 @@ class AttendancePdf {
           _keyFigure(
             l10n.attReportRate,
             _percent(working == 0 ? 0 : present / working),
-            _Ink.jade700,
+            ReportInk.jade700,
           ),
           pw.SizedBox(width: 6),
-          _keyFigure(l10n.attReportHours, _hours(worked), _Ink.gold500),
+          _keyFigure(l10n.attReportHours, _hours(worked), ReportInk.gold500),
           pw.SizedBox(width: 6),
           _keyFigure(
             l10n.attReportPeople,
             '${report.people.length}',
-            _Ink.sky500,
+            ReportInk.sky500,
           ),
         ],
       ),
@@ -1165,10 +1105,10 @@ class AttendancePdf {
           for (final (i, person) in report.people.indexed)
             pw.TableRow(
               decoration: pw.BoxDecoration(
-                color: i.isEven ? _Ink.white : _Ink.jade50,
+                color: i.isEven ? ReportInk.white : ReportInk.jade50,
               ),
               children: [
-                _cell('${i + 1}', color: _Ink.ink500),
+                _cell('${i + 1}', color: ReportInk.ink500),
                 pw.Padding(
                   padding: const pw.EdgeInsets.symmetric(
                     horizontal: 6,
@@ -1188,33 +1128,34 @@ class AttendancePdf {
                           person.subject.employeeId,
                           person.subject.designation,
                         ].where((part) => part.isNotEmpty).join(' · '),
-                        style: _text(6.5, color: _Ink.ink500),
+                        style: _text(6.5, color: ReportInk.ink500),
                       ),
                     ],
                   ),
                 ),
                 if (person.failed) ...[
-                  for (var c = 0; c < 6; c++) _cell('—', color: _Ink.coral800),
+                  for (var c = 0; c < 6; c++)
+                    _cell('—', color: ReportInk.coral800),
                 ] else ...[
                   _cell(
                     '${person.count(AttendanceMark.onTime)}',
                     font: assets.semiBold,
-                    color: _Ink.jade950,
+                    color: ReportInk.jade950,
                   ),
                   _cell(
                     '${person.count(AttendanceMark.late)}',
                     font: assets.semiBold,
-                    color: _Ink.gold800,
+                    color: ReportInk.gold800,
                   ),
                   _cell(
                     '${person.count(AttendanceMark.leave)}',
                     font: assets.semiBold,
-                    color: _Ink.sky800,
+                    color: ReportInk.sky800,
                   ),
                   _cell(
                     '${person.count(AttendanceMark.absent)}',
                     font: assets.semiBold,
-                    color: _Ink.coral800,
+                    color: ReportInk.coral800,
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.symmetric(
@@ -1229,20 +1170,20 @@ class AttendancePdf {
                           style: _text(
                             8,
                             font: assets.bold,
-                            color: _Ink.jade950,
+                            color: ReportInk.jade950,
                           ),
                         ),
                         pw.SizedBox(height: 2),
                         _bar(
                           person.rate,
-                          _Ink.jade700,
-                          _Ink.jade100,
+                          ReportInk.jade700,
+                          ReportInk.jade100,
                           height: 3,
                         ),
                       ],
                     ),
                   ),
-                  _cell(_hours(person.worked), color: _Ink.ink700),
+                  _cell(_hours(person.worked), color: ReportInk.ink700),
                 ],
               ],
             ),

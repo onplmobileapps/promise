@@ -4335,6 +4335,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hold steady. The picture is blurred'**
   String get cnicHintBlurry;
+
+  /// Heading of the screen that asks for a face check before an inspection starts.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your face to start'**
+  String get inspGateTitle;
+
+  /// Why a face check is needed before an inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your face is checked now and again before you submit, so every report is signed by the person who made it.'**
+  String get inspGateMessage;
+
+  /// One of the things the start face check confirms.
+  ///
+  /// In en, this message translates to:
+  /// **'A live face, not a photo'**
+  String get inspGateCheckLive;
+
+  /// One of the things the start face check confirms.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched to your registered face'**
+  String get inspGateCheckMatch;
+
+  /// One of the things the start face check confirms.
+  ///
+  /// In en, this message translates to:
+  /// **'Time and place noted on the report'**
+  String get inspGateCheckStamp;
+
+  /// Button that opens the face check and then the inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify and start'**
+  String get inspGateStart;
+
+  /// Step of an inspection's face check: the face is checked.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get inspStepVerify;
+
+  /// Step of an inspection's face check: the inspection begins.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get inspStepStart;
+
+  /// Step of submitting an inspection: the report is read.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get inspStepReview;
+
+  /// Step of submitting an inspection: it is sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get inspStepSubmit;
+
+  /// Shown while the server checks the face.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying your face…'**
+  String get inspVerifying;
+
+  /// Title when the face check passed.
+  ///
+  /// In en, this message translates to:
+  /// **'Face verified'**
+  String get inspVerifiedTitle;
+
+  /// Title when the face check failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Face not verified'**
+  String get inspVerifyFailedTitle;
+
+  /// When the employee has no registered face.
+  ///
+  /// In en, this message translates to:
+  /// **'Your face isn\'t registered yet. Register it from Attendance in HRMS, then try again.'**
+  String get inspNotRegistered;
+
+  /// When the employee's face registration is not yet approved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your face registration is waiting for approval. You can inspect once it is approved.'**
+  String get inspRegistrationPending;
+
+  /// When the face check failed for an unknown reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Your face couldn\'t be verified. Try again in good light.'**
+  String get inspVerifyFailed;
+
+  /// Title of the screen where an inspection is checked and sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and submit'**
+  String get inspReviewTitle;
+
+  /// Lead text on the review screen.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the report as it will be submitted. Read it through before you confirm.'**
+  String get inspReviewLead;
+
+  /// Shown while the PDF of an inspection is made.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the report…'**
+  String get inspReviewPreparing;
+
+  /// Under a page of the report preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {count}'**
+  String inspReviewPage(int page, int count);
+
+  /// Button confirming the previewed report is right.
+  ///
+  /// In en, this message translates to:
+  /// **'The report is correct'**
+  String get inspReviewConfirm;
+
+  /// Shown once the report was confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'You confirmed the report'**
+  String get inspReviewConfirmed;
+
+  /// Button going back to edit an inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the form'**
+  String get inspReviewEdit;
+
+  /// Button opening the face check before submitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify face to submit'**
+  String get inspReviewVerify;
+
+  /// Shown once the face was verified for submitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified at {time}'**
+  String inspReviewVerified(String time);
+
+  /// Button that sends an inspection.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit inspection'**
+  String get inspSubmit;
+
+  /// Shown while an inspection is being sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitting…'**
+  String get inspSubmitting;
+
+  /// Title when an inspection was sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspection submitted'**
+  String get inspSubmittedTitle;
+
+  /// Message when an inspection was sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your report has been submitted.'**
+  String get inspSubmittedMessage;
+
+  /// Title when sending an inspection failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t submit'**
+  String get inspSubmitFailedTitle;
+
+  /// Button saving the inspection report as a PDF.
+  ///
+  /// In en, this message translates to:
+  /// **'Save PDF'**
+  String get inspSavePdf;
+
+  /// When the PDF was saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to Downloads'**
+  String get inspPdfSaved;
+
+  /// When saving the PDF failed.
+  ///
+  /// In en, this message translates to:
+  /// **'The PDF couldn\'t be saved.'**
+  String get inspPdfSaveFailed;
+
+  /// Label on the report: who inspected.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspector'**
+  String get inspPdfInspector;
+
+  /// Label on the report: when.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get inspPdfDate;
+
+  /// Label on the report for the start face check.
+  ///
+  /// In en, this message translates to:
+  /// **'Face verified at start'**
+  String get inspPdfStartVerified;
+
+  /// Label on the report for the submission face check.
+  ///
+  /// In en, this message translates to:
+  /// **'Face verified at submission'**
+  String get inspPdfSubmitVerified;
+
+  /// On the report: a face check still to come.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet verified'**
+  String get inspPdfNotVerified;
+
+  /// Label on the report: where the face was checked.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get inspPdfLocation;
+
+  /// Heading of a section's photos on the report.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get inspPdfPhotos;
+
+  /// Footer of every page of an inspection report.
+  ///
+  /// In en, this message translates to:
+  /// **'e-Inspection report'**
+  String get inspPdfFooter;
+
+  /// On the report: a question left blank.
+  ///
+  /// In en, this message translates to:
+  /// **'Not answered'**
+  String get inspPdfUnanswered;
+
+  /// Count on the report of questions answered.
+  ///
+  /// In en, this message translates to:
+  /// **'Answered'**
+  String get inspPdfAnswered;
+
+  /// Count on the report of answers that read as something wrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Findings'**
+  String get inspPdfFindings;
 }
 
 class _AppLocalizationsDelegate

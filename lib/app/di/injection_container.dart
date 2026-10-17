@@ -16,6 +16,10 @@ import 'package:railway_hrms/modules/auth/data/auth_remote_datasource.dart';
 import 'package:railway_hrms/modules/auth/data/auth_repository.dart';
 import 'package:railway_hrms/modules/auth/data/auth_repository_impl.dart';
 import 'package:railway_hrms/modules/hrms/bloc/face/face_verification_cubit.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_remote_datasource.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_repository.dart';
+import 'package:railway_hrms/modules/inspection/data/inspection_repository_impl.dart';
+import 'package:railway_hrms/modules/inspection/shared/identity/inspection_face_verifier.dart';
 import 'package:railway_hrms/modules/prams/bloc/accident_cubit.dart';
 import 'package:railway_hrms/modules/prams/bloc/incident_photo_cubit.dart';
 import 'package:railway_hrms/modules/prams/data/accident_remote_datasource.dart';
@@ -66,6 +70,17 @@ Future<void> init() async {
   // HRMS
   sl.registerFactory<FaceVerificationCubit>(
     () => FaceVerificationCubit(sl<FaceRepository>()),
+  );
+
+  // Inspection
+  sl.registerLazySingleton<InspectionRemoteDataSource>(
+    () => InspectionRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<InspectionRepository>(
+    () => InspectionRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<InspectionFaceVerifier>(
+    () => ServerInspectionFaceVerifier(sl<FaceRepository>()),
   );
 
   // Tracking

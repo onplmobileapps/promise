@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:railway_hrms/modules/hrms/bloc/face/face_attendance_outcome.dart';
+import 'package:railway_hrms/core/face_verification/face_attendance_outcome.dart';
 import 'package:railway_hrms/modules/hrms/data/models/attendance_record.dart';
 import 'package:railway_hrms/modules/hrms/data/models/emp_leave_record.dart';
 import 'package:railway_hrms/modules/hrms/data/models/leave_types.dart';

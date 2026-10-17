@@ -3358,5 +3358,194 @@
   "cnicHintBlurry": "Hold steady. The picture is blurred",
   "@cnicHintBlurry": {
     "description": "When the camera's picture is too blurred to take a CNIC."
+  },
+  "inspGateTitle": "Verify your face to start",
+  "@inspGateTitle": {
+    "description": "Heading of the screen that asks for a face check before an inspection starts."
+  },
+  "inspGateMessage": "Your face is checked now and again before you submit, so every report is signed by the person who made it.",
+  "@inspGateMessage": {
+    "description": "Why a face check is needed before an inspection."
+  },
+  "inspGateCheckLive": "A live face, not a photo",
+  "@inspGateCheckLive": {
+    "description": "One of the things the start face check confirms."
+  },
+  "inspGateCheckMatch": "Matched to your registered face",
+  "@inspGateCheckMatch": {
+    "description": "One of the things the start face check confirms."
+  },
+  "inspGateCheckStamp": "Time and place noted on the report",
+  "@inspGateCheckStamp": {
+    "description": "One of the things the start face check confirms."
+  },
+  "inspGateStart": "Verify and start",
+  "@inspGateStart": {
+    "description": "Button that opens the face check and then the inspection."
+  },
+  "inspStepVerify": "Verify",
+  "@inspStepVerify": {
+    "description": "Step of an inspection's face check: the face is checked."
+  },
+  "inspStepStart": "Start",
+  "@inspStepStart": {
+    "description": "Step of an inspection's face check: the inspection begins."
+  },
+  "inspStepReview": "Review",
+  "@inspStepReview": {
+    "description": "Step of submitting an inspection: the report is read."
+  },
+  "inspStepSubmit": "Submit",
+  "@inspStepSubmit": {
+    "description": "Step of submitting an inspection: it is sent."
+  },
+  "inspVerifying": "Verifying your face…",
+  "@inspVerifying": {
+    "description": "Shown while the server checks the face."
+  },
+  "inspVerifiedTitle": "Face verified",
+  "@inspVerifiedTitle": {
+    "description": "Title when the face check passed."
+  },
+  "inspVerifyFailedTitle": "Face not verified",
+  "@inspVerifyFailedTitle": {
+    "description": "Title when the face check failed."
+  },
+  "inspNotRegistered": "Your face isn't registered yet. Register it from Attendance in HRMS, then try again.",
+  "@inspNotRegistered": {
+    "description": "When the employee has no registered face."
+  },
+  "inspRegistrationPending": "Your face registration is waiting for approval. You can inspect once it is approved.",
+  "@inspRegistrationPending": {
+    "description": "When the employee's face registration is not yet approved."
+  },
+  "inspVerifyFailed": "Your face couldn't be verified. Try again in good light.",
+  "@inspVerifyFailed": {
+    "description": "When the face check failed for an unknown reason."
+  },
+  "inspReviewTitle": "Review and submit",
+  "@inspReviewTitle": {
+    "description": "Title of the screen where an inspection is checked and sent."
+  },
+  "inspReviewLead": "This is the report as it will be submitted. Read it through before you confirm.",
+  "@inspReviewLead": {
+    "description": "Lead text on the review screen."
+  },
+  "inspReviewPreparing": "Preparing the report…",
+  "@inspReviewPreparing": {
+    "description": "Shown while the PDF of an inspection is made."
+  },
+  "inspReviewPage": "Page {page} of {count}",
+  "@inspReviewPage": {
+    "description": "Under a page of the report preview.",
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inspReviewConfirm": "The report is correct",
+  "@inspReviewConfirm": {
+    "description": "Button confirming the previewed report is right."
+  },
+  "inspReviewConfirmed": "You confirmed the report",
+  "@inspReviewConfirmed": {
+    "description": "Shown once the report was confirmed."
+  },
+  "inspReviewEdit": "Back to the form",
+  "@inspReviewEdit": {
+    "description": "Button going back to edit an inspection."
+  },
+  "inspReviewVerify": "Verify face to submit",
+  "@inspReviewVerify": {
+    "description": "Button opening the face check before submitting."
+  },
+  "inspReviewVerified": "Verified at {time}",
+  "@inspReviewVerified": {
+    "description": "Shown once the face was verified for submitting.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "inspSubmit": "Submit inspection",
+  "@inspSubmit": {
+    "description": "Button that sends an inspection."
+  },
+  "inspSubmitting": "Submitting…",
+  "@inspSubmitting": {
+    "description": "Shown while an inspection is being sent."
+  },
+  "inspSubmittedTitle": "Inspection submitted",
+  "@inspSubmittedTitle": {
+    "description": "Title when an inspection was sent."
+  },
+  "inspSubmittedMessage": "Your report has been submitted.",
+  "@inspSubmittedMessage": {
+    "description": "Message when an inspection was sent."
+  },
+  "inspSubmitFailedTitle": "Couldn't submit",
+  "@inspSubmitFailedTitle": {
+    "description": "Title when sending an inspection failed."
+  },
+  "inspSavePdf": "Save PDF",
+  "@inspSavePdf": {
+    "description": "Button saving the inspection report as a PDF."
+  },
+  "inspPdfSaved": "Saved to Downloads",
+  "@inspPdfSaved": {
+    "description": "When the PDF was saved."
+  },
+  "inspPdfSaveFailed": "The PDF couldn't be saved.",
+  "@inspPdfSaveFailed": {
+    "description": "When saving the PDF failed."
+  },
+  "inspPdfInspector": "Inspector",
+  "@inspPdfInspector": {
+    "description": "Label on the report: who inspected."
+  },
+  "inspPdfDate": "Date",
+  "@inspPdfDate": {
+    "description": "Label on the report: when."
+  },
+  "inspPdfStartVerified": "Face verified at start",
+  "@inspPdfStartVerified": {
+    "description": "Label on the report for the start face check."
+  },
+  "inspPdfSubmitVerified": "Face verified at submission",
+  "@inspPdfSubmitVerified": {
+    "description": "Label on the report for the submission face check."
+  },
+  "inspPdfNotVerified": "Not yet verified",
+  "@inspPdfNotVerified": {
+    "description": "On the report: a face check still to come."
+  },
+  "inspPdfLocation": "Location",
+  "@inspPdfLocation": {
+    "description": "Label on the report: where the face was checked."
+  },
+  "inspPdfPhotos": "Photos",
+  "@inspPdfPhotos": {
+    "description": "Heading of a section's photos on the report."
+  },
+  "inspPdfFooter": "e-Inspection report",
+  "@inspPdfFooter": {
+    "description": "Footer of every page of an inspection report."
+  },
+  "inspPdfUnanswered": "Not answered",
+  "@inspPdfUnanswered": {
+    "description": "On the report: a question left blank."
+  },
+  "inspPdfAnswered": "Answered",
+  "@inspPdfAnswered": {
+    "description": "Count on the report of questions answered."
+  },
+  "inspPdfFindings": "Findings",
+  "@inspPdfFindings": {
+    "description": "Count on the report of answers that read as something wrong."
   }
 }

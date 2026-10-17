@@ -2382,4 +2382,145 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cnicHintBlurry => 'Hold steady. The picture is blurred';
+
+  @override
+  String get inspGateTitle => 'Verify your face to start';
+
+  @override
+  String get inspGateMessage =>
+      'Your face is checked now and again before you submit, so every report is signed by the person who made it.';
+
+  @override
+  String get inspGateCheckLive => 'A live face, not a photo';
+
+  @override
+  String get inspGateCheckMatch => 'Matched to your registered face';
+
+  @override
+  String get inspGateCheckStamp => 'Time and place noted on the report';
+
+  @override
+  String get inspGateStart => 'Verify and start';
+
+  @override
+  String get inspStepVerify => 'Verify';
+
+  @override
+  String get inspStepStart => 'Start';
+
+  @override
+  String get inspStepReview => 'Review';
+
+  @override
+  String get inspStepSubmit => 'Submit';
+
+  @override
+  String get inspVerifying => 'Verifying your face…';
+
+  @override
+  String get inspVerifiedTitle => 'Face verified';
+
+  @override
+  String get inspVerifyFailedTitle => 'Face not verified';
+
+  @override
+  String get inspNotRegistered =>
+      'Your face isn\'t registered yet. Register it from Attendance in HRMS, then try again.';
+
+  @override
+  String get inspRegistrationPending =>
+      'Your face registration is waiting for approval. You can inspect once it is approved.';
+
+  @override
+  String get inspVerifyFailed =>
+      'Your face couldn\'t be verified. Try again in good light.';
+
+  @override
+  String get inspReviewTitle => 'Review and submit';
+
+  @override
+  String get inspReviewLead =>
+      'This is the report as it will be submitted. Read it through before you confirm.';
+
+  @override
+  String get inspReviewPreparing => 'Preparing the report…';
+
+  @override
+  String inspReviewPage(int page, int count) {
+    return 'Page $page of $count';
+  }
+
+  @override
+  String get inspReviewConfirm => 'The report is correct';
+
+  @override
+  String get inspReviewConfirmed => 'You confirmed the report';
+
+  @override
+  String get inspReviewEdit => 'Back to the form';
+
+  @override
+  String get inspReviewVerify => 'Verify face to submit';
+
+  @override
+  String inspReviewVerified(String time) {
+    return 'Verified at $time';
+  }
+
+  @override
+  String get inspSubmit => 'Submit inspection';
+
+  @override
+  String get inspSubmitting => 'Submitting…';
+
+  @override
+  String get inspSubmittedTitle => 'Inspection submitted';
+
+  @override
+  String get inspSubmittedMessage => 'Your report has been submitted.';
+
+  @override
+  String get inspSubmitFailedTitle => 'Couldn\'t submit';
+
+  @override
+  String get inspSavePdf => 'Save PDF';
+
+  @override
+  String get inspPdfSaved => 'Saved to Downloads';
+
+  @override
+  String get inspPdfSaveFailed => 'The PDF couldn\'t be saved.';
+
+  @override
+  String get inspPdfInspector => 'Inspector';
+
+  @override
+  String get inspPdfDate => 'Date';
+
+  @override
+  String get inspPdfStartVerified => 'Face verified at start';
+
+  @override
+  String get inspPdfSubmitVerified => 'Face verified at submission';
+
+  @override
+  String get inspPdfNotVerified => 'Not yet verified';
+
+  @override
+  String get inspPdfLocation => 'Location';
+
+  @override
+  String get inspPdfPhotos => 'Photos';
+
+  @override
+  String get inspPdfFooter => 'e-Inspection report';
+
+  @override
+  String get inspPdfUnanswered => 'Not answered';
+
+  @override
+  String get inspPdfAnswered => 'Answered';
+
+  @override
+  String get inspPdfFindings => 'Findings';
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:railway_hrms/modules/hrms/bloc/face/face_attendance_outcome.dart';
+import 'package:railway_hrms/core/face_verification/face_attendance_outcome.dart';
 
 void main() {
   test('a matched face marks the attendance', () {
