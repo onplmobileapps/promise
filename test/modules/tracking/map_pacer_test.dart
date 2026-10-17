@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:railway_hrms/core/maps/map_loop.dart';
 import 'package:railway_hrms/modules/tracking/services/map_pacer.dart';
 
 void main() {
@@ -41,5 +42,40 @@ void main() {
     expect(pacer.tier, MapTier.steady);
     feed(pacer, 5, 40, t0.add(const Duration(seconds: 5)));
     expect(pacer.tier, MapTier.smooth);
+  });
+
+  testWidgets('the map loop ticks at its interval only while it shows', (
+    tester,
+  ) async {
+    var ticks = 0;
+    var interval = const Duration(milliseconds: 20);
+    final loop = MapLoop(() => ticks++, interval: () => interval);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(ticks, 0);
+
+    loop.start();
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(ticks, inInclusiveRange(10, 11));
+
+    // Covered by another screen, it waits.
+    loop.visible = false;
+    final covered = ticks;
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(ticks, covered);
+    loop.visible = true;
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(ticks, covered + 1);
+
+    // A slower pacer, fewer ticks.
+    interval = const Duration(milliseconds: 50);
+    final before = ticks;
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(ticks - before, inInclusiveRange(19, 21));
+
+    loop.dispose();
+    final last = ticks;
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(ticks, last);
   });
 }

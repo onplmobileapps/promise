@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
+import 'package:railway_hrms/core/maps/map_loop.dart';
 import 'package:railway_hrms/modules/tracking/bloc/real_time_tracking_cubit.dart';
 import 'package:railway_hrms/modules/tracking/bloc/real_time_tracking_state.dart';
 import 'package:railway_hrms/modules/tracking/data/models/live_train_models.dart';
@@ -50,8 +50,7 @@ class AllTrainsMapView extends StatefulWidget {
 /// A train on the map, with what the map and the cards show for it.
 typedef _OnMap = ({LiveTrain train, TrainPosition position, LiveStatus status});
 
-class _AllTrainsMapViewState extends State<AllTrainsMapView>
-    with SingleTickerProviderStateMixin {
+class _AllTrainsMapViewState extends State<AllTrainsMapView> {
   static const double _cardWidth = 284;
 
   /// From this zoom trains are drawn in 3D instead of as flat sprites.
@@ -63,7 +62,6 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
 
   late final RealTimeTrackingCubit _cubit = context
       .read<RealTimeTrackingCubit>();
-  late final Ticker _ticker = createTicker((_) => _onFrame());
   final _carousel = ScrollController();
   Timer? _clock;
 
@@ -76,13 +74,37 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
   String _query = '';
   String? _selectedId;
 
-  /// What moves each train between its reports, by train id, and where it
-  /// is drawn now.
+  /// What moves each train between its reports, by train id, where it is
+  /// drawn now and when it was last moved on.
   final Map<String, TrainMotion> _motions = {};
   final Map<String, TrainPose> _poses = {};
+  final Map<String, DateTime> _posedAt = {};
+
+  /// The fastest train in view, which sets how often the map is redrawn.
+  double _fastest = 0;
 
   /// Keeps the map's updates within what the phone can draw.
   final _pacer = MapPacer.forPhone();
+
+  /// Moves the trains on the map as often as they visibly move, without
+  /// having Flutter redraw the screen around it.
+  late final MapLoop _loop = MapLoop(_onFrame, interval: () => _pacer.gap);
+
+  /// The trains on the map, as last worked out: their statuses age only by
+  /// the second, so they aren't worked out again for every update.
+  List<_OnMap>? _entries;
+  DateTime _entriesAt = DateTime(0);
+  final Map<String, String> _labels = {};
+
+  /// Zoomed in this far, only the trains in and around the view are sent
+  /// to the map: a handful rather than every train in the country.
+  static const double _cullFromZoom = 8;
+
+  /// What of the map the last update covered; null when it covered all.
+  _View? _view;
+
+  /// The screen's diagonal, in logical pixels.
+  double _screenDiagonal = 1000;
   bool _drawBusy = false;
   bool _drawAgain = false;
 
@@ -107,7 +129,10 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
     super.initState();
     _feedMotions(_cubit.state);
     // Statuses age without new reports (a moving train becomes "last seen").
-    _clock = Timer.periodic(const Duration(seconds: 15), (_) => _draw());
+    _clock = Timer.periodic(const Duration(seconds: 15), (_) {
+      _entries = null;
+      _draw();
+    });
     _slowTimer = Timer(_slowAfter, () {
       if (mounted && !_shown) setState(() => _slow = true);
     });
@@ -122,8 +147,14 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _palette = TrackPalette.of(context);
+    final size = MediaQuery.sizeOf(context);
+    _screenDiagonal = math.sqrt(
+      size.width * size.width + size.height * size.height,
+    );
     // Only while on screen, not under a train's own map.
-    _setWatching(TickerMode.valuesOf(context).enabled);
+    final shown = TickerMode.valuesOf(context).enabled;
+    _setWatching(shown);
+    _loop.visible = shown;
   }
 
   @override
@@ -131,7 +162,7 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
     _setWatching(false);
     _clock?.cancel();
     _slowTimer?.cancel();
-    _ticker.dispose();
+    _loop.dispose();
     _carousel.dispose();
     _search.dispose();
     _searchFocus.dispose();
@@ -158,9 +189,10 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
     }
     if (!mounted || !identical(map, _map)) return;
     _layersReady = true;
+    _view = null;
     _draw();
     _drawStations();
-    if (!_ticker.isActive) _ticker.start();
+    if (!_loop.isActive) _loop.start();
     Timer(const Duration(milliseconds: 250), () {
       if (mounted && !_shown) setState(() => _shown = true);
     });
@@ -441,12 +473,15 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
       final position = state.positionOf(train);
       if (position == null) continue;
       seen.add(train.id);
-      _motions.putIfAbsent(train.id, TrainMotion.new)
+      // Off the screen a train is moved on only now and then, in longer
+      // steps.
+      _motions.putIfAbsent(train.id, () => TrainMotion(maxStepS: 1.5))
         ..setPath(state.pathOf(train.id))
         ..report(position, now);
     }
     _motions.removeWhere((id, _) => !seen.contains(id));
     _poses.removeWhere((id, _) => !seen.contains(id));
+    _posedAt.removeWhere((id, _) => !seen.contains(id));
   }
 
   /// Every station, those where today's trains start and end standing out.
@@ -469,35 +504,30 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
 
   void _onState(RealTimeTrackingState state) {
     _feedMotions(state);
+    _entries = null;
     _drawSoon = true;
-    if (!_ticker.isActive) _ticker.start();
+    if (_layersReady && !_loop.isActive) _loop.start();
   }
 
-  /// Runs every frame: moves every train along its track, and redraws them
-  /// as often as they visibly move — every frame zoomed in on a fast train,
-  /// about once a second when the whole country shows.
+  /// Runs every tick of [_loop]: redraws the trains as often as they
+  /// visibly move — every frame zoomed in on a fast train, about once a
+  /// second when the whole country shows — and as the view moves.
   void _onFrame() {
     final map = _map;
     if (map == null || !_layersReady) return;
     final now = DateTime.now();
-    var fastest = 0.0;
-    for (final MapEntry(key: id, value: motion) in _motions.entries) {
-      final pose = motion.poseAt(now);
-      if (pose == null) continue;
-      _poses[id] = pose;
-      if (pose.speedMps > fastest) fastest = pose.speedMps;
-    }
     final camera = map.cameraPosition;
     final interval = camera == null
         ? const Duration(milliseconds: 250)
         : redrawInterval(
-            speedMps: fastest,
+            speedMps: _fastest,
             zoom: camera.zoom,
             latitude: camera.target.latitude,
           );
     // As often as the trains visibly move, but no more than the phone keeps
     // up with.
     if (_drawSoon ||
+        _viewMoved(camera) ||
         now.difference(_lastDrawAt) >=
             (interval > _pacer.gap ? interval : _pacer.gap)) {
       _drawSoon = false;
@@ -510,6 +540,64 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
     }
   }
 
+  /// What of the map [camera] shows, and around it; null when the whole
+  /// country does.
+  _View? _viewOf(CameraPosition? camera) {
+    if (camera == null || camera.zoom < _cullFromZoom) return null;
+    final metersPerPx = metersPerPixel(camera.zoom, camera.target.latitude);
+    // Tilted, the map shows far further towards the horizon.
+    final reach = _screenDiagonal * (camera.tilt > 10 ? 2.6 : 0.8);
+    return _View(camera.target, camera.zoom, metersPerPx * reach);
+  }
+
+  /// Whether the view has moved far enough from what the last update
+  /// covered that trains coming into it must be sent.
+  bool _viewMoved(CameraPosition? camera) {
+    final last = _view;
+    final culls = camera != null && camera.zoom >= _cullFromZoom;
+    if (last == null) return culls;
+    if (!culls) return true;
+    return (camera.zoom - last.zoom).abs() > 0.4 ||
+        haversineMeters(camera.target, last.center) > last.reachM * 0.25;
+  }
+
+  /// Moves every train on to [now]: those in [view] each time, the rest
+  /// about once a second, which is all a train off the screen needs.
+  void _step(DateTime now, _View? view) {
+    var fastest = 0.0;
+    for (final MapEntry(key: id, value: motion) in _motions.entries) {
+      final last = _poses[id];
+      final at = _posedAt[id];
+      if (view != null &&
+          last != null &&
+          at != null &&
+          !view.holds(last.point) &&
+          now.difference(at) < const Duration(seconds: 1)) {
+        continue;
+      }
+      final pose = motion.poseAt(now);
+      if (pose == null) continue;
+      _poses[id] = pose;
+      _posedAt[id] = now;
+      if (pose.speedMps > fastest && (view == null || view.holds(pose.point))) {
+        fastest = pose.speedMps;
+      }
+    }
+    _fastest = fastest;
+  }
+
+  /// [_onMap] as last worked out, again once it is a few seconds old.
+  List<_OnMap> _onMapNow(DateTime now) {
+    final entries = _entries;
+    if (entries != null &&
+        now.difference(_entriesAt) < const Duration(seconds: 5)) {
+      return entries;
+    }
+    _labels.clear();
+    _entriesAt = now;
+    return _entries = _onMap(_cubit.state, now);
+  }
+
   void _draw([DateTime? at]) {
     final map = _map;
     if (map == null || !_layersReady || !mounted) return;
@@ -518,11 +606,14 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
       return;
     }
     final now = at ?? DateTime.now();
+    final view = _viewOf(map.cameraPosition);
+    _step(now, view);
+    _view = view;
     _lastDrawAt = now;
     _drawBusy = true;
     final sent = DateTime.now();
     map
-        .setGeoJsonSource('fleet', _fleetCollection(now))
+        .setGeoJsonSource('fleet', _fleetCollection(now, view))
         .catchError((Object e) => debugPrint('⚠️ Fleet markers: $e'))
         .whenComplete(() {
           _drawBusy = false;
@@ -562,16 +653,29 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
     if (camera.zoom < _train3dZoom - 0.5) return;
     final metersPerPx = metersPerPixel(camera.zoom, camera.target.latitude);
     final reachM = metersPerPx * 1500;
-    final features = <Object>[];
     final state = _cubit.state;
-    for (final e in _onMap(state, now)) {
+    final near = [
+      for (final e in _onMapNow(now))
+        if (haversineMeters(
+              _poses[e.train.id]?.point ?? e.position.position,
+              camera.target,
+            ) <=
+            reachM)
+          e,
+    ];
+    // A few trains close up in every detail; more, or a phone with less to
+    // spare, in less.
+    final scene = Train3dScene(
+      metersPerPx: metersPerPx,
+      detail: near.length <= 3 && _pacer.tier == MapTier.smooth
+          ? Train3dDetail.full
+          : Train3dDetail.low,
+    );
+    for (final e in near) {
       final pose = _poses[e.train.id];
-      final point = pose?.point ?? e.position.position;
-      if (haversineMeters(point, camera.target) > reachM) continue;
-      final train = train3dCollection(
-        head: point,
+      scene.add(
+        head: pose?.point ?? e.position.position,
         heading: pose?.heading ?? e.position.course,
-        metersPerPx: metersPerPx,
         path: pose?.along == null ? null : state.pathOf(e.train.id),
         headAlong: pose?.along,
         reversed: pose?.reversed ?? false,
@@ -580,14 +684,10 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
             ? Train3dPalette.faded
             : Train3dPalette.pakistanRailways,
       );
-      features.addAll((train['features'] as List).cast<Object>());
     }
     _draw3dBusy = true;
     map
-        .setGeoJsonSource('fleet-3d', {
-          'type': 'FeatureCollection',
-          'features': features,
-        })
+        .setGeoJsonSource('fleet-3d', scene.toGeoJson())
         .catchError((Object e) => debugPrint('⚠️ Fleet 3D: $e'))
         .whenComplete(() => _draw3dBusy = false);
   }
@@ -665,28 +765,33 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
     _ => 'old',
   };
 
-  Map<String, dynamic> _fleetCollection(DateTime now) {
+  /// The trains for the map's `fleet` source: those in [view], or every
+  /// one when it is null.
+  Map<String, dynamic> _fleetCollection(DateTime now, _View? view) {
     final state = _cubit.state;
-    String label(LiveTrain train) {
+    String label(LiveTrain train) => _labels[train.id] ??= () {
       final code = train.code.isEmpty ? train.displayName : train.code;
       // Two runs of one train: each says its day.
       return state.hasOtherRuns(train)
           ? '$code · ${runDayLabel(train, now)}'
           : code;
-    }
+    }();
 
     return {
       'type': 'FeatureCollection',
       'features': [
-        for (final e in _onMap(state, now))
+        for (final e in _onMapNow(now))
           if ((_poses[e.train.id]?.point ?? e.position.position)
-              case final point)
+              case final point when view == null || view.holds(point))
             {
               'type': 'Feature',
               'id': e.train.id,
               'properties': {
                 'kind': _kindOf(e.status),
-                'course': _poses[e.train.id]?.heading ?? e.position.course,
+                'course': _round(
+                  _poses[e.train.id]?.heading ?? e.position.course,
+                  10,
+                ),
                 'label': label(e.train),
                 'z':
                     switch (_kindOf(e.status)) {
@@ -698,12 +803,19 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
               },
               'geometry': {
                 'type': 'Point',
-                'coordinates': [point.longitude, point.latitude],
+                // To about ten centimetres, which is all a marker needs.
+                'coordinates': [
+                  _round(point.longitude, 1e6),
+                  _round(point.latitude, 1e6),
+                ],
               },
             },
       ],
     };
   }
+
+  static double _round(double value, double per) =>
+      (value * per).roundToDouble() / per;
 
   // ─── Selection ────────────────────────────────────────────────────────
 
@@ -723,6 +835,7 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
     if (!mounted) return;
     if (id != _selectedId) {
       setState(() => _selectedId = id);
+      _entries = null;
       _draw();
       if (id == null) {
         _drawFocus(DateTime.now());
@@ -756,6 +869,7 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
   void _setFilter(TrainFilter filter) {
     if (filter == _filter) return;
     setState(() => _filter = filter);
+    _entries = null;
     final selected = _selectedId;
     if (selected != null &&
         !_onMap(
@@ -770,6 +884,7 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
   void _setQuery(String query) {
     if (query == _query) return;
     setState(() => _query = query);
+    _entries = null;
     final selected = _selectedId;
     final found = _onMap(_cubit.state, DateTime.now());
     if (selected != null && !found.any((e) => e.train.id == selected)) {
@@ -876,8 +991,9 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView>
                 },
                 onStyleLoadedCallback: _onStyleLoaded,
                 onMapClick: (_, _) => _select(null),
-                // The 3D trains are sized for the zoom they were drawn at.
-                onCameraIdle: () => _draw3d(DateTime.now()),
+                // The 3D trains are sized for the zoom they were drawn at,
+                // and the trains in view are those around where it stopped.
+                onCameraIdle: () => _drawSoon = true,
               ),
             ),
             Positioned.fill(
@@ -1662,5 +1778,24 @@ class _Suggestion extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// What of the map an update covers: [reachM] around [center], at [zoom].
+class _View {
+  _View(this.center, this.zoom, this.reachM)
+    : _perLng = 111320 * math.cos(center.latitude * math.pi / 180);
+
+  final LatLng center;
+  final double zoom;
+  final double reachM;
+  final double _perLng;
+
+  /// Whether [point] is within reach; quickly, on a flat map, which at
+  /// these distances is near enough.
+  bool holds(LatLng point) {
+    final dy = (point.latitude - center.latitude) * 110574;
+    final dx = (point.longitude - center.longitude) * _perLng;
+    return dx * dx + dy * dy <= reachM * reachM;
   }
 }

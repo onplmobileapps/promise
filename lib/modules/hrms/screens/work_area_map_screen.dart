@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
 import 'package:railway_hrms/core/l10n/l10n.dart';
+import 'package:railway_hrms/core/maps/map_loop.dart';
 import 'package:railway_hrms/core/network/api_endpoints.dart';
 import 'package:railway_hrms/core/security/device_integrity.dart';
 import 'package:railway_hrms/core/storage/storage_service.dart';
@@ -37,15 +37,21 @@ class WorkAreaMapScreen extends StatefulWidget {
   State<WorkAreaMapScreen> createState() => _WorkAreaMapScreenState();
 }
 
-class _WorkAreaMapScreenState extends State<WorkAreaMapScreen>
-    with SingleTickerProviderStateMixin {
+class _WorkAreaMapScreenState extends State<WorkAreaMapScreen> {
   late final WorkAreaCubit _cubit = context.read<WorkAreaCubit>();
-  late final Ticker _ticker = createTicker(_onTick);
+
+  /// Pulses the ring under the employee: on a timer, as the map draws it
+  /// itself, not by having Flutter redraw the screen every frame.
+  late final MapLoop _pulse = MapLoop(
+    _onTick,
+    interval: () => AppPerformance.lite
+        ? const Duration(milliseconds: 90)
+        : const Duration(milliseconds: 60),
+  );
   MapLibreMapController? _map;
   bool _layersReady = false;
   bool _framed = false;
   bool _pulseBusy = false;
-  DateTime _lastPulse = DateTime(0);
 
   /// The office the employee picked from the list, if any.
   WorkOffice? _picked;
@@ -63,8 +69,15 @@ class _WorkAreaMapScreenState extends State<WorkAreaMapScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Covered by another screen, the pulse waits.
+    _pulse.visible = TickerMode.valuesOf(context).enabled;
+  }
+
+  @override
   void dispose() {
-    _ticker.dispose();
+    _pulse.dispose();
     super.dispose();
   }
 
@@ -95,7 +108,7 @@ class _WorkAreaMapScreenState extends State<WorkAreaMapScreen>
     if (!mounted) return;
     _layersReady = true;
     await _draw(_cubit.state);
-    _ticker.start();
+    _pulse.start();
   }
 
   /// Swaps the initials on the avatar for the employee's photo, if they
@@ -427,14 +440,11 @@ class _WorkAreaMapScreenState extends State<WorkAreaMapScreen>
     );
   }
 
-  void _onTick(Duration elapsed) {
+  void _onTick() {
     final map = _map;
     final at = _cubit.state.position;
-    if (map == null || !_layersReady || _pulseBusy) return;
-    final now = DateTime.now();
-    if (now.difference(_lastPulse) < const Duration(milliseconds: 60)) return;
-    _lastPulse = now;
-    final t = (elapsed.inMilliseconds % 1800) / 1800;
+    if (map == null || !_layersReady || _pulseBusy || !mounted) return;
+    final t = (DateTime.now().millisecondsSinceEpoch % 1800) / 1800;
     _pulseBusy = true;
     map
         .setGeoJsonSource(

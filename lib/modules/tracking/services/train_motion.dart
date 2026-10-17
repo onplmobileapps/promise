@@ -43,6 +43,15 @@ class TrainPose {
 /// again, then comes gently to rest; a train far behind a late report
 /// fast-forwards to it.
 class TrainMotion {
+  /// [maxStepS] is the longest step taken at once: a train stepped every
+  /// frame keeps the default, one stepped only now and then, as off the
+  /// screen, takes longer steps.
+  TrainMotion({this.maxStepS = 0.25});
+
+  /// The longest step taken at once, so a frame after a pause doesn't
+  /// throw the train ahead.
+  final double maxStepS;
+
   RoutePath? _path;
   _Report? _report;
 
@@ -108,10 +117,6 @@ class TrainMotion {
 
   /// How quickly it turns to a new heading.
   static const double _turnEaseS = 0.35;
-
-  /// The longest step taken at once, so a frame after a pause doesn't
-  /// throw the train ahead.
-  static const double _maxStepS = 0.25;
 
   RoutePath? get path => _path;
 
@@ -222,7 +227,7 @@ class TrainMotion {
     _lastStep = now;
     final dt = last == null
         ? 0.0
-        : (now.difference(last).inMicroseconds / 1e6).clamp(0.0, _maxStepS);
+        : (now.difference(last).inMicroseconds / 1e6).clamp(0.0, maxStepS);
     final elapsed = (now.difference(report.time).inMicroseconds / 1e6).clamp(
       0.0,
       600.0,

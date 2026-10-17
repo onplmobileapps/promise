@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:railway_hrms/core/design_system/design_system.dart';
+import 'package:railway_hrms/core/maps/map_loop.dart';
 import 'package:railway_hrms/modules/tracking/bloc/real_time_tracking_cubit.dart';
 import 'package:railway_hrms/modules/tracking/bloc/real_time_tracking_state.dart';
 import 'package:railway_hrms/modules/tracking/data/models/live_train_models.dart';
@@ -42,8 +42,7 @@ class TrainLiveMapView extends StatefulWidget {
   State<TrainLiveMapView> createState() => _TrainLiveMapViewState();
 }
 
-class _TrainLiveMapViewState extends State<TrainLiveMapView>
-    with SingleTickerProviderStateMixin {
+class _TrainLiveMapViewState extends State<TrainLiveMapView> {
   static const double _sheetInitial = 0.38;
   static const double _sheetMin = 0.17;
 
@@ -66,12 +65,14 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
   late final RealTimeTrackingCubit _cubit = context
       .read<RealTimeTrackingCubit>();
   final _sheet = DraggableScrollableController();
-  late final Ticker _ticker = createTicker((_) => _onFrame());
   final _motion = TrainMotion();
 
   /// Keeps the map's updates within what the phone can draw.
   final _pacer = MapPacer.forPhone();
-  DateTime _lastSent = DateTime(0);
+
+  /// Moves the train on the map as often as the pacer allows, without
+  /// having Flutter redraw the screen around it.
+  late final MapLoop _loop = MapLoop(_onFrame, interval: () => _pacer.gap);
 
   MapLibreMapController? _map;
   bool _layersReady = false;
@@ -126,6 +127,21 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
   bool _drew3d = false;
   DateTime? _lastFrame;
   DateTime _lastStatusAt = DateTime(0);
+
+  // What was last sent of each, so an update that would change nothing on
+  // the map — a standing train, a camera already where it should be — is
+  // not sent at all.
+  LatLng? _sentTrainAt;
+  double _sentTrainHeading = double.nan;
+  bool? _sentLive;
+  DateTime _sentTrainTime = DateTime(0);
+  LatLng? _sent3dAt;
+  double _sent3dHeading = double.nan;
+  double _sent3dZoom = double.nan;
+  bool? _sent3dLive;
+  Train3dDetail? _sent3dDetail;
+  LatLng? _sentCameraAt;
+  double _sentCameraBearing = double.nan;
   bool _live = true;
   Timer? _insetsTimer;
   double _insetBottom = -1;
@@ -141,6 +157,8 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _palette = TrackPalette.of(context);
+    // Covered by another screen, the map waits.
+    _loop.visible = TickerMode.valuesOf(context).enabled;
   }
 
   @override
@@ -161,9 +179,11 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
     _slowTimer?.cancel();
     _refollowTimer?.cancel();
     _insetsTimer?.cancel();
-    _ticker.dispose();
+    _loop.dispose();
     _sheet.dispose();
-    _cubit.clearSelection();
+    // Another run's map may have taken this one's place, and selected its
+    // own train already.
+    _cubit.clearSelection(trainId: _train.id);
     super.dispose();
   }
 
@@ -191,7 +211,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
 
   void _retryMap() {
     _slowTimer?.cancel();
-    _ticker.stop();
+    _loop.stop();
     setState(() {
       _mapKey++;
       _map = null;
@@ -224,6 +244,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
     _drawnStationFix = null;
     _drawnPosition = null;
     _insetBottom = -1;
+    _forgetSent();
     // The rest of the network, faintly, around the train's own line.
     unawaited(
       addRailNetworkLayer(
@@ -239,8 +260,8 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
     if (!mounted) return;
     // The first frames draw the train; then the cover lifts off a map
     // that already has everything on it.
-    if (!_ticker.isActive && _cubit.state.positionOf(_train) != null) {
-      _ticker.start();
+    if (!_loop.isActive && _cubit.state.positionOf(_train) != null) {
+      _loop.start();
     }
     Timer(const Duration(milliseconds: 150), () {
       if (mounted && !_shown) setState(() => _shown = true);
@@ -478,7 +499,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
     if (position != null && position != _drawnPosition) {
       _drawnPosition = position;
       _motion.report(position, DateTime.now());
-      if (!_ticker.isActive) _ticker.start();
+      if (!_loop.isActive) _loop.start();
       if (firstPosition && !_follow) setState(() => _follow = true);
     }
 
@@ -512,18 +533,14 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
     }
   }
 
-  /// Runs every frame while the train has a place: moves it, pulses the
-  /// ring under it, keeps the chase camera on it and greys the route behind
-  /// it. Each is one small update to the map, sent no faster than the map
-  /// takes them.
+  /// Runs every tick of [_loop] while the train has a place: moves it,
+  /// pulses the ring under it, keeps the chase camera on it and greys the
+  /// route behind it. Each is one small update to the map, sent no faster
+  /// than the map takes them, and only when it would change what shows.
   void _onFrame() {
     final map = _map;
     if (map == null || !_layersReady) return;
     final now = DateTime.now();
-    // No more often than the phone keeps up with: every frame up to 60 a
-    // second on a fast one, less on a slow one.
-    if (now.difference(_lastSent) < _pacer.gap) return;
-    _lastSent = now;
     final last = _lastFrame;
     final dt = last == null
         ? 0.0
@@ -544,15 +561,53 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
 
     final pose = _motion.poseAt(now);
     if (pose == null) return;
-    _drawTrain(map, pose, now);
-    _drawTrain3d(map, pose);
-    _chase(map, pose, dt.toDouble());
+    final zoom = map.cameraPosition?.zoom ?? _chaseZoom;
+    // Moves smaller than a fraction of a pixel don't show.
+    final stillM = metersPerPixel(zoom, pose.point.latitude) * 0.15;
+    _drawTrain(map, pose, now, stillM);
+    _drawTrain3d(map, pose, zoom, stillM);
+    _chase(map, pose, dt.toDouble(), stillM);
     _drawProgress(map, pose, now);
   }
 
-  void _drawTrain(MapLibreMapController map, TrainPose pose, DateTime now) {
+  /// Everything is sent afresh, as onto a map just loaded.
+  void _forgetSent() {
+    _sentTrainAt = null;
+    _sent3dAt = null;
+    _sent3dZoom = double.nan;
+    _sentCameraAt = null;
+    _drew3d = false;
+  }
+
+  static bool _near(LatLng? a, LatLng b, double meters) =>
+      a != null && haversineMeters(a, b) <= meters;
+
+  static bool _sameAngle(double a, double b, double degrees) =>
+      !a.isNaN && _turn(a - b).abs() <= degrees;
+
+  /// The pulse is a decoration: drawn as often as the app's other loops,
+  /// fewer times a second on a phone that draws lite.
+  static Duration get _pulseGap => AppPerformance.lite
+      ? const Duration(milliseconds: 50)
+      : Duration(microseconds: 1000000 ~/ AppPerformance.loopFps);
+
+  void _drawTrain(
+    MapLibreMapController map,
+    TrainPose pose,
+    DateTime now,
+    double stillM,
+  ) {
     if (_trainBusy) return;
+    final moved =
+        !_near(_sentTrainAt, pose.point, stillM) ||
+        !_sameAngle(_sentTrainHeading, pose.heading, 0.3) ||
+        _sentLive != _live;
+    if (!moved && now.difference(_sentTrainTime) < _pulseGap) return;
     _trainBusy = true;
+    _sentTrainAt = pose.point;
+    _sentTrainHeading = pose.heading;
+    _sentLive = _live;
+    _sentTrainTime = now;
     final pulse = (now.millisecondsSinceEpoch % 2200) / 2200;
     final sent = DateTime.now();
     map
@@ -581,14 +636,38 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
     );
   }
 
-  void _drawTrain3d(MapLibreMapController map, TrainPose pose) {
+  void _drawTrain3d(
+    MapLibreMapController map,
+    TrainPose pose,
+    double zoom,
+    double stillM,
+  ) {
     if (_train3dBusy || !_pacer.draws3d) return;
-    final zoom = map.cameraPosition?.zoom ?? 0;
     final near = zoom >= _train3dZoom - 0.5;
     // Zoomed out the layer hides; it is emptied once, not every frame.
     if (!near && !_drew3d) return;
+    // A phone with frames to spare gets every detail of the train.
+    final detail = _pacer.tier == MapTier.smooth
+        ? Train3dDetail.full
+        : Train3dDetail.low;
+    // Sized for the zoom, so drawn again as it changes; otherwise only
+    // when the train moves or turns.
+    if (near &&
+        _drew3d &&
+        _near(_sent3dAt, pose.point, stillM) &&
+        _sameAngle(_sent3dHeading, pose.heading, 0.2) &&
+        (zoom - _sent3dZoom).abs() < 0.01 &&
+        _sent3dLive == _live &&
+        _sent3dDetail == detail) {
+      return;
+    }
     _train3dBusy = true;
     _drew3d = near;
+    _sent3dAt = pose.point;
+    _sent3dHeading = pose.heading;
+    _sent3dZoom = zoom;
+    _sent3dLive = _live;
+    _sent3dDetail = detail;
     map
         .setGeoJsonSource(
           'train-3d',
@@ -603,6 +682,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
                   palette: _live
                       ? Train3dPalette.pakistanRailways
                       : Train3dPalette.faded,
+                  detail: detail,
                 )
               : _emptyCollection,
         )
@@ -610,15 +690,27 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
         .whenComplete(() => _train3dBusy = false);
   }
 
-  /// Keeps the chase camera on the train, moved with it every frame rather
-  /// than eased after it once a second, so neither ever jerks.
-  void _chase(MapLibreMapController map, TrainPose pose, double dt) {
+  /// Keeps the chase camera on the train, moved with it every tick rather
+  /// than eased after it once a second, so neither ever jerks; a camera
+  /// already on a standing train is left be.
+  void _chase(
+    MapLibreMapController map,
+    TrainPose pose,
+    double dt,
+    double stillM,
+  ) {
     if (!_follow || _swooping || _cameraBusy) return;
     final target = pose.heading + _chaseAngle;
     final bearing = _cameraBearing;
     _cameraBearing = bearing == null || dt == 0
         ? target
         : bearing + _turn(target - bearing) * (1 - math.exp(-dt / 1.2));
+    if (_near(_sentCameraAt, pose.point, stillM) &&
+        _sameAngle(_sentCameraBearing, _cameraBearing!, 0.05)) {
+      return;
+    }
+    _sentCameraAt = pose.point;
+    _sentCameraBearing = _cameraBearing!;
     _cameraBusy = true;
     map
         .moveCamera(
@@ -905,6 +997,8 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView>
       debugPrint('⚠️ Tracking camera: $e');
     } finally {
       _swooping = false;
+      // The swoop moved the camera: the chase takes over from where it is.
+      _sentCameraAt = null;
     }
   }
 
