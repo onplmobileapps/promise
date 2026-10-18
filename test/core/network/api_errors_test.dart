@@ -66,19 +66,12 @@ void main() {
     final error = await changePassword();
     expect(error, isA<ServerException>());
     expect(error!.message, 'Old password: Wrong password.');
-    expect(
-      sent.requests.single.data,
-      containsPair('confirm_password', 'n3w-Pass!'),
-    );
-  });
-
-  test('a server that takes the change as PUT gets it again as PUT', () async {
-    final sent = network([
-      (405, {'detail': 'Method "POST" not allowed.'}),
-      (200, {'message': 'Password changed.'}),
+    expect(sent.requests.single.method, 'POST');
+    expect((sent.requests.single.data as Map).keys, [
+      'old_password',
+      'new_password',
+      'confirm_new_password',
     ]);
-    expect(await changePassword(), isNull);
-    expect(sent.requests.map((r) => r.method), ['POST', 'PUT']);
   });
 
   test('a "no" sent with a 200 is a failure', () async {

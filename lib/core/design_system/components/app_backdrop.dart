@@ -56,10 +56,7 @@ class AppBackdrop extends StatelessWidget {
     final child = RepaintBoundary(child: this.child);
     final intensity = blobIntensity;
     final backgroundPattern = RepaintBoundary(
-      child: CustomPaint(
-        painter: pattern,
-        child: const SizedBox.expand(),
-      ),
+      child: CustomPaint(painter: pattern, child: const SizedBox.expand()),
     );
 
     if (intensity != null) {
@@ -73,11 +70,7 @@ class AppBackdrop extends StatelessWidget {
         color: colors.background,
         child: Stack(
           fit: StackFit.expand,
-          children: [
-            blobBackground,
-            backgroundPattern,
-            child,
-          ],
+          children: [blobBackground, backgroundPattern, child],
         ),
       );
     }
@@ -100,10 +93,7 @@ class AppBackdrop extends StatelessWidget {
           ),
           child: Stack(
             fit: StackFit.expand,
-            children: [
-              backgroundPattern,
-              child,
-            ],
+            children: [backgroundPattern, child],
           ),
         );
       },

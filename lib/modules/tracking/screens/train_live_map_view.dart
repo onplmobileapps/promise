@@ -57,7 +57,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
   static const double _chaseAngle = 30;
 
   /// From this zoom the train is drawn in 3D instead of as a flat sprite.
-  static const double _train3dZoom = 12;
+  static const double _train3dZoom = 0;
 
   /// How long the map may take to load before the cover says so.
   static const Duration _slowAfter = Duration(seconds: 12);
@@ -101,6 +101,13 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
   /// the follow key or the whole-journey view, stays off.
   bool _refollow = false;
   Timer? _refollowTimer;
+
+  /// A finger is on the map.
+  bool _touching = false;
+
+  /// Checks in a row that found the train off the screen.
+  int _offScreen = 0;
+  bool _checkingView = false;
   static const Duration _refollowAfter = Duration(seconds: 6);
 
   /// The chase camera's turn, eased more slowly than the train's own so
@@ -557,6 +564,10 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
 
     final pose = _motion.poseAt(now);
     if (pose == null) return;
+    if (now.difference(_lastViewCheck) > const Duration(seconds: 1)) {
+      _lastViewCheck = now;
+      _keepInView(map, pose);
+    }
     final zoom = map.cameraPosition?.zoom ?? _chaseZoom;
     // Moves smaller than a fraction of a pixel don't show.
     final stillM = metersPerPixel(zoom, pose.point.latitude) * 0.15;
@@ -564,6 +575,39 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
     _drawTrain3d(map, pose, zoom, stillM);
     _chase(map, pose, dt.toDouble(), stillM);
     _drawProgress(map, pose, now);
+  }
+
+  DateTime _lastViewCheck = DateTime(0);
+
+  /// The map moves with the train: one that has run off the screen, with
+  /// no hand on the map, is followed again — the map never loses it.
+  void _keepInView(MapLibreMapController map, TrainPose pose) {
+    if (_follow || _swooping || _touching || _checkingView) {
+      _offScreen = 0;
+      return;
+    }
+    _checkingView = true;
+    map
+        .getVisibleRegion()
+        .then((view) {
+          if (!mounted) return;
+          final p = pose.point;
+          final inside =
+              p.latitude >= view.southwest.latitude &&
+              p.latitude <= view.northeast.latitude &&
+              p.longitude >= view.southwest.longitude &&
+              p.longitude <= view.northeast.longitude;
+          _offScreen = inside ? 0 : _offScreen + 1;
+          // Off it for two checks running: a moment, not a flicker.
+          if (_offScreen >= 2 && !_follow && !_touching) {
+            _offScreen = 0;
+            _refollow = false;
+            _refollowTimer?.cancel();
+            unawaited(_startFollow());
+          }
+        })
+        .catchError((Object e) => debugPrint('⚠️ Map view: $e'))
+        .whenComplete(() => _checkingView = false);
   }
 
   /// Everything is sent afresh, as onto a map just loaded.
@@ -615,22 +659,9 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
         });
   }
 
-  /// On a phone that can't keep up, the 3D train gives way to the flat one
-  /// close up, which is far less to draw; and comes back when it can.
-  void _applyTier() {
-    final map = _map;
-    if (map == null || !_layersReady) return;
-    final flat = !_pacer.draws3d;
-    unawaited(
-      Future.wait([
-        map.setLayerVisibility('train-3d', !flat),
-        map.setLayerVisibility('train-icon-near', flat),
-      ]).catchError((Object e) {
-        debugPrint('⚠️ Train layers: $e');
-        return <void>[];
-      }),
-    );
-  }
+  /// The train stays in 3D whatever the phone: only its detail follows
+  /// the pace the map keeps (see [_drawTrain3d]).
+  void _applyTier() {}
 
   void _drawTrain3d(
     MapLibreMapController map,
@@ -638,7 +669,9 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
     double zoom,
     double stillM,
   ) {
-    if (_train3dBusy || !_pacer.draws3d) return;
+    // Always in 3D, on every phone: one short of frames gets a simpler
+    // model, never a flat one.
+    if (_train3dBusy) return;
     final near = zoom >= _train3dZoom - 0.5;
     // Zoomed out the layer hides; it is emptied once, not every frame.
     if (!near && !_drew3d) return;
@@ -1034,6 +1067,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
   }
 
   void _onUserTouch() {
+    _touching = true;
     _refollowTimer?.cancel();
     if (!_follow && !_auto) return;
     _refollow = _follow;
@@ -1046,6 +1080,7 @@ class _TrainLiveMapViewState extends State<TrainLiveMapView> {
   /// The hand is off the map: back to the train in a while, if a touch
   /// took the camera off it.
   void _onUserRelease() {
+    _touching = false;
     if (!_refollow) return;
     _refollowTimer?.cancel();
     _refollowTimer = Timer(_refollowAfter, () {
@@ -1512,6 +1547,24 @@ class _JourneySheet extends StatelessWidget {
                 _JourneyCard(train: train, state: state),
                 if (_stripStops(train, state) case final stops
                     when stops.length >= 2) ...[
+                  if (journeyTiming(
+                        stops: stops,
+                        day: (state.trainById(train.id) ?? train).departureDay,
+                        reached: state.reached,
+                        coveredKm: position == null || state.fix == null
+                            ? null
+                            : state.fix!.alongM / 1000,
+                        reportedAt: position?.fixTime,
+                      )
+                      case final timing
+                      when timing.scheduledLength != null) ...[
+                    const SizedBox(height: 12),
+                    _JourneyTime(
+                      timing: timing,
+                      to: stops.last.station.name,
+                      now: now,
+                    ),
+                  ],
                   const SizedBox(height: 22),
                   StationStrip(
                     stops: stops,
@@ -2222,6 +2275,174 @@ class _Note extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The whole journey's time: what the timetable gives it, what it is
+/// taking at the delay the train runs at, how late it is overall, and
+/// when it is expected at its last stop.
+class _JourneyTime extends StatelessWidget {
+  const _JourneyTime({
+    required this.timing,
+    required this.to,
+    required this.now,
+  });
+
+  final JourneyTiming timing;
+  final String to;
+  final DateTime now;
+
+  static final DateFormat _at = DateFormat('EEE h:mm a');
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = TrackPalette.of(context);
+    final scheduled = timing.scheduledLength!;
+    final expected = timing.expectedLength;
+    final delay = timing.delay;
+    final arrival = timing.expectedArrival;
+    final late = delay != null && delay.inMinutes > 2;
+    final early = delay != null && delay.inMinutes < -2;
+    final tone = late ? palette.red : palette.g1;
+    final onTheWay = timing.onTheWay(now);
+    TextStyle label() => TextStyle(
+      fontSize: 10.5,
+      fontWeight: FontWeight.w800,
+      letterSpacing: 0.6,
+      color: palette.mute,
+    );
+    TextStyle value(Color color) => TextStyle(
+      fontSize: 19,
+      fontWeight: FontWeight.w900,
+      color: color,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: BoxDecoration(
+        color: palette.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: late ? palette.redSoft : palette.line),
+        boxShadow: palette.shadow(0.6),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.schedule_rounded, size: 18, color: tone),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Journey time',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: palette.ink,
+                  ),
+                ),
+              ),
+              if (delay != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: late ? palette.redSoft : palette.soft,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    delayLabel(delay),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: tone,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('TIMETABLE', style: label()),
+                    const SizedBox(height: 2),
+                    Text(durationLabel(scheduled), style: value(palette.ink)),
+                  ],
+                ),
+              ),
+              if (expected != null)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        late || early ? 'TAKING' : 'ON TIME',
+                        style: label(),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(durationLabel(expected), style: value(tone)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          if (late && expected != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Due to take ${durationLabel(scheduled)}, now taking '
+              '${durationLabel(expected)}: ${delayLabel(delay)} overall.',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+                color: palette.ink,
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Divider(height: 1, color: palette.line),
+          const SizedBox(height: 10),
+          if (arrival != null)
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Expected at $to  ',
+                    style: TextStyle(color: palette.mute),
+                  ),
+                  TextSpan(
+                    text: _at.format(arrival),
+                    style: TextStyle(color: palette.ink),
+                  ),
+                ],
+              ),
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          if (onTheWay != null) ...[
+            const SizedBox(height: 3),
+            Text(
+              'On its way for ${durationLabel(onTheWay)}'
+              '${timing.departureDelay == null ? ' (from its due departure)' : ''}',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: palette.mute,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

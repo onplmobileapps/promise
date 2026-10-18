@@ -1,7 +1,7 @@
 name: railway_hrms
 description: "Pakistan Railway Operational and Management Integrated Services Ecosystem."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-version: 1.1.9+22
+version: 1.2.0+23
 environment:
   sdk: ^3.10.8
 dependencies:
@@ -53,7 +53,6 @@ flutter:
     - assets/lottie/
     - assets/fonts/inter/OFL.txt
     - assets/fonts/outfit/OFL.txt
-    - .env.dev
     - .env.prod
   # Inter sets the text and Outfit the headings and big numbers; the families
   # are named in lib/core/design_system/foundations/app_fonts.dart.

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:railway_hrms/core/design_system/components/app_icon_tile.dart';
+import 'package:railway_hrms/core/design_system/components/app_reveal.dart';
+import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_sizes.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_spacing.dart';
-import 'package:railway_hrms/core/design_system/icons/app_glyph_icon.dart';
+import 'package:railway_hrms/core/design_system/icons/app_glyph_draw.dart';
 import 'package:railway_hrms/core/design_system/icons/app_glyphs.dart';
 import 'package:railway_hrms/core/design_system/theme/theme_context.dart';
 
@@ -29,19 +31,37 @@ class AppEmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AppIconTile(
-            size: AppSizes.emptyTile,
-            child: AppGlyphIcon(
-              glyph,
-              size: AppSizes.iconXl,
-              color: context.colors.iconAccent,
+          // The tile rises in and its mark draws itself; the words follow.
+          AppReveal(
+            child: AppIconTile(
+              size: AppSizes.emptyTile,
+              child: AppGlyphDraw(
+                glyph,
+                size: AppSizes.iconXl,
+                color: context.colors.iconAccent,
+                delay: AppMotion.revealStagger * 2,
+              ),
             ),
           ),
           AppSpacing.gapLg,
-          Text(title, textAlign: TextAlign.center, style: text.titleMedium),
+          AppReveal(
+            index: 1,
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: text.titleMedium,
+            ),
+          ),
           if (message != null) ...[
             AppSpacing.gapXs,
-            Text(message, textAlign: TextAlign.center, style: text.bodyMedium),
+            AppReveal(
+              index: 2,
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: text.bodyMedium,
+              ),
+            ),
           ],
         ],
       ),

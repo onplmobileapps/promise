@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:railway_hrms/core/design_system/components/app_press_scale.dart';
+import 'package:railway_hrms/core/design_system/components/app_reveal.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_fonts.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_haptics.dart';
 import 'package:railway_hrms/core/design_system/foundations/app_motion.dart';
@@ -34,9 +36,10 @@ class AppListGroup extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // The rows come in one after another, as the list appears.
               for (var i = 0; i < children.length; i++) ...[
                 if (i > 0) Divider(height: 1, color: colors.outline),
-                children[i],
+                AppReveal(index: i, child: children[i]),
               ],
             ],
           ),
@@ -104,71 +107,75 @@ class AppListRow extends StatelessWidget {
                     AppHaptics.select();
                     onTap!();
                   },
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                minHeight: AppSizes.listRowMinHeight,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md + AppSpacing.xxs,
-                  vertical: AppSpacing.md,
+            // A row that does something gives a little under the finger.
+            child: AppPressScale(
+              enabled: onTap != null,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: AppSizes.listRowMinHeight,
                 ),
-                child: Row(
-                  crossAxisAlignment: subtitle == null
-                      ? CrossAxisAlignment.center
-                      : CrossAxisAlignment.start,
-                  children: [
-                    if (leading != null) ...[leading, AppSpacing.gapMd],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  title,
-                                  style: text.labelLarge?.copyWith(
-                                    fontWeight: subtitle == null
-                                        ? AppFonts.medium
-                                        : AppFonts.semiBold,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md + AppSpacing.xxs,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: subtitle == null
+                        ? CrossAxisAlignment.center
+                        : CrossAxisAlignment.start,
+                    children: [
+                      if (leading != null) ...[leading, AppSpacing.gapMd],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    title,
+                                    style: text.labelLarge?.copyWith(
+                                      fontWeight: subtitle == null
+                                          ? AppFonts.medium
+                                          : AppFonts.semiBold,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (meta != null) ...[
-                                AppSpacing.gapSm,
-                                Text(
-                                  meta,
-                                  style: text.bodySmall?.copyWith(
-                                    fontFeatures: AppFonts.tabularFigures,
+                                if (meta != null) ...[
+                                  AppSpacing.gapSm,
+                                  Text(
+                                    meta,
+                                    style: text.bodySmall?.copyWith(
+                                      fontFeatures: AppFonts.tabularFigures,
+                                    ),
                                   ),
-                                ),
+                                ],
                               ],
-                            ],
-                          ),
-                          if (subtitle != null) ...[
-                            AppSpacing.gapXxs,
-                            Text(
-                              subtitle,
-                              style: text.labelMedium?.copyWith(
-                                fontWeight: AppFonts.regular,
-                              ),
                             ),
+                            if (subtitle != null) ...[
+                              AppSpacing.gapXxs,
+                              Text(
+                                subtitle,
+                                style: text.labelMedium?.copyWith(
+                                  fontWeight: AppFonts.regular,
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                    if (trailing != null) ...[AppSpacing.gapSm, trailing],
-                    if (showChevron) ...[
-                      AppSpacing.gapXs,
-                      AppGlyphIcon(
-                        AppGlyphs.chevronRight,
-                        size: AppSizes.iconSm,
-                        color: colors.textTertiary,
-                      ),
+                      if (trailing != null) ...[AppSpacing.gapSm, trailing],
+                      if (showChevron) ...[
+                        AppSpacing.gapXs,
+                        AppGlyphIcon(
+                          AppGlyphs.chevronRight,
+                          size: AppSizes.iconSm,
+                          color: colors.textTertiary,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),

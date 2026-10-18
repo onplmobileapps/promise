@@ -300,6 +300,8 @@ class _InspectionReviewScreenState extends State<InspectionReviewScreen>
     await showAppDialog(
       context: context,
       tone: delivery.queued ? AppDialogTone.info : AppDialogTone.success,
+      // Sent: the report flies up and away.
+      glyph: delivery.queued ? null : AppGlyphs.upload,
       title: delivery.queued ? l10n.inspQueuedTitle : l10n.inspSubmittedTitle,
       message: delivery.queued
           ? l10n.inspQueuedMessage

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -7,7 +8,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maplibre_gl/maplibre_gl.dart' show LatLng;
 import 'package:railway_hrms/core/design_system/design_system.dart'
-    show AppLoop, AppLoopsMixin;
+    show
+        AppDialogTone,
+        AppGlyphs,
+        AppLoop,
+        AppLoopsMixin,
+        AppRollingNumber,
+        showAppDialog;
 import 'package:railway_hrms/modules/tracking/bloc/real_time_tracking_cubit.dart';
 import 'package:railway_hrms/modules/tracking/bloc/real_time_tracking_state.dart';
 import 'package:railway_hrms/modules/tracking/data/models/live_train_models.dart';
@@ -17,6 +24,11 @@ import 'package:railway_hrms/modules/tracking/services/pakistan_outline.dart';
 import 'package:railway_hrms/modules/tracking/services/rail_router.dart';
 import 'package:railway_hrms/modules/tracking/widgets/tracking_ui.dart'
     show TrackPalette, kStaleAfter;
+import 'package:skeletonizer/skeletonizer.dart';
+
+/// How long live locations are waited for before the user is told none
+/// are coming.
+const Duration _liveDataWait = Duration(seconds: 45);
 
 /// Pakistan Railways livery for the little trains.
 const _locoGreen = Color(0xFF1F7A4D);
@@ -44,10 +56,16 @@ class _LiveTrainsHomeContentState extends State<LiveTrainsHomeContent>
   late final RealTimeTrackingCubit _tracking = context
       .read<RealTimeTrackingCubit>();
 
+  Timer? _liveDataCheck;
+
+  /// The user has been told what is wrong; once a visit.
+  bool _told = false;
+
   @override
   void initState() {
     super.initState();
     _tracking.watchFleet();
+    _liveDataCheck = Timer(_liveDataWait, _checkLiveData);
     _entranceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
@@ -58,8 +76,53 @@ class _LiveTrainsHomeContentState extends State<LiveTrainsHomeContent>
   @override
   void dispose() {
     _tracking.unwatchFleet();
+    _liveDataCheck?.cancel();
     _entranceController.dispose();
     super.dispose();
+  }
+
+  /// No trains, or no live location from any of them: the user is told
+  /// why, rather than left looking at empty counts.
+  Future<void> _checkLiveData() async {
+    if (!mounted || _told) return;
+    // Not over another tracking screen, which says it there.
+    if (!(ModalRoute.of(context)?.isCurrent ?? true)) {
+      _liveDataCheck = Timer(const Duration(seconds: 10), _checkLiveData);
+      return;
+    }
+    final s = _tracking.state;
+    final withGps = s.trains.where((t) => t.hasDevice).length;
+    final String title;
+    final String message;
+    if (s.trains.isEmpty && s.errorMessage != null) {
+      title = "Couldn't load today's trains";
+      message =
+          '${s.errorMessage} Check your internet connection and try again.';
+    } else if (withGps > 0 && s.reportingCount(DateTime.now()) == 0) {
+      title = 'No live locations yet';
+      message =
+          'The tracking server is not sending train locations right now, so '
+          "trains can't be shown live. Check your internet connection; if "
+          "it's working, the server may be down. Locations appear on their "
+          'own as soon as they come in.';
+    } else {
+      return;
+    }
+    _told = true;
+    final retry = await showAppDialog(
+      context: context,
+      tone: AppDialogTone.warning,
+      glyph: AppGlyphs.signal,
+      title: title,
+      message: message,
+      primaryLabel: 'Try again',
+      secondaryLabel: 'OK',
+    );
+    if (retry == true && mounted) {
+      _told = false;
+      unawaited(_tracking.loadTrains());
+      _liveDataCheck = Timer(_liveDataWait, _checkLiveData);
+    }
   }
 
   Animation<double> _entrance(
@@ -107,34 +170,42 @@ class _LiveTrainsHomeContentState extends State<LiveTrainsHomeContent>
               math.max(constraints.maxHeight * 0.48, minHero),
               600.0,
             );
-            return CustomScrollView(
-              slivers: [
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  // One column, so the sheet paints over the hero's edge (a
-                  // viewport paints its first sliver last). The hero's fixed
-                  // height also spares its LayoutBuilder from being measured.
-                  child: Column(
-                    children: [
-                      // The hero's tracks run on past its sides so trains
-                      // roll in and out of view; clipped, so they never
-                      // show over the page beside it as this one slides.
-                      SizedBox(
-                        height: heroHeight,
-                        child: ClipRect(child: _buildHero()),
-                      ),
-                      Expanded(
-                        child: _buildSheet(
-                          bottomInset: math.max(
-                            16,
-                            media.padding.bottom + 16 - _sheetOverlap,
+            // Pulled down, today's trains are loaded again.
+            return RefreshIndicator(
+              color: palette.g2,
+              backgroundColor: palette.card,
+              onRefresh: _tracking.loadTrains,
+              child: CustomScrollView(
+                // Pullable even when it all fits.
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    // One column, so the sheet paints over the hero's edge (a
+                    // viewport paints its first sliver last). The hero's fixed
+                    // height also spares its LayoutBuilder from being measured.
+                    child: Column(
+                      children: [
+                        // The hero's tracks run on past its sides so trains
+                        // roll in and out of view; clipped, so they never
+                        // show over the page beside it as this one slides.
+                        SizedBox(
+                          height: heroHeight,
+                          child: ClipRect(child: _buildHero()),
+                        ),
+                        Expanded(
+                          child: _buildSheet(
+                            bottomInset: math.max(
+                              16,
+                              media.padding.bottom + 16 - _sheetOverlap,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         ),
@@ -556,17 +627,36 @@ class _NetworkCard extends StatelessWidget {
                 BlocSelector<
                   RealTimeTrackingCubit,
                   RealTimeTrackingState,
-                  (int, int, int, int, bool)
+                  (int, int, int, int, bool, bool)
                 >(
-                  selector: (s) => (
-                    s.trains.length,
-                    s.reportingCount(DateTime.now()),
-                    s.trains.where((t) => t.isUp).length,
-                    s.trains.where((t) => t.isDown).length,
-                    s.isLoading && s.trains.isEmpty,
-                  ),
+                  selector: (s) {
+                    final now = DateTime.now();
+                    final tracked = s.reportingCount(now);
+                    final loading = s.isLoading && s.trains.isEmpty;
+                    // Live locations still on their way: the feed not yet
+                    // open, or open for less than the wait with none in.
+                    final opened = s.listeningSince.values.fold<DateTime?>(
+                      null,
+                      (a, b) => a == null || b.isBefore(a) ? b : a,
+                    );
+                    final gpsLoading =
+                        loading ||
+                        (tracked == 0 &&
+                            s.trains.any((t) => t.hasDevice) &&
+                            (opened == null ||
+                                now.difference(opened) < _liveDataWait));
+                    return (
+                      s.trains.length,
+                      tracked,
+                      s.trains.where((t) => t.isUp).length,
+                      s.trains.where((t) => t.isDown).length,
+                      loading,
+                      gpsLoading,
+                    );
+                  },
                   builder: (context, data) {
-                    final (running, tracked, up, down, loading) = data;
+                    final (running, tracked, up, down, loading, gpsLoading) =
+                        data;
                     final share = running == 0 ? 0.0 : tracked / running;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -657,7 +747,7 @@ class _NetworkCard extends StatelessWidget {
                             Expanded(
                               child: _StatBlock(
                                 value: tracked,
-                                loading: loading,
+                                loading: gpsLoading,
                                 label: 'Live on GPS',
                               ),
                             ),
@@ -702,7 +792,7 @@ class _NetworkCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              loading
+                              gpsLoading
                                   ? 'Loading…'
                                   : '${(share * 100).round()}% tracked live',
                               style: TextStyle(
@@ -749,14 +839,11 @@ class _StatBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (loading)
-          Text('—', style: style)
+          // A placeholder in the number's place, shimmering as it loads.
+          Skeletonizer(enabled: true, child: Text('00', style: style))
         else
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: value.toDouble()),
-            duration: const Duration(milliseconds: 1100),
-            curve: Curves.easeOutCubic,
-            builder: (context, v, _) => Text('${v.round()}', style: style),
-          ),
+          // Each figure rolls to its new one, as on an iOS picker.
+          AppRollingNumber(value, style: style),
         const SizedBox(height: 2),
         Text(
           label,

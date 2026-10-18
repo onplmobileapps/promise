@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:railway_hrms/core/design_system/components/app_press_scale.dart';
 
 /// A raised face that answers a tap with ink: [decoration]'s fill and
 /// border lie under the ink, and its shadows fall outside the face.
@@ -37,14 +38,19 @@ class AppInkSurface extends StatelessWidget {
         ),
       ),
     );
-    if (shadows.isEmpty) return face;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: decoration.shape,
-        borderRadius: circle ? null : decoration.borderRadius,
-        boxShadow: shadows,
-      ),
-      child: face,
+    // The whole surface, shadow and all, gives a little under the finger.
+    return AppPressScale(
+      enabled: onTap != null,
+      child: shadows.isEmpty
+          ? face
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                shape: decoration.shape,
+                borderRadius: circle ? null : decoration.borderRadius,
+                boxShadow: shadows,
+              ),
+              child: face,
+            ),
     );
   }
 }

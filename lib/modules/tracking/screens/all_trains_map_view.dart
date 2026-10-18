@@ -51,18 +51,15 @@ class AllTrainsMapView extends StatefulWidget {
 typedef _OnMap = ({LiveTrain train, TrainPosition position, LiveStatus status});
 
 class _AllTrainsMapViewState extends State<AllTrainsMapView> {
-  static const double _cardWidth = 284;
 
   /// From this zoom trains are drawn in 3D instead of as flat sprites.
   static const double _train3dZoom = 12;
-  static const double _cardGap = 12;
 
   /// The search field and its gap above the filters.
   static const double _searchHeight = 58;
 
   late final RealTimeTrackingCubit _cubit = context
       .read<RealTimeTrackingCubit>();
-  final _carousel = ScrollController();
   Timer? _clock;
 
   MapLibreMapController? _map;
@@ -163,7 +160,6 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
     _clock?.cancel();
     _slowTimer?.cancel();
     _loop.dispose();
-    _carousel.dispose();
     _search.dispose();
     _searchFocus.dispose();
     _map?.onFeatureTapped.remove(_onFeatureTapped);
@@ -860,7 +856,11 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
   ) {
     const tappable = {'fleet-halo', 'fleet-train', 'fleet-train-near'};
     if (!tappable.contains(layerId)) return;
+    // A train tapped opens on its own map.
+    final train = _cubit.state.trainById(id);
+    if (train == null) return;
     _select(id);
+    _openTrain(train);
   }
 
   void _select(String? id, {bool fly = false}) {
@@ -869,33 +869,9 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
       setState(() => _selectedId = id);
       _entries = null;
       _draw();
-      if (id == null) {
-        _drawFocus(DateTime.now());
-      } else {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _showCard(id));
-      }
+      if (id == null) _drawFocus(DateTime.now());
     }
     if (fly && id != null) unawaited(_flyTo(id));
-  }
-
-  void _showCard(String id) {
-    if (!_carousel.hasClients) return;
-    final index = _onMap(
-      _cubit.state,
-      DateTime.now(),
-    ).indexWhere((e) => e.train.id == id);
-    if (index < 0) return;
-    final offset = (index * (_cardWidth + _cardGap)).clamp(
-      0.0,
-      _carousel.position.maxScrollExtent,
-    );
-    unawaited(
-      _carousel.animateTo(
-        offset,
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeOutCubic,
-      ),
-    );
   }
 
   void _setFilter(TrainFilter filter) {
@@ -1130,23 +1106,6 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
           ),
         ),
         Positioned(
-          right: 14,
-          // Clear of the filters, which grow with the text size.
-          top:
-              media.padding.top +
-              150 +
-              _searchHeight +
-              14 * (MediaQuery.textScalerOf(context).scale(1) - 1),
-          child: MapIconButton(
-            icon: Icons.zoom_out_map_rounded,
-            tooltip: 'Whole country',
-            onTap: () {
-              _select(null);
-              unawaited(_fitPakistan());
-            },
-          ),
-        ),
-        Positioned(
           left: 0,
           right: 0,
           bottom: 0,
@@ -1156,35 +1115,21 @@ class _AllTrainsMapViewState extends State<AllTrainsMapView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Padding(
-                  padding: EdgeInsets.fromLTRB(14, 0, 14, 10),
+                  padding: EdgeInsets.fromLTRB(14, 0, 14, 0),
                   child: _Legend(),
                 ),
-                SizedBox(
-                  height: _carouselHeight(context),
-                  child: onMap.isEmpty
-                      ? _EmptyCarousel(
-                          waiting: withDevice.length - located,
-                          filtered: located > 0,
-                        )
-                      : ListView.separated(
-                          controller: _carousel,
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          clipBehavior: Clip.none,
-                          itemCount: onMap.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(width: _cardGap),
-                          itemBuilder: (context, i) => _FleetCard(
-                            key: ValueKey(onMap[i].train.id),
-                            entry: onMap[i],
-                            now: now,
-                            width: _cardWidth,
-                            selected: onMap[i].train.id == _selectedId,
-                            onTap: () => _select(onMap[i].train.id, fly: true),
-                            onOpen: () => _openTrain(onMap[i].train),
-                          ),
-                        ),
-                ),
+                // Nothing on the map yet: why, in place of the trains.
+                if (onMap.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: SizedBox(
+                      height: _carouselHeight(context),
+                      child: _EmptyCarousel(
+                        waiting: withDevice.length - located,
+                        filtered: located > 0,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1340,153 +1285,6 @@ class _Legend extends StatelessWidget {
           item(palette.amber, 'Stopped'),
           item(palette.offline, 'Offline'),
         ],
-      ),
-    );
-  }
-}
-
-class _FleetCard extends StatelessWidget {
-  final _OnMap entry;
-  final DateTime now;
-  final double width;
-  final bool selected;
-  final VoidCallback onTap;
-  final VoidCallback onOpen;
-
-  const _FleetCard({
-    super.key,
-    required this.entry,
-    required this.now,
-    required this.width,
-    required this.selected,
-    required this.onTap,
-    required this.onOpen,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = TrackPalette.of(context);
-    final train = entry.train;
-    final position = entry.position;
-    final route = [
-      train.origin?.code ?? train.origin?.name,
-      train.destination?.code ?? train.destination?.name,
-    ].whereType<String>().join(' → ');
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      width: width,
-      decoration: BoxDecoration(
-        color: palette.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: selected ? palette.g2 : palette.card,
-          width: 2,
-        ),
-        boxShadow: palette.shadow(selected ? 2.4 : 1.4),
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 11, 10, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    TrainNumberBadge(train: train, size: 42),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            train.displayName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w900,
-                              color: palette.ink,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              if (route.isNotEmpty)
-                                Flexible(
-                                  child: Text(
-                                    route,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: palette.mute,
-                                    ),
-                                  ),
-                                ),
-                              // Another day's run is on the map too.
-                              if (context.select(
-                                (RealTimeTrackingCubit c) =>
-                                    c.state.hasOtherRuns(train),
-                              )) ...[
-                                const SizedBox(width: 6),
-                                RunDateChip(run: train),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Tooltip(
-                      message: 'Track this train',
-                      child: Material(
-                        color: palette.g2,
-                        shape: const CircleBorder(),
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: onOpen,
-                          child: SizedBox(
-                            width: 36,
-                            height: 36,
-                            child: Icon(
-                              Icons.arrow_forward_rounded,
-                              color: palette.onAccent,
-                              size: 19,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                StatusPill(status: entry.status, dense: true),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    Icon(Icons.place_outlined, size: 13, color: palette.mute),
-                    const SizedBox(width: 3),
-                    Expanded(
-                      child: Text(
-                        position.shortAddress ?? 'Location received',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: palette.mute,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

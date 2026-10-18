@@ -183,7 +183,8 @@ class ConditionSwitchTile extends StatelessWidget {
     final cs = theme.colorScheme;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: AppMotion.short,
+      curve: AppMotion.enter,
       decoration: BoxDecoration(
         color: value ? color.withValues(alpha: 0.07) : cs.surface,
         borderRadius: BorderRadius.circular(14),
@@ -243,7 +244,8 @@ class ConditionSwitchTile extends StatelessWidget {
             ),
           ),
           AnimatedSize(
-            duration: const Duration(milliseconds: 200),
+            duration: AppMotion.short,
+            curve: AppMotion.enter,
             alignment: Alignment.topCenter,
             child: (value && expandedChild != null)
                 ? Padding(

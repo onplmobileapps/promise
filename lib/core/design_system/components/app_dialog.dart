@@ -123,13 +123,17 @@ class AppDialog extends StatelessWidget {
       AppDialogTone.info => (spheres.sky, AppGlyphs.info),
       AppDialogTone.confirm => (spheres.coral, AppGlyphs.circleHelp),
     };
-    // A tone's own check or cross is drawn on; any other mark stands.
-    final drawn = glyph != null
-        ? null
+    // The mark draws itself on: the one given, where it has a drawing, or
+    // the tone's own; any other stands.
+    final given = glyph;
+    final drawn = given != null
+        ? AppLottie.of(given)
         : switch (tone) {
             AppDialogTone.success => AppLottie.check,
             AppDialogTone.error => AppLottie.cross,
-            _ => null,
+            AppDialogTone.warning => AppLottie.warning,
+            AppDialogTone.info => AppLottie.info,
+            AppDialogTone.confirm => null,
           };
     return Dialog(
       backgroundColor: AppPalette.transparent,

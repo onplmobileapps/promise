@@ -85,6 +85,22 @@ abstract final class AppMotion {
   /// Quick to start, gentle to land: for things coming on screen.
   static const Curve enter = Curves.easeOutCubic;
 
+  /// A piece coming into view: how long it rises, how far, and how much
+  /// later each next one starts, so a list arrives in a ripple.
+  static const Duration reveal = Duration(milliseconds: 380);
+  static const double revealRise = 12;
+  static const Duration revealStagger = Duration(milliseconds: 45);
+
+  /// The most pieces of one list that wait their turn; the rest come with
+  /// the last of them, so a long list isn't slow to appear.
+  static const int revealStaggerMost = 8;
+
+  /// A glyph drawn line by line, as an empty list's mark appears.
+  static const Duration glyphDraw = Duration(milliseconds: 900);
+
+  /// How far a row sinks when pressed, as a share of its size.
+  static const double pressScale = 0.985;
+
   /// How far behind the one above it each of a page's first cards starts
   /// to rise, and how many are held back so; the rest rise with the last.
   static const Duration entranceStep = Duration(milliseconds: 45);

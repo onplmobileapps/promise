@@ -172,3 +172,94 @@ String delayLabel(Duration delay) {
       : '${size ~/ 60} h ${size % 60} min';
   return minutes > 0 ? '$text late' : '$text early';
 }
+
+/// A journey's times: the timetable's, and how late the train runs.
+class JourneyTiming {
+  const JourneyTiming({required this.due, required this.reached, this.delay});
+
+  /// Each stop's timetable time; null where it has none.
+  final List<DateTime?> due;
+
+  /// When the train reached each stop, where seen.
+  final List<DateTime?> reached;
+
+  /// How late it runs now; negative when early, null when nothing says.
+  final Duration? delay;
+
+  DateTime? get _firstDue => due.nonNulls.firstOrNull;
+  DateTime? get _lastDue => due.nonNulls.lastOrNull;
+
+  /// The timetable's journey, first departure to last arrival.
+  Duration? get scheduledLength {
+    final first = _firstDue;
+    final last = _lastDue;
+    return first == null || last == null ? null : last.difference(first);
+  }
+
+  /// When the train left its first stop: as seen, or else when it was
+  /// due to.
+  DateTime? get departure => reached.firstOrNull ?? _firstDue;
+
+  /// How late it left: as seen at its first stop, else none known.
+  Duration? get departureDelay {
+    final left = reached.firstOrNull;
+    final first = due.firstOrNull;
+    return left == null || first == null ? null : left.difference(first);
+  }
+
+  /// When it is expected at its last stop, at the delay it runs at.
+  DateTime? get expectedArrival {
+    final last = _lastDue;
+    final late = delay;
+    if (last == null) return null;
+    return late == null ? last : last.add(late);
+  }
+
+  /// How long the whole journey is expected to take, departure to
+  /// arrival, at the delay it runs at.
+  Duration? get expectedLength {
+    final from = departure;
+    final to = expectedArrival;
+    return from == null || to == null ? null : to.difference(from);
+  }
+
+  /// How long the train has been on its way at [now].
+  Duration? onTheWay(DateTime now) {
+    final from = departure;
+    if (from == null || now.isBefore(from)) return null;
+    return now.difference(from);
+  }
+}
+
+/// [stops]' timing from [day] (the journey's first day): the timetable,
+/// when the train was seen at each, and how late it runs where its last
+/// report, [reportedAt] at [coveredKm], puts it — else where it was last
+/// seen at a stop.
+JourneyTiming journeyTiming({
+  required List<RouteStop> stops,
+  required DateTime? day,
+  required List<DateTime?> reached,
+  double? coveredKm,
+  DateTime? reportedAt,
+}) {
+  final due = timetableOf(stops, day);
+  final seen = [
+    for (var i = 0; i < stops.length; i++)
+      i < reached.length ? reached[i] : null,
+  ];
+  final delay =
+      (coveredKm == null || reportedAt == null
+          ? null
+          : delayAtPosition(stops, due, coveredKm, reportedAt)) ??
+      delayNow(due, seen);
+  return JourneyTiming(due: due, reached: seen, delay: delay);
+}
+
+/// [d] in words: "22 h 30 min", "45 min".
+String durationLabel(Duration d) {
+  final minutes = d.inMinutes.abs();
+  if (minutes < 60) return '$minutes min';
+  final h = minutes ~/ 60;
+  final m = minutes % 60;
+  return m == 0 ? '$h h' : '$h h $m min';
+}

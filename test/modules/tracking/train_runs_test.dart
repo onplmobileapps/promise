@@ -116,4 +116,56 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await cubit.close();
   });
+
+  testWidgets('of two runs both moving, the card shows the one heard from '
+      'last', (tester) async {
+    tester.view.physicalSize = const Size(400, 860);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final now = DateTime.now();
+    String day(int back) {
+      final d = now.subtract(Duration(days: back));
+      return '${d.year}-${d.month.toString().padLeft(2, '0')}-'
+          '${d.day.toString().padLeft(2, '0')}';
+    }
+
+    late _Feed feed;
+    final cubit = RealTimeTrackingCubit(
+      // Today's run's device went quiet days ago; yesterday's reports now.
+      _Trains([_run(1, day(1), device: 11), _run(2, day(0), device: 12)]),
+      feed: ({required onPosition, required onLinkChanged}) =>
+          feed = _Feed(onPosition: onPosition, onLinkChanged: onLinkChanged),
+      route: (_) async => const [LatLng(24.85, 67.0), LatLng(34.0, 71.55)],
+    );
+    await cubit.loadTrains();
+    TrainPosition report(int device, Duration ago, String address) =>
+        TrainPosition(
+          deviceId: device,
+          position: const LatLng(25.4, 68.3),
+          speedKmh: 60,
+          course: 10,
+          moving: true,
+          validFix: true,
+          fixTime: now.subtract(ago),
+          address: address,
+          online: true,
+        );
+    feed
+      ..onPosition(report(12, const Duration(days: 6), 'Spezand, Quetta'))
+      ..onPosition(report(11, const Duration(seconds: 12), 'Kotri, Jamshoro'));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider.value(
+          value: cubit,
+          child: const TrainTrackingView(useParentCubit: true),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.textContaining('Kotri'), findsOneWidget);
+    expect(find.textContaining('Spezand'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await cubit.close();
+  });
 }

@@ -7,7 +7,11 @@ import 'package:railway_hrms/core/design_system/icons/app_glyphs.dart';
 /// traced from its [AppGlyph], so the finished drawing is the glyph itself.
 enum AppLottie {
   check('assets/lottie/check.json', AppGlyphs.check),
-  cross('assets/lottie/cross.json', AppGlyphs.close);
+  cross('assets/lottie/cross.json', AppGlyphs.close),
+  warning('assets/lottie/warning.json', AppGlyphs.triangleAlert),
+  info('assets/lottie/info.json', AppGlyphs.info),
+  upload('assets/lottie/upload.json', AppGlyphs.upload),
+  download('assets/lottie/download.json', AppGlyphs.download);
 
   const AppLottie(this.asset, this.glyph);
 
@@ -16,6 +20,14 @@ enum AppLottie {
   /// The mark as it stands once drawn, shown in its place when it cannot
   /// be played.
   final AppGlyph glyph;
+
+  /// The mark drawn for [glyph], if there is one.
+  static AppLottie? of(AppGlyph glyph) {
+    for (final mark in values) {
+      if (identical(mark.glyph, glyph)) return mark;
+    }
+    return null;
+  }
 }
 
 /// [mark] drawn once in [color] at [size], as a dialog's badge shows it.
@@ -43,7 +55,9 @@ class AppLottieMark extends StatelessWidget {
       height: size,
       repeat: false,
       delegates: LottieDelegates(
-        values: [ValueDelegate.strokeColor(const ['**'], value: color)],
+        values: [
+          ValueDelegate.strokeColor(const ['**'], value: color),
+        ],
       ),
       errorBuilder: (_, _, _) => still,
     );

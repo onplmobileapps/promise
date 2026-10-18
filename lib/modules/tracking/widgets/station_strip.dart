@@ -165,21 +165,19 @@ class _StationStripState extends State<StationStrip> with AppLoopsMixin {
     final covered = widget.coveredKm;
     final trainX = _trainX(stops, covered);
     final moving = widget.position?.moving ?? false;
-    // Timetable times, each on the first day that keeps them in order.
-    final scheduled = timetableOf(stops, widget.runDate);
+    // Timetable times, when the train was seen at each, and how late it
+    // runs: worked out as the journey card works them out.
+    final timing = journeyTiming(
+      stops: stops,
+      day: widget.runDate,
+      reached: widget.reached,
+      coveredKm: covered,
+      reportedAt: widget.position?.fixTime,
+    );
+    final scheduled = timing.due;
     final timetable = scheduled.any((due) => due != null);
-    final reached = [
-      for (var i = 0; i < stops.length; i++)
-        i < widget.reached.length ? widget.reached[i] : null,
-    ];
-    // How late it is where its last report puts it; else where it was
-    // last seen at a station.
-    final reportedAt = widget.position?.fixTime;
-    final delay =
-        (covered == null || reportedAt == null
-            ? null
-            : delayAtPosition(stops, scheduled, covered, reportedAt)) ??
-        delayNow(scheduled, reached);
+    final reached = timing.reached;
+    final delay = timing.delay;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -534,11 +532,15 @@ class _StopItem extends StatelessWidget {
     return lines;
   }
 
-  /// How late it was here, once it has been.
+  /// How late it was here, once seen here; how late it is expected here,
+  /// at the delay it runs at, while still ahead.
   Duration? get _lateHere {
     final due = scheduled;
+    if (due == null) return null;
     final at = reached;
-    return due == null || at == null ? null : at.difference(due);
+    if (at != null) return at.difference(due);
+    if (kind == _StopKind.next || kind == _StopKind.ahead) return delay;
+    return null;
   }
 
   @override

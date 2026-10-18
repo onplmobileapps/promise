@@ -243,6 +243,13 @@ abstract final class AppGlyphs {
   ], strokeWidth: 2.4);
 
   /// A new version to get.
+  /// Sends something away, as a report submitted.
+  static const upload = AppGlyph([
+    GlyphPart('<path d="M12 3v12"/>'),
+    GlyphPart('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'),
+    GlyphPart('<path d="m17 8-5-5-5 5"/>'),
+  ], strokeWidth: 2.2);
+
   static const download = AppGlyph([
     GlyphPart('<path d="M12 15V3"/>'),
     GlyphPart('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'),

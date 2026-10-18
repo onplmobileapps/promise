@@ -118,6 +118,10 @@ class _PromiseDashboardViewState extends State<PromiseDashboardView> {
   ).pushNamed(AppRoutes.liveTracking);
 
   void _onBack() {
+    // A page over the app (live tracking) still sliding away: this back
+    // was meant for it, not for leaving the app.
+    final above = ModalRoute.of(context)?.secondaryAnimation;
+    if (above != null && above.status != AnimationStatus.dismissed) return;
     if (_tab != _Tab.home) return _select(_Tab.home);
     final pages = _homePages.currentState;
     // A module's page, or one it opened: back off it, as the page allows

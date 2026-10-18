@@ -7,7 +7,6 @@ import 'package:railway_hrms/core/di/service_locator.dart';
 import 'package:railway_hrms/modules/tracking/bloc/real_time_tracking_cubit.dart';
 import 'package:railway_hrms/modules/tracking/bloc/real_time_tracking_state.dart';
 import 'package:railway_hrms/modules/tracking/data/models/live_train_models.dart';
-import 'package:railway_hrms/modules/tracking/screens/all_trains_map_view.dart';
 import 'package:railway_hrms/modules/tracking/screens/train_live_map_view.dart';
 import 'package:railway_hrms/modules/tracking/services/route_geometry.dart';
 import 'package:railway_hrms/modules/tracking/widgets/run_picker.dart';
@@ -112,9 +111,6 @@ class _TrainListScreenState extends State<_TrainListScreen> {
               builder: (context, state) => _Header(
                 showBack: widget.showBackButton,
                 subtitle: _subtitle(state),
-                refreshing: state.isLoading,
-                onRefresh: _cubit.loadTrains,
-                onMap: () => _push(const AllTrainsMapView()),
               ),
             ),
             _SearchField(
@@ -232,7 +228,8 @@ class _TrainListScreenState extends State<_TrainListScreen> {
       services.putIfAbsent(train.serviceKey, () => []).add(train);
     }
     final cards = [
-      for (final runs in services.values) (_shownRun(runs, statuses), runs),
+      for (final runs in services.values)
+        (_shownRun(runs, statuses, state, now), runs),
     ];
     return RefreshIndicator(
       color: palette.g2,
@@ -264,6 +261,8 @@ class _TrainListScreenState extends State<_TrainListScreen> {
   static LiveTrain _shownRun(
     List<LiveTrain> runs,
     Map<String, LiveStatus> statuses,
+    RealTimeTrackingState state,
+    DateTime now,
   ) {
     int rank(LiveTrain run) => switch (statuses[run.id]?.kind) {
       TrainLiveStatus.moving => 0,
@@ -271,9 +270,21 @@ class _TrainListScreenState extends State<_TrainListScreen> {
       TrainLiveStatus.weakGps => 2,
       _ => 3,
     };
+    // How long ago the run's device last reported; never.
+    Duration age(LiveTrain run) {
+      final fix = state.positionOf(run)?.fixTime;
+      if (fix == null) return const Duration(days: 3650);
+      final ago = now.difference(fix);
+      return ago.isNegative ? Duration.zero : ago;
+    }
+
     return ([...runs]..sort((a, b) {
           final byStatus = rank(a).compareTo(rank(b));
-          return byStatus != 0 ? byStatus : LiveTrain.byLatestRun(a, b);
+          if (byStatus != 0) return byStatus;
+          // Of two runs alike, the one heard from last: a device that
+          // went quiet days ago isn't shown over one reporting now.
+          final byAge = age(a).compareTo(age(b));
+          return byAge != 0 ? byAge : LiveTrain.byLatestRun(a, b);
         }))
         .first;
   }
@@ -299,17 +310,8 @@ class _TrainListScreenState extends State<_TrainListScreen> {
 class _Header extends StatelessWidget {
   final bool showBack;
   final String subtitle;
-  final bool refreshing;
-  final VoidCallback onRefresh;
-  final VoidCallback onMap;
 
-  const _Header({
-    required this.showBack,
-    required this.subtitle,
-    required this.refreshing,
-    required this.onRefresh,
-    required this.onMap,
-  });
+  const _Header({required this.showBack, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -346,94 +348,7 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-          _RoundButton(
-            icon: Icons.map_rounded,
-            tooltip: 'All trains on the map',
-            filled: true,
-            onTap: onMap,
-          ),
-          const SizedBox(width: 10),
-          _RoundButton(
-            icon: Icons.refresh_rounded,
-            tooltip: 'Refresh',
-            busy: refreshing,
-            onTap: refreshing ? null : onRefresh,
-          ),
         ],
-      ),
-    );
-  }
-}
-
-class _RoundButton extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback? onTap;
-  final bool busy;
-
-  /// Green, for the main action.
-  final bool filled;
-
-  const _RoundButton({
-    required this.icon,
-    required this.tooltip,
-    this.onTap,
-    this.busy = false,
-    this.filled = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = TrackPalette.of(context);
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        shape: const CircleBorder(),
-        child: Ink(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: filled ? null : palette.card,
-            gradient: filled
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [palette.g1, palette.g3],
-                  )
-                : null,
-            boxShadow: filled
-                ? [
-                    BoxShadow(
-                      color: palette.g2.withValues(alpha: 0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 5),
-                    ),
-                  ]
-                : palette.shadow(0.8),
-          ),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onTap,
-            child: Center(
-              child: busy
-                  ? SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        color: palette.g2,
-                      ),
-                    )
-                  : Icon(
-                      icon,
-                      color: filled ? palette.onAccent : palette.g2,
-                      size: 20,
-                    ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -518,168 +433,173 @@ class _TrainCard extends StatelessWidget {
     final palette = TrackPalette.of(context);
     final p = position;
     final tint = trainDirectionColor(train, palette);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        // White, washing into the lightest tint of the train's badge colour
-        // on the right.
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            palette.card,
-            palette.card,
-            palette.tint(tint, 0.06),
-            palette.tint(tint, 0.14),
-          ],
-          stops: const [0, 0.42, 0.75, 1],
+    // The card gives a little under the finger.
+    return AppPressScale(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          // White, washing into the lightest tint of the train's badge colour
+          // on the right.
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              palette.card,
+              palette.card,
+              palette.tint(tint, 0.06),
+              palette.tint(tint, 0.14),
+            ],
+            stops: const [0, 0.42, 0.75, 1],
+          ),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: palette.shadow(),
         ),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: palette.shadow(),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: onTap,
-            splashColor: tint.withValues(alpha: 0.14),
-            highlightColor: tint.withValues(alpha: 0.06),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Status at a glance, down the card's edge.
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: 5,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          status.color,
-                          status.color.withValues(alpha: 0.45),
-                        ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              splashColor: tint.withValues(alpha: 0.14),
+              highlightColor: tint.withValues(alpha: 0.06),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Status at a glance, down the card's edge.
+                    AnimatedContainer(
+                      duration: AppMotion.medium,
+                      width: 5,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            status.color,
+                            status.color.withValues(alpha: 0.45),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 14, 8, 14),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TrainNumberBadge(train: train),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Its name and code, and which way it runs.
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        train.code.isEmpty
-                                            ? train.displayName
-                                            : '${train.displayName} '
-                                                  '${train.code}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 15.5,
-                                          fontWeight: FontWeight.w800,
-                                          color: palette.ink,
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 14, 8, 14),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TrainNumberBadge(train: train),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Its name and code, and which way it runs.
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          train.code.isEmpty
+                                              ? train.displayName
+                                              : '${train.displayName} '
+                                                    '${train.code}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 15.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: palette.ink,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    if (train.isUp || train.isDown) ...[
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        train.isUp
-                                            ? Icons.north_rounded
-                                            : Icons.south_rounded,
-                                        size: 15,
-                                        color: tint,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                if (runs.length > 1) ...[
-                                  const SizedBox(height: 4),
-                                  RunCountChip(runs: runs),
-                                ],
-                                const SizedBox(height: 6),
-                                _RouteTrack(
-                                  train: train,
-                                  position: p,
-                                  status: status,
-                                ),
-                                const SizedBox(height: 10),
-                                // Until its first live report, the status
-                                // and place shimmer as they load.
-                                Skeletonizer(
-                                  enabled: _loadingLive(p, status),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      StatusPill(status: status, dense: true),
-                                      if (p != null ||
-                                          _loadingLive(p, status)) ...[
-                                        const SizedBox(height: 6),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.place_outlined,
-                                              size: 13,
-                                              color: palette.mute,
-                                            ),
-                                            const SizedBox(width: 3),
-                                            Expanded(
-                                              child: Text(
-                                                // Where it is; an offline
-                                                // train's old place isn't said
-                                                // to be when.
-                                                p == null
-                                                    // Shown only as its skeleton.
-                                                    ? 'Finding where the train is'
-                                                    : status.kind ==
-                                                          TrainLiveStatus.stale
-                                                    ? p.shortAddress ??
-                                                          'Location received'
-                                                    : '${p.shortAddress ?? 'Location received'} · '
-                                                          '${formatAgo(p.fixTime, now)}',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: 11.5,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: palette.mute,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                      if (train.isUp || train.isDown) ...[
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          train.isUp
+                                              ? Icons.north_rounded
+                                              : Icons.south_rounded,
+                                          size: 15,
+                                          color: tint,
                                         ),
                                       ],
                                     ],
                                   ),
-                                ),
-                              ],
+                                  if (runs.length > 1) ...[
+                                    const SizedBox(height: 4),
+                                    RunCountChip(runs: runs),
+                                  ],
+                                  const SizedBox(height: 6),
+                                  _RouteTrack(
+                                    train: train,
+                                    position: p,
+                                    status: status,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  // Until its first live report, the status
+                                  // and place shimmer as they load.
+                                  Skeletonizer(
+                                    enabled: _loadingLive(p, status),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        StatusPill(status: status, dense: true),
+                                        if (p != null ||
+                                            _loadingLive(p, status)) ...[
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.place_outlined,
+                                                size: 13,
+                                                color: palette.mute,
+                                              ),
+                                              const SizedBox(width: 3),
+                                              Expanded(
+                                                child: Text(
+                                                  // Where it is; an offline
+                                                  // train's old place isn't said
+                                                  // to be when.
+                                                  p == null
+                                                      // Shown only as its skeleton.
+                                                      ? 'Finding where the train is'
+                                                      : status.kind ==
+                                                            TrainLiveStatus
+                                                                .stale
+                                                      ? p.shortAddress ??
+                                                            'Location received'
+                                                      : '${p.shortAddress ?? 'Location received'} · '
+                                                            '${formatAgo(p.fixTime, now)}',
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: palette.mute,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 14),
-                            child: Icon(
-                              Icons.chevron_right_rounded,
-                              color: tint.withValues(alpha: 0.7),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 14),
+                              child: Icon(
+                                Icons.chevron_right_rounded,
+                                color: tint.withValues(alpha: 0.7),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

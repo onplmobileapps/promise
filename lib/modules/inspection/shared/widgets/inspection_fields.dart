@@ -710,7 +710,10 @@ class InspectionCard extends StatelessWidget {
     final trailing = this.trailing;
     return RepaintBoundary(
       child: DecoratedBox(
-        decoration: appCardDecoration(context, radius: AppRadius.borderHeroCard),
+        decoration: appCardDecoration(
+          context,
+          radius: AppRadius.borderHeroCard,
+        ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
           child: Column(

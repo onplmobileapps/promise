@@ -299,8 +299,8 @@ class _FilterSegment extends StatelessWidget {
                       color: Color.lerp(color, palette.onAccent, onPill),
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      '$count',
+                    AppRollingNumber(
+                      count,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,

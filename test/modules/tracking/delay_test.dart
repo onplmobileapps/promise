@@ -125,4 +125,35 @@ void main() {
     expect(delayLabel(const Duration(minutes: -5)), '5 min early');
     expect(delayLabel(const Duration(hours: 2)), '2 h late');
   });
+
+  test('a 22-hour journey running an hour late takes 23', () {
+    // Rawalpindi 08:00 → Karachi next day 06:00, 22 hours on the timetable.
+    final stops = [
+      RouteStop(
+        const TrainStation(name: 'Rawalpindi', departureTime: '08:00:00'),
+        0,
+      ),
+      RouteStop(
+        const TrainStation(name: 'Lahore', arrivalTime: '12:30:00'),
+        290,
+      ),
+      RouteStop(
+        const TrainStation(name: 'Karachi Cantt', arrivalTime: '06:00:00'),
+        1500,
+      ),
+    ];
+    final timing = journeyTiming(
+      stops: stops,
+      day: DateTime(2026, 10, 18),
+      // Seen leaving on time, reported halfway to Lahore at 11:15: due
+      // there at 10:15.
+      reached: [DateTime(2026, 10, 18, 8, 0)],
+      coveredKm: 145,
+      reportedAt: DateTime(2026, 10, 18, 11, 15),
+    );
+    expect(timing.scheduledLength, const Duration(hours: 22));
+    expect(delayLabel(timing.delay!), '1 h late');
+    expect(timing.expectedArrival, DateTime(2026, 10, 19, 7, 0));
+    expect(durationLabel(timing.expectedLength!), '23 h');
+  });
 }
